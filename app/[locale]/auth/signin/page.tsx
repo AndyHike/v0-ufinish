@@ -1,7 +1,10 @@
 import { getTranslations } from "next-intl/server"
 import Link from "next/link"
 import { getLocale } from "next-intl/server"
-import { AuthForm } from "@/components/auth/auth-form"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import { login } from "@/lib/auth/actions"
 
 export default async function SignIn() {
@@ -21,57 +24,68 @@ export default async function SignIn() {
           </p>
         </div>
 
-        <AuthForm action={login} successRedirect={`/${locale}`} submitText={t("signIn")}>
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              {t("email")}
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              placeholder={t("emailPlaceholder")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              {t("password")}
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              placeholder={t("passwordPlaceholder")}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+        <form
+          action={async (formData) => {
+            "use server"
+            const result = await login(formData)
+            if (result.success) {
+              return { redirect: `/${locale}` }
+            }
+            return { error: result.message || t("somethingWentWrong") }
+          }}
+          className="mt-8 space-y-6"
+        >
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">{t("email")}</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                placeholder={t("emailPlaceholder")}
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm">
-                {t("rememberMe")}
-              </label>
             </div>
 
-            <div className="text-sm">
-              <Link href={`/${locale}/auth/forgot-password`} className="font-medium text-primary hover:text-primary/90">
-                {t("forgotPassword")}
-              </Link>
+            <div className="space-y-2">
+              <Label htmlFor="password">{t("password")}</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                placeholder={t("passwordPlaceholder")}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Checkbox id="remember-me" name="remember-me" className="mr-2" />
+                <Label
+                  htmlFor="remember-me"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {t("rememberMe")}
+                </Label>
+              </div>
+
+              <div className="text-sm">
+                <Link
+                  href={`/${locale}/auth/forgot-password`}
+                  className="font-medium text-primary hover:text-primary/90"
+                >
+                  {t("forgotPassword")}
+                </Link>
+              </div>
             </div>
           </div>
-        </AuthForm>
+
+          <Button type="submit" className="w-full">
+            {t("signIn")}
+          </Button>
+        </form>
       </div>
     </div>
   )
