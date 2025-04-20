@@ -1,0 +1,157 @@
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { MoreHorizontal, Search } from "lucide-react"
+import Image from "next/image"
+
+export function ModelsList() {
+  const [searchQuery, setSearchQuery] = useState("")
+
+  // In a real app, this would fetch data from an API
+  const models = [
+    {
+      id: "1",
+      name: "iPhone 13",
+      brand: "Apple",
+      brandLogo: "/bitten-fruit-silhouette.png",
+      image: "/placeholder.svg?height=40&width=40&query=iphone 13",
+      year: "2021",
+      createdAt: "10.03.2023",
+    },
+    {
+      id: "2",
+      name: "Galaxy S21",
+      brand: "Samsung",
+      brandLogo: "/samsung-wordmark.png",
+      image: "/placeholder.svg?height=40&width=40&query=galaxy s21",
+      year: "2021",
+      createdAt: "15.02.2023",
+    },
+    {
+      id: "3",
+      name: "Redmi Note 10",
+      brand: "Xiaomi",
+      brandLogo: "/xiaomi-logo-abstract.png",
+      image: "/placeholder.svg?height=40&width=40&query=redmi note 10",
+      year: "2021",
+      createdAt: "22.04.2023",
+    },
+    {
+      id: "4",
+      name: "P40 Pro",
+      brand: "Huawei",
+      brandLogo: "/abstract-petal-design.png",
+      image: "/placeholder.svg?height=40&width=40&query=huawei p40 pro",
+      year: "2020",
+      createdAt: "05.01.2023",
+    },
+    {
+      id: "5",
+      name: "9 Pro",
+      brand: "OnePlus",
+      brandLogo: "/placeholder.svg?height=40&width=40&query=oneplus logo",
+      image: "/placeholder.svg?height=40&width=40&query=oneplus 9 pro",
+      year: "2021",
+      createdAt: "18.05.2023",
+    },
+  ]
+
+  const filteredModels = models.filter(
+    (model) =>
+      model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      model.brand.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Пошук моделей..."
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Модель</TableHead>
+            <TableHead>Бренд</TableHead>
+            <TableHead>Рік випуску</TableHead>
+            <TableHead>Дата створення</TableHead>
+            <TableHead className="w-[50px]"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredModels.map((model) => (
+            <TableRow key={model.id}>
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 overflow-hidden rounded-md">
+                    <Image
+                      src={model.image || "/placeholder.svg"}
+                      alt={model.name}
+                      width={32}
+                      height={32}
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                  <span className="font-medium">{model.name}</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 overflow-hidden rounded-full">
+                    <Image
+                      src={model.brandLogo || "/placeholder.svg"}
+                      alt={model.brand}
+                      width={20}
+                      height={20}
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                  {model.brand}
+                </div>
+              </TableCell>
+              <TableCell>{model.year}</TableCell>
+              <TableCell>{model.createdAt}</TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                      <span className="sr-only">Меню</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Дії</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>Редагувати</DropdownMenuItem>
+                    <DropdownMenuItem>Переглянути опис</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive">Видалити</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
