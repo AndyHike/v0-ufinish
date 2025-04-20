@@ -29,5 +29,25 @@
     "orders": "Orders",
     "adminDashboard": "Admin Dashboard",
     "logout": "Logout"
+  },
+  "Search": {
+    "title": "Search",
+    "placeholder": "Search phones, brands...",
+    "search": "Search",
+    "clear": "Clear",
+    "results": "Results",
+    "brand": "Brand",
+    "model": "Model",
+    "service": "Service"
+  },
+  "Hero": {
+    "title": "Professional Mobile Phone Repair",
+    "subtitle": "Fast and quality repair of your phone with warranty. Trust your device to professionals.",
+    "servicesButton": "Our Services",
+    "contactButton": "Contact Us",
+    "feature1": "Free Diagnostics",
+    "feature2": "Warranty on All Repairs",
+    "feature3": "Same-Day Repair Service",
+    "imageAlt": "Phone Repair"
   }
 }

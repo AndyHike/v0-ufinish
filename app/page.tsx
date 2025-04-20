@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation"
-import { defaultLocale } from "./i18n"
+import { defaultLocale } from "../i18n.js"
 
-// This is the root page that redirects to the default locale
 export default function Home() {
   redirect(`/${defaultLocale}`)
 }

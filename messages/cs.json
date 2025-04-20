@@ -29,5 +29,25 @@
     "orders": "Objednávky",
     "adminDashboard": "Administrátorský panel",
     "logout": "Odhlásit se"
+  },
+  "Search": {
+    "title": "Hledat",
+    "placeholder": "Hledat telefony, značky...",
+    "search": "Hledat",
+    "clear": "Vymazat",
+    "results": "Výsledky",
+    "brand": "Značka",
+    "model": "Model",
+    "service": "Služba"
+  },
+  "Hero": {
+    "title": "Profesionální oprava mobilních telefonů",
+    "subtitle": "Rychlá a kvalitní oprava vašeho telefonu s garancí. Svěřte svůj přístroj profesionálům.",
+    "servicesButton": "Naše služby",
+    "contactButton": "Kontaktovat",
+    "feature1": "Bezplatná diagnostika",
+    "feature2": "Záruka na všechny opravy",
+    "feature3": "Rychlá oprava během dne",
+    "imageAlt": "Oprava telefonu"
   }
 }
