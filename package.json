@@ -60,10 +60,10 @@
     "zod": "^3.24.1",
     "@auth/core": "latest",
     "nodemailer": "latest",
-    "@formatjs/intl-localematcher": "latest",
-    "negotiator": "latest",
     "next-intl": "latest",
-    "next-auth": "latest"
+    "next-auth": "latest",
+    "@formatjs/intl-localematcher": "latest",
+    "negotiator": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
