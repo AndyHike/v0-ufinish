@@ -6,8 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Check } from "lucide-react"
 
 export default function PricingPage() {
-  // Since we don't have pricing translations yet, we'll use the Services translations for the title
-  const t = useTranslations("Services")
+  const t = useTranslations("Pricing")
 
   // Mock pricing data
   const pricingData = [
@@ -24,15 +23,15 @@ export default function PricingPage() {
   // Mock pricing plans
   const plans = [
     {
-      name: "Basic",
-      price: "Free",
-      description: "Basic diagnostics and consultation",
+      name: t("basic"),
+      price: t("free"),
+      description: t("basicDescription"),
       features: ["Device inspection", "Problem identification", "Repair cost estimate", "No obligation consultation"],
     },
     {
-      name: "Standard",
+      name: t("standard"),
       price: "from 500 ₴",
-      description: "Most common repairs and services",
+      description: t("standardDescription"),
       features: [
         "All Basic features",
         "Common hardware repairs",
@@ -42,9 +41,9 @@ export default function PricingPage() {
       ],
     },
     {
-      name: "Premium",
+      name: t("premium"),
       price: "from 1500 ₴",
-      description: "Complex repairs with extended warranty",
+      description: t("premiumDescription"),
       features: [
         "All Standard features",
         "Complex hardware repairs",
@@ -59,18 +58,18 @@ export default function PricingPage() {
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="mb-12 text-center">
-        <h1 className="text-4xl font-bold">Pricing</h1>
-        <p className="mt-4 text-xl text-muted-foreground">Transparent pricing for all our repair services</p>
+        <h1 className="text-4xl font-bold">{t("pricing")}</h1>
+        <p className="mt-4 text-xl text-muted-foreground">{t("pricingSubtitle")}</p>
       </div>
 
       <div className="mb-16">
-        <h2 className="mb-6 text-2xl font-bold">Service Rates</h2>
+        <h2 className="mb-6 text-2xl font-bold">{t("serviceRates")}</h2>
         <Table>
-          <TableCaption>Note: Final prices may vary based on device model and damage severity</TableCaption>
+          <TableCaption>{t("priceNote")}</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[70%]">Service</TableHead>
-              <TableHead>Price Range</TableHead>
+              <TableHead className="w-[70%]">{t("service")}</TableHead>
+              <TableHead>{t("priceRange")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -85,7 +84,7 @@ export default function PricingPage() {
       </div>
 
       <div>
-        <h2 className="mb-6 text-2xl font-bold">Repair Plans</h2>
+        <h2 className="mb-6 text-2xl font-bold">{t("repairPlans")}</h2>
         <div className="grid gap-6 md:grid-cols-3">
           {plans.map((plan, index) => (
             <Card key={index}>

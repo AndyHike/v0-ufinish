@@ -50,7 +50,10 @@ export function Header() {
                         <Link
                           href={item.href}
                           className={`block rounded-md px-3 py-2 text-sm hover:bg-accent ${
-                            pathname === item.href ? "font-medium text-foreground" : "text-muted-foreground"
+                            (item.href === `/${locale}` && pathname === `/${locale}`) ||
+                            (item.href !== `/${locale}` && pathname.startsWith(item.href))
+                              ? "font-medium text-foreground"
+                              : "text-muted-foreground"
                           }`}
                         >
                           {item.name}
@@ -76,7 +79,10 @@ export function Header() {
               key={item.href}
               href={item.href}
               className={`text-sm ${
-                pathname === item.href ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground"
+                (item.href === `/${locale}` && pathname === `/${locale}`) ||
+                (item.href !== `/${locale}` && pathname.startsWith(item.href))
+                  ? "font-medium text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {item.name}
