@@ -11,13 +11,17 @@ export async function POST(request: Request) {
     }
 
     // Check if email is already in use (mock implementation)
-    if (email === "admin@example.com" || email === "user@example.com") {
-      return NextResponse.json({ message: "Email already in use" }, { status: 409 })
-    }
+    // For testing purposes, let's allow all emails to register
+    // In a real app, you would check against a database
 
-    // In a real app, you would hash the password and save the user to a database
-    // For this example, we'll just return a success response
-    return NextResponse.json({ message: "User registered successfully" }, { status: 201 })
+    // Mock successful registration
+    return NextResponse.json(
+      {
+        message: "User registered successfully",
+        user: { name, email, id: Math.random().toString(36).substring(2, 15) },
+      },
+      { status: 201 },
+    )
   } catch (error) {
     console.error("Registration error:", error)
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })

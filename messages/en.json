@@ -100,10 +100,17 @@
   "Contact": {
     "title": "Contact Us",
     "subtitle": "Have questions? Write to us and we will contact you as soon as possible.",
+    "contactUs": "Contact Us",
+    "contactUsDescription": "Fill out the form and we'll get back to you as soon as possible.",
     "phone": "Phone",
     "email": "Email",
     "address": "Address",
     "addressDetails": "Main Street 1, Kyiv, Ukraine",
+    "workingHours": "Working Hours",
+    "workingHoursWeekdays": "Monday - Friday: 9:00 - 18:00",
+    "workingHoursSaturday": "Saturday: 10:00 - 16:00",
+    "workingHoursSunday": "Sunday: Closed",
+    "ourLocation": "Our Location",
     "mapTitle": "Location Map",
     "nameLabel": "Name",
     "namePlaceholder": "Enter your name",
@@ -220,11 +227,6 @@
     "storyPart1": "Founded in 2010, our phone repair service began with a simple mission: to provide fast, reliable, and affordable repairs for all types of mobile devices. What started as a small workshop has grown into a trusted service center with multiple locations.",
     "storyPart2": "We take pride in our technical expertise, quality parts, and commitment to customer satisfaction. Every repair is backed by our warranty, giving you peace of mind that your device is in good hands.",
     "storyPart3": "Today, we continue to expand our services to meet the evolving needs of our customers, while maintaining the personalized approach that has been our hallmark from the beginning.",
-    "ourShop": "Our repair shop",
-    "meetOurTeam": "Meet Our Team",
-    "founder": "Founder & Master Technician",
-    "seniorSpecialist": "Senior Repair Specialist",
-    "customerManager": "Customer Service Manager",
-    "techSupport": "Technical Support Specialist"
+    "ourShop": "Our repair shop"
   }
 }

@@ -44,7 +44,7 @@ export default function ContactPage() {
           <Card>
             <CardHeader>
               <CardTitle>{t("contactUs")}</CardTitle>
-              <CardDescription>Fill out the form and we'll get back to you as soon as possible.</CardDescription>
+              <CardDescription>{t("contactUsDescription")}</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -124,10 +124,10 @@ export default function ContactPage() {
               <div className="flex items-start space-x-4">
                 <Clock className="mt-1 h-5 w-5 text-primary" />
                 <div>
-                  <h3 className="font-semibold">Working Hours</h3>
-                  <p className="text-sm text-muted-foreground">Monday - Friday: 9:00 - 18:00</p>
-                  <p className="text-sm text-muted-foreground">Saturday: 10:00 - 16:00</p>
-                  <p className="text-sm text-muted-foreground">Sunday: Closed</p>
+                  <h3 className="font-semibold">{t("workingHours")}</h3>
+                  <p className="text-sm text-muted-foreground">{t("workingHoursWeekdays")}</p>
+                  <p className="text-sm text-muted-foreground">{t("workingHoursSaturday")}</p>
+                  <p className="text-sm text-muted-foreground">{t("workingHoursSunday")}</p>
                 </div>
               </div>
             </CardContent>
@@ -136,7 +136,7 @@ export default function ContactPage() {
       </div>
 
       <div className="mt-12">
-        <h2 className="mb-6 text-2xl font-bold">Our Location</h2>
+        <h2 className="mb-6 text-2xl font-bold">{t("ourLocation")}</h2>
         <div className="aspect-video overflow-hidden rounded-lg">
           <iframe
             title={t("mapTitle")}

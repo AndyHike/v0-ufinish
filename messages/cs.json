@@ -100,10 +100,17 @@
   "Contact": {
     "title": "Kontaktujte nás",
     "subtitle": "Máte otázky? Napište nám a my vás budeme kontaktovat co nejdříve.",
+    "contactUs": "Kontaktujte nás",
+    "contactUsDescription": "Vyplňte formulář a my vás budeme kontaktovat co nejdříve.",
     "phone": "Telefon",
     "email": "E-mail",
     "address": "Adresa",
     "addressDetails": "Václavské náměstí 1, Praha, Česká republika",
+    "workingHours": "Otevírací doba",
+    "workingHoursWeekdays": "Pondělí - Pátek: 9:00 - 18:00",
+    "workingHoursSaturday": "Sobota: 10:00 - 16:00",
+    "workingHoursSunday": "Neděle: Zavřeno",
+    "ourLocation": "Naše lokalita",
     "mapTitle": "Mapa umístění",
     "nameLabel": "Jméno",
     "namePlaceholder": "Zadejte své jméno",
@@ -220,11 +227,6 @@
     "storyPart1": "Založena v roce 2010, naše služba oprav telefonů začala s jednoduchou misí: poskytovat rychlé, spolehlivé a cenově dostupné opravy pro všechny typy mobilních zařízení. To, co začalo jako malá dílna, se rozrostlo v důvěryhodné servisní centrum s několika pobočkami.",
     "storyPart2": "Jsme hrdí na naše technické znalosti, kvalitní díly a závazek k spokojenosti zákazníků. Každá oprava je podpořena naší zárukou, což vám dává jistotu, že vaše zařízení je v dobrých rukou.",
     "storyPart3": "Dnes pokračujeme v rozšiřování našich služeb, abychom vyhověli vyvíjejícím se potřebám našich zákazníků, přičemž si zachováváme personalizovaný přístup, který byl naší vizitkou od začátku.",
-    "ourShop": "Naše opravna",
-    "meetOurTeam": "Seznamte se s naším týmem",
-    "founder": "Zakladatel a hlavní technik",
-    "seniorSpecialist": "Vedoucí specialista oprav",
-    "customerManager": "Manažer zákaznického servisu",
-    "techSupport": "Specialista technické podpory"
+    "ourShop": "Naše opravna"
   }
 }
