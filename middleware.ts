@@ -8,6 +8,8 @@ export default createMiddleware({
   defaultLocale,
   // The default locale will be used when visiting a non-localized path
   localePrefix: "as-needed",
+  // This function is called when a locale is detected
+  localeDetection: false, // Disable automatic locale detection to ensure we only use the URL locale
 })
 
 export const config = {

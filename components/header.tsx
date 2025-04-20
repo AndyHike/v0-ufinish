@@ -26,6 +26,14 @@ export function Header() {
     { name: t("contact"), href: `/${locale}/contact` },
   ]
 
+  // Helper function to check if a path is active
+  const isActive = (path: string) => {
+    if (path === `/${locale}`) {
+      return pathname === `/${locale}`
+    }
+    return pathname.startsWith(path)
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
@@ -50,10 +58,7 @@ export function Header() {
                         <Link
                           href={item.href}
                           className={`block rounded-md px-3 py-2 text-sm hover:bg-accent ${
-                            (item.href === `/${locale}` && pathname === `/${locale}`) ||
-                            (item.href !== `/${locale}` && pathname.startsWith(item.href))
-                              ? "font-medium text-foreground"
-                              : "text-muted-foreground"
+                            isActive(item.href) ? "font-medium text-foreground" : "text-muted-foreground"
                           }`}
                         >
                           {item.name}
@@ -79,10 +84,7 @@ export function Header() {
               key={item.href}
               href={item.href}
               className={`text-sm ${
-                (item.href === `/${locale}` && pathname === `/${locale}`) ||
-                (item.href !== `/${locale}` && pathname.startsWith(item.href))
-                  ? "font-medium text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                isActive(item.href) ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {item.name}

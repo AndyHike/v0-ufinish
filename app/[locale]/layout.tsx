@@ -19,7 +19,7 @@ export default async function LocaleLayout({
   }
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
+    <NextIntlClientProvider locale={locale} messages={messages} timeZone="Europe/Kiev">
       <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-1">{children}</main>
