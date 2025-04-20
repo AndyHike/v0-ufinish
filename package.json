@@ -60,8 +60,8 @@
     "zod": "^3.24.1",
     "@auth/core": "latest",
     "nodemailer": "latest",
-    "next-intl": "latest",
     "next-auth": "latest",
+    "next-intl": "latest",
     "@formatjs/intl-localematcher": "latest",
     "negotiator": "latest"
   },

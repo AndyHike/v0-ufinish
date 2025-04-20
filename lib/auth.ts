@@ -63,7 +63,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: "/auth/signin",
+    signIn: "/{locale}/auth/signin", // Update to use dynamic locale
   },
   session: {
     strategy: "jwt",

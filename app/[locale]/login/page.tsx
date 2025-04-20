@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl" // Add useLocale
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,6 +16,7 @@ import { Eye, EyeOff, Smartphone } from "lucide-react"
 
 export default function LoginPage() {
   const t = useTranslations("Login")
+  const locale = useLocale() // Get current locale
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
@@ -37,9 +38,9 @@ export default function LoginPage() {
 
     // Redirect to appropriate dashboard
     if (activeTab === "admin") {
-      router.push("/admin")
+      router.push(`/${locale}/admin`)
     } else {
-      router.push("/profile")
+      router.push(`/${locale}/profile`)
     }
 
     setIsLoading(false)
@@ -75,7 +76,7 @@ export default function LoginPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="user-password">{t("passwordLabel")}</Label>
-                      <Link href="/forgot-password" className="text-xs text-primary hover:underline">
+                      <Link href={`/${locale}/forgot-password`} className="text-xs text-primary hover:underline">
                         {t("forgotPassword")}
                       </Link>
                     </div>
@@ -112,7 +113,7 @@ export default function LoginPage() {
             </Card>
             <div className="mt-4 text-center text-sm">
               {t("noAccount")}{" "}
-              <Link href="/register" className="text-primary hover:underline">
+              <Link href={`/${locale}/register`} className="text-primary hover:underline">
                 {t("register")}
               </Link>
             </div>
@@ -132,7 +133,7 @@ export default function LoginPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="admin-password">{t("passwordLabel")}</Label>
-                      <Link href="/forgot-password" className="text-xs text-primary hover:underline">
+                      <Link href={`/${locale}/forgot-password`} className="text-xs text-primary hover:underline">
                         {t("forgotPassword")}
                       </Link>
                     </div>

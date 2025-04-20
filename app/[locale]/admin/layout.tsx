@@ -4,8 +4,8 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { usePathname, useRouter } from "next/navigation"
+import { useTranslations, useLocale } from "next-intl" // Add useLocale
 import { Button } from "@/components/ui/button"
 import {
   Sidebar,
@@ -27,44 +27,46 @@ export default function AdminLayout({
 }) {
   const t = useTranslations("Admin")
   const pathname = usePathname()
+  const locale = useLocale() // Get current locale
+  const router = useRouter()
   const [isLogoutLoading, setIsLogoutLoading] = useState(false)
 
   const handleLogout = async () => {
     setIsLogoutLoading(true)
     // Simulate logout
     await new Promise((resolve) => setTimeout(resolve, 1000))
-    window.location.href = "/login"
+    router.push(`/${locale}/auth/signin`)
   }
 
   const navigation = [
     {
       name: t("dashboard"),
-      href: "/admin",
+      href: `/${locale}/admin`,
       icon: LayoutDashboard,
     },
     {
       name: t("brands"),
-      href: "/admin/brands",
+      href: `/${locale}/admin/brands`,
       icon: Tag,
     },
     {
       name: t("models"),
-      href: "/admin/models",
+      href: `/${locale}/admin/models`,
       icon: Smartphone,
     },
     {
       name: t("discounts"),
-      href: "/admin/discounts",
+      href: `/${locale}/admin/discounts`,
       icon: Percent,
     },
     {
       name: t("users"),
-      href: "/admin/users",
+      href: `/${locale}/admin/users`,
       icon: Users,
     },
     {
       name: t("settings"),
-      href: "/admin/settings",
+      href: `/${locale}/admin/settings`,
       icon: Settings,
     },
   ]
@@ -74,7 +76,7 @@ export default function AdminLayout({
       <div className="flex min-h-screen">
         <Sidebar>
           <SidebarHeader className="flex h-14 items-center border-b px-4">
-            <Link href="/admin" className="flex items-center gap-2 font-semibold">
+            <Link href={`/${locale}/admin`} className="flex items-center gap-2 font-semibold">
               <Smartphone className="h-5 w-5" />
               <span>{t("adminPanel")}</span>
             </Link>

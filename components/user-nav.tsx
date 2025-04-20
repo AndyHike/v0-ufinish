@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl" // Add useLocale
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -21,13 +21,14 @@ const mockUser = null // Change to an object with user data to test logged-in st
 
 export function UserNav() {
   const t = useTranslations("UserNav")
+  const locale = useLocale() // Get current locale
   const [user, setUser] = useState(mockUser)
   const [isOpen, setIsOpen] = useState(false)
 
   if (!user) {
     return (
       <Button variant="outline" size="sm" asChild>
-        <Link href="/login">
+        <Link href={`/${locale}/auth/signin`}>
           <LogIn className="mr-2 h-4 w-4" />
           {t("login")}
         </Link>
@@ -57,14 +58,14 @@ export function UserNav() {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/profile">{t("profile")}</Link>
+            <Link href={`/${locale}/profile`}>{t("profile")}</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/orders">{t("orders")}</Link>
+            <Link href={`/${locale}/orders`}>{t("orders")}</Link>
           </DropdownMenuItem>
           {user.isAdmin && (
             <DropdownMenuItem asChild>
-              <Link href="/admin">{t("adminDashboard")}</Link>
+              <Link href={`/${locale}/admin`}>{t("adminDashboard")}</Link>
             </DropdownMenuItem>
           )}
         </DropdownMenuGroup>
