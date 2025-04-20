@@ -2,6 +2,7 @@ import type React from "react"
 import { NextIntlClientProvider } from "next-intl"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { getCurrentUser } from "@/lib/auth/session"
 
 export default async function LocaleLayout({
   children,
@@ -18,10 +19,12 @@ export default async function LocaleLayout({
     messages = {}
   }
 
+  const user = await getCurrentUser()
+
   return (
     <NextIntlClientProvider locale={locale} messages={messages} timeZone="Europe/Kiev">
       <div className="flex min-h-screen flex-col">
-        <Header />
+        <Header user={user} />
         <main className="flex-1">{children}</main>
         <Footer />
       </div>

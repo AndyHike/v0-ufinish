@@ -4,22 +4,20 @@ import type React from "react"
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 
 interface AuthFormProps {
   children: React.ReactNode
   action: (formData: FormData) => Promise<{ success: boolean; message?: string }>
   successRedirect?: string
+  submitText?: string
 }
 
-export function AuthForm({
-  children,
-  action,
-  successRedirect,
-  submitText = "Submit",
-}: AuthFormProps & { submitText?: string }) {
+export function AuthForm({ children, action, successRedirect, submitText }: AuthFormProps) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const t = useTranslations("Auth")
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -32,7 +30,7 @@ export function AuthForm({
         const result = await action(formData)
 
         if (!result.success) {
-          setError(result.message || "Something went wrong")
+          setError(result.message || t("somethingWentWrong"))
           return
         }
 
@@ -42,7 +40,7 @@ export function AuthForm({
         }
       } catch (error) {
         console.error("Authentication error:", error)
-        setError("An unexpected error occurred. Please try again.")
+        setError(t("unexpectedError"))
       }
     })
   }
@@ -58,7 +56,7 @@ export function AuthForm({
         disabled={isPending}
         className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
       >
-        {isPending ? "Processing..." : submitText}
+        {isPending ? t("processing") : submitText || t("submit")}
       </button>
     </form>
   )

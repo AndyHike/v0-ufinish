@@ -21,14 +21,7 @@ export default async function SignIn() {
           </p>
         </div>
 
-        <AuthForm
-          action={async (formData) => {
-            "use server"
-            return login(formData)
-          }}
-          successRedirect={`/${locale}`}
-          submitText={t("signIn")}
-        >
+        <AuthForm action={login} successRedirect={`/${locale}`} submitText={t("signIn")}>
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium">
               {t("email")}

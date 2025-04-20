@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useParams } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -10,8 +9,9 @@ import { Menu, Smartphone, Search } from "lucide-react"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { SearchDialog } from "@/components/search-dialog"
 import { UserNav } from "@/components/user-nav"
+import { useState } from "react"
 
-export function Header() {
+export function Header({ user }) {
   const t = useTranslations("Header")
   const pathname = usePathname()
   const params = useParams()
@@ -96,7 +96,7 @@ export function Header() {
             <Search className="h-5 w-5" />
           </Button>
           <LanguageSwitcher className="hidden md:flex" />
-          <UserNav />
+          <UserNav user={user} />
         </div>
       </div>
       <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />

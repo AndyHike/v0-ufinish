@@ -148,7 +148,9 @@
     "sendResetLink": "Send reset link",
     "backToSignIn": "Back to sign in",
     "unexpectedError": "An unexpected error occurred",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "submit": "Submit",
+    "somethingWentWrong": "Something went wrong. Please try again."
   },
   "Login": {
     "title": "Account Login",

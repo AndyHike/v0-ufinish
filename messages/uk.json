@@ -149,19 +149,8 @@
     "backToSignIn": "Повернутися до входу",
     "unexpectedError": "Сталася неочікувана помилка",
     "processing": "Обробка...",
-    "signingIn": "Вхід...",
-    "signUp": "Зареєструватися",
-    "signInDescription": "Увійдіть у свій обліковий запис",
-    "signUpDescription": "Створіть новий обліковий запис",
-    "fullName": "Повне ім'я",
-    "signingUp": "Реєстрація...",
-    "error": "Помилка",
-    "invalidCredentials": "Невірна електронна пошта або пароль",
-    "somethingWentWrong": "Щось пішло не так. Спробуйте ще раз.",
-    "success": "Успіх",
-    "accountCreated": "Обліковий запис успішно створено",
-    "registrationFailed": "Не вдалося зареєструватися",
-    "passwordTooShort": "Пароль повинен містити щонайменше 8 символів"
+    "submit": "Надіслати",
+    "somethingWentWrong": "Щось пішло не так. Спробуйте ще раз."
   },
   "Login": {
     "title": "Вхід до облікового запису",

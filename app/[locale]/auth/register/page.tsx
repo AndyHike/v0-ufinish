@@ -22,10 +22,7 @@ export default async function Register() {
         </div>
 
         <AuthForm
-          action={async (formData) => {
-            "use server"
-            return register(formData)
-          }}
+          action={register}
           successRedirect={`/${locale}/auth/signin?registered=true`}
           submitText={t("register")}
         >

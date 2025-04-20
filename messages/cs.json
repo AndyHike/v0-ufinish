@@ -149,6 +149,8 @@
     "backToSignIn": "Zpět na přihlášení",
     "unexpectedError": "Došlo k neočekávané chybě",
     "processing": "Zpracování...",
+    "submit": "Odeslat",
+    "somethingWentWrong": "Něco se pokazilo. Zkuste to prosím znovu.",
     "signInDescription": "Přihlaste se ke svému účtu",
     "signUpDescription": "Vytvořte si nový účet",
     "fullName": "Celé jméno",
@@ -156,7 +158,6 @@
     "signingUp": "Registrace...",
     "error": "Chyba",
     "invalidCredentials": "Neplatný e-mail nebo heslo",
-    "somethingWentWrong": "Něco se pokazilo. Zkuste to prosím znovu.",
     "success": "Úspěch",
     "accountCreated": "Účet byl úspěšně vytvořen",
     "registrationFailed": "Registrace se nezdařila"
