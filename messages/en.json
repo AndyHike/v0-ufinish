@@ -1,0 +1,33 @@
+{
+  "Header": {
+    "siteTitle": "Phone Repair",
+    "home": "Home",
+    "services": "Services",
+    "pricing": "Pricing",
+    "about": "About",
+    "contact": "Contact",
+    "openMenu": "Open menu",
+    "search": "Search"
+  },
+  "Footer": {
+    "siteTitle": "Phone Repair",
+    "description": "Professional mobile phone repair with quality guarantee.",
+    "quickLinks": "Quick Links",
+    "home": "Home",
+    "services": "Services",
+    "pricing": "Pricing",
+    "about": "About",
+    "contact": "Contact",
+    "contactUs": "Contact Us",
+    "address": "Main Street 1, Kyiv, Ukraine",
+    "followUs": "Follow Us",
+    "allRightsReserved": "All rights reserved."
+  },
+  "UserNav": {
+    "login": "Login",
+    "profile": "Profile",
+    "orders": "Orders",
+    "adminDashboard": "Admin Dashboard",
+    "logout": "Logout"
+  }
+}

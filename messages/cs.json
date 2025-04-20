@@ -1,0 +1,33 @@
+{
+  "Header": {
+    "siteTitle": "Oprava Telefonů",
+    "home": "Domů",
+    "services": "Služby",
+    "pricing": "Ceník",
+    "about": "O nás",
+    "contact": "Kontakt",
+    "openMenu": "Otevřít menu",
+    "search": "Hledat"
+  },
+  "Footer": {
+    "siteTitle": "Oprava Telefonů",
+    "description": "Profesionální oprava mobilních telefonů s garancí kvality.",
+    "quickLinks": "Rychlé odkazy",
+    "home": "Domů",
+    "services": "Služby",
+    "pricing": "Ceník",
+    "about": "O nás",
+    "contact": "Kontakt",
+    "contactUs": "Kontaktujte nás",
+    "address": "Václavské náměstí 1, Praha, Česká republika",
+    "followUs": "Sledujte nás",
+    "allRightsReserved": "Všechna práva vyhrazena."
+  },
+  "UserNav": {
+    "login": "Přihlásit se",
+    "profile": "Profil",
+    "orders": "Objednávky",
+    "adminDashboard": "Administrátorský panel",
+    "logout": "Odhlásit se"
+  }
+}

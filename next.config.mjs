@@ -1,6 +1,6 @@
 import createNextIntlPlugin from 'next-intl/plugin';
 
-const withNextIntl = createNextIntlPlugin();
+const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -14,12 +14,6 @@ const nextConfig = {
   // Optimize images for static export
   images: {
     unoptimized: true,
-  },
-  // Increase build timeout
-  experimental: {
-    turbotrace: {
-      logLevel: 'error'
-    }
   },
   // Disable source maps in production to reduce build size
   productionBrowserSourceMaps: false,
