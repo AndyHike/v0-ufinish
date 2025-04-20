@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
-import { useLocale } from "next-intl"
+import { useRouter, usePathname, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Globe } from "lucide-react"
@@ -14,7 +13,8 @@ interface LanguageSwitcherProps {
 export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const locale = useLocale()
+  const params = useParams()
+  const currentLocale = params.locale as string
   const [isOpen, setIsOpen] = useState(false)
 
   const languages = [
@@ -25,7 +25,7 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
 
   const handleLanguageChange = (newLocale: string) => {
     // Extract the path without the locale
-    const pathWithoutLocale = pathname.replace(/^\/(uk|cs|en)/, "") || "/"
+    const pathWithoutLocale = pathname.replace(/^\/[^/]+/, "") || "/"
 
     // Navigate to the new locale path
     router.push(`/${newLocale}${pathWithoutLocale}`)
@@ -45,7 +45,7 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
           <DropdownMenuItem
             key={language.code}
             onClick={() => handleLanguageChange(language.code)}
-            className={locale === language.code ? "font-medium bg-accent" : ""}
+            className={currentLocale === language.code ? "font-medium bg-accent" : ""}
           >
             {language.name}
           </DropdownMenuItem>

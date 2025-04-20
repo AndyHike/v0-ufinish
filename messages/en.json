@@ -49,5 +49,73 @@
     "feature2": "Warranty on All Repairs",
     "feature3": "Same-Day Repair Service",
     "imageAlt": "Phone Repair"
+  },
+  "Services": {
+    "title": "Our Services",
+    "subtitle": "We offer a wide range of mobile phone repair services.",
+    "service1": {
+      "title": "Screen Replacement",
+      "description": "Professional replacement of broken or damaged screens."
+    },
+    "service2": {
+      "title": "Battery Replacement",
+      "description": "Restore your phone's battery life with a new battery."
+    },
+    "service3": {
+      "title": "Connectivity Issues",
+      "description": "Fix Wi-Fi, Bluetooth, and other connectivity issues."
+    },
+    "service4": {
+      "title": "Water Damage",
+      "description": "Restore phones after water damage."
+    },
+    "learnMore": "Learn More",
+    "allServicesButton": "All Services"
+  },
+  "Brands": {
+    "title": "Brands We Work With",
+    "subtitle": "We repair phones of all popular brands.",
+    "allBrandsButton": "All Brands"
+  },
+  "Testimonials": {
+    "title": "Customer Testimonials",
+    "subtitle": "See what our customers say about our services.",
+    "testimonial1": {
+      "name": "Alex Peterson",
+      "content": "Very satisfied with the quality of repair. My iPhone works like new after screen replacement."
+    },
+    "testimonial2": {
+      "name": "Maria Johnson",
+      "content": "Fast and professional service. They replaced the battery in 30 minutes, and now my phone lasts all day."
+    },
+    "testimonial3": {
+      "name": "John Smith",
+      "content": "Excellent service at a reasonable price. I recommend to anyone having phone issues."
+    },
+    "testimonial4": {
+      "name": "Natalie Brown",
+      "content": "They saved my phone after I dropped it in water. Very grateful for the quick help!"
+    }
+  },
+  "Contact": {
+    "title": "Contact Us",
+    "subtitle": "Have questions? Write to us and we will contact you as soon as possible.",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "addressDetails": "Main Street 1, Kyiv, Ukraine",
+    "mapTitle": "Location Map",
+    "nameLabel": "Name",
+    "namePlaceholder": "Enter your name",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Enter your email",
+    "phoneLabel": "Phone",
+    "phonePlaceholder": "Enter your phone number",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Enter your message",
+    "send": "Send",
+    "sending": "Sending...",
+    "successTitle": "Message Sent",
+    "successMessage": "Thank you for your message. We will contact you as soon as possible."
   }
 }

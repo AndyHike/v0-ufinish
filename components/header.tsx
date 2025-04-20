@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -14,14 +14,16 @@ import { UserNav } from "@/components/user-nav"
 export function Header() {
   const t = useTranslations("Header")
   const pathname = usePathname()
+  const params = useParams()
+  const locale = params.locale as string
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   const navigation = [
-    { name: t("home"), href: "/" },
-    { name: t("services"), href: "/services" },
-    { name: t("pricing"), href: "/pricing" },
-    { name: t("about"), href: "/about" },
-    { name: t("contact"), href: "/contact" },
+    { name: t("home"), href: `/${locale}` },
+    { name: t("services"), href: `/${locale}/services` },
+    { name: t("pricing"), href: `/${locale}/pricing` },
+    { name: t("about"), href: `/${locale}/about` },
+    { name: t("contact"), href: `/${locale}/contact` },
   ]
 
   return (
@@ -63,7 +65,7 @@ export function Header() {
               </div>
             </SheetContent>
           </Sheet>
-          <Link href="/" className="flex items-center gap-2">
+          <Link href={`/${locale}`} className="flex items-center gap-2">
             <Smartphone className="h-5 w-5" />
             <span className="hidden font-semibold md:inline-block">{t("siteTitle")}</span>
           </Link>

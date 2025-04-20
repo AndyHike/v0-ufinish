@@ -49,5 +49,73 @@
     "feature2": "Záruka na všechny opravy",
     "feature3": "Rychlá oprava během dne",
     "imageAlt": "Oprava telefonu"
+  },
+  "Services": {
+    "title": "Naše služby",
+    "subtitle": "Nabízíme širokou škálu služeb oprav mobilních telefonů.",
+    "service1": {
+      "title": "Výměna displeje",
+      "description": "Profesionální výměna rozbitého nebo poškozeného displeje."
+    },
+    "service2": {
+      "title": "Výměna baterie",
+      "description": "Obnovení výdrže vašeho telefonu s novou baterií."
+    },
+    "service3": {
+      "title": "Problémy s připojením",
+      "description": "Oprava Wi-Fi, Bluetooth a dalších problémů s připojením."
+    },
+    "service4": {
+      "title": "Ochrana proti vodě",
+      "description": "Obnova telefonů po poškození vodou."
+    },
+    "learnMore": "Zjistit více",
+    "allServicesButton": "Všechny služby"
+  },
+  "Brands": {
+    "title": "Značky, se kterými pracujeme",
+    "subtitle": "Opravujeme telefony všech populárních značek.",
+    "allBrandsButton": "Všechny značky"
+  },
+  "Testimonials": {
+    "title": "Recenze zákazníků",
+    "subtitle": "Zjistěte, co říkají naši zákazníci o našich službách.",
+    "testimonial1": {
+      "name": "Jan Novák",
+      "content": "Velmi spokojen s kvalitou opravy. Můj iPhone funguje jako nový po výměně displeje."
+    },
+    "testimonial2": {
+      "name": "Marie Svobodová",
+      "content": "Rychlý a profesionální servis. Vyměnili baterii za 30 minut a teď můj telefon vydrží celý den."
+    },
+    "testimonial3": {
+      "name": "Petr Dvořák",
+      "content": "Vynikající služby za rozumnou cenu. Doporučuji všem, kteří mají problémy s telefonem."
+    },
+    "testimonial4": {
+      "name": "Lucie Nováková",
+      "content": "Zachránili můj telefon poté, co jsem ho upustila do vody. Velmi vděčná za rychlou pomoc!"
+    }
+  },
+  "Contact": {
+    "title": "Kontaktujte nás",
+    "subtitle": "Máte otázky? Napište nám a my vás budeme kontaktovat co nejdříve.",
+    "phone": "Telefon",
+    "email": "E-mail",
+    "address": "Adresa",
+    "addressDetails": "Václavské náměstí 1, Praha, Česká republika",
+    "mapTitle": "Mapa umístění",
+    "nameLabel": "Jméno",
+    "namePlaceholder": "Zadejte své jméno",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "Zadejte svůj e-mail",
+    "phoneLabel": "Telefon",
+    "phonePlaceholder": "Zadejte své telefonní číslo",
+    "messageLabel": "Zpráva",
+    "messagePlaceholder": "Zadejte svou zprávu",
+    "send": "Odeslat",
+    "sending": "Odesílání...",
+    "successTitle": "Zpráva odeslána",
+    "successMessage": "Děkujeme za vaši zprávu. Budeme vás kontaktovat co nejdříve."
   }
 }
