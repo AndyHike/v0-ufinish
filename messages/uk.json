@@ -135,7 +135,7 @@
     "name": "Ім'я",
     "namePlaceholder": "Введіть ваше ім'я",
     "email": "Електронна пошта",
-    "emailPlaceholder": "Введіть вашу електронну пошту",
+    "emailPlaceholder": "ваша@пошта.com",
     "phone": "Телефон",
     "phonePlaceholder": "Введіть ваш номер телефону",
     "password": "Пароль",

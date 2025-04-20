@@ -126,23 +126,29 @@
     "successMessage": "Thank you for your message. We will contact you as soon as possible."
   },
   "Auth": {
-    "signIn": "Sign In",
-    "signUp": "Sign Up",
-    "signInDescription": "Sign in to your account",
-    "signUpDescription": "Create a new account",
-    "email": "Email",
-    "password": "Password",
-    "forgotPassword": "Forgot password?",
+    "createAccount": "Create an account",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "signInToAccount": "Sign in to your account",
+    "noAccount": "Don't have an account?",
+    "register": "Register",
     "name": "Name",
-    "fullName": "Full name",
-    "signingIn": "Signing in...",
-    "signingUp": "Signing up...",
-    "error": "Error",
-    "invalidCredentials": "Invalid email or password",
-    "somethingWentWrong": "Something went wrong. Please try again.",
-    "success": "Success",
-    "accountCreated": "Account created successfully",
-    "registrationFailed": "Registration failed"
+    "namePlaceholder": "Enter your name",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "phone": "Phone",
+    "phonePlaceholder": "Enter your phone number",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "passwordRequirements": "Password must be at least 8 characters",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset password",
+    "enterEmail": "Enter your email to reset your password",
+    "sendResetLink": "Send reset link",
+    "backToSignIn": "Back to sign in",
+    "unexpectedError": "An unexpected error occurred",
+    "processing": "Processing..."
   },
   "Login": {
     "title": "Account Login",
@@ -226,7 +232,6 @@
     "ourStory": "Our Story",
     "storyPart1": "Founded in 2010, our phone repair service began with a simple mission: to provide fast, reliable, and affordable repairs for all types of mobile devices. What started as a small workshop has grown into a trusted service center with multiple locations.",
     "storyPart2": "We take pride in our technical expertise, quality parts, and commitment to customer satisfaction. Every repair is backed by our warranty, giving you peace of mind that your device is in good hands.",
-    "storyPart3": "Today, we continue to expand our services to meet the evolving needs of our customers, while maintaining the personalized approach that has been our hallmark from the beginning.",
-    "ourShop": "Our repair shop"
+    "storyPart3": "Today, we continue to expand our services to meet the evolving needs of our customers, while maintaining the personalized approach that has been our hallmark from the beginning."
   }
 }

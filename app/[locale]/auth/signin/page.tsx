@@ -1,7 +1,8 @@
 import { getTranslations } from "next-intl/server"
 import Link from "next/link"
-import { loginWithRedirect } from "@/app/actions/auth"
 import { getLocale } from "next-intl/server"
+import { AuthForm } from "@/components/auth/auth-form"
+import { login } from "@/lib/auth/actions"
 
 export default async function SignIn() {
   const locale = await getLocale()
@@ -20,37 +21,42 @@ export default async function SignIn() {
           </p>
         </div>
 
-        <form action={loginWithRedirect.bind(null, locale)} className="space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                {t("email")}
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                placeholder={t("emailPlaceholder")}
-              />
-            </div>
+        <AuthForm
+          action={async (formData) => {
+            "use server"
+            return login(formData)
+          }}
+          successRedirect={`/${locale}`}
+          submitText={t("signIn")}
+        >
+          <div className="space-y-2">
+            <label htmlFor="email" className="text-sm font-medium">
+              {t("email")}
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              placeholder={t("emailPlaceholder")}
+            />
+          </div>
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                {t("password")}
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                placeholder={t("passwordPlaceholder")}
-              />
-            </div>
+          <div className="space-y-2">
+            <label htmlFor="password" className="text-sm font-medium">
+              {t("password")}
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              placeholder={t("passwordPlaceholder")}
+            />
           </div>
 
           <div className="flex items-center justify-between">
@@ -72,14 +78,7 @@ export default async function SignIn() {
               </Link>
             </div>
           </div>
-
-          <button
-            type="submit"
-            className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            {t("signIn")}
-          </button>
-        </form>
+        </AuthForm>
       </div>
     </div>
   )
