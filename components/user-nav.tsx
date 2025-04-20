@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useTranslations, useLocale } from "next-intl" // Add useLocale
+import { useRouter } from "next/navigation"
+import { useTranslations, useLocale } from "next-intl"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -15,15 +16,32 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User, LogIn } from "lucide-react"
-
-// Mock user state - in a real app, this would come from your auth provider
-const mockUser = null // Change to an object with user data to test logged-in state
+import { logout } from "@/app/actions/auth"
 
 export function UserNav() {
   const t = useTranslations("UserNav")
-  const locale = useLocale() // Get current locale
-  const [user, setUser] = useState(mockUser)
+  const locale = useLocale()
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  // This would be replaced with a real user state from your auth context
+  const [user, setUser] = useState<any>(null)
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      await logout()
+      setUser(null)
+      router.push(`/${locale}`)
+      router.refresh()
+    } catch (error) {
+      console.error("Logout error:", error)
+    } finally {
+      setIsLoggingOut(false)
+      setIsOpen(false)
+    }
+  }
 
   if (!user) {
     return (
@@ -63,21 +81,15 @@ export function UserNav() {
           <DropdownMenuItem asChild>
             <Link href={`/${locale}/orders`}>{t("orders")}</Link>
           </DropdownMenuItem>
-          {user.isAdmin && (
+          {user.role === "admin" && (
             <DropdownMenuItem asChild>
               <Link href={`/${locale}/admin`}>{t("adminDashboard")}</Link>
             </DropdownMenuItem>
           )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => {
-            // Handle logout
-            setUser(null)
-            setIsOpen(false)
-          }}
-        >
-          {t("logout")}
+        <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+          {isLoggingOut ? t("loggingOut") : t("logout")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

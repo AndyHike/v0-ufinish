@@ -1,19 +1,44 @@
 import createMiddleware from "next-intl/middleware"
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 import { locales, defaultLocale } from "./i18n.js"
 
-export default createMiddleware({
-  // A list of all locales that are supported
+// Create the next-intl middleware
+const intlMiddleware = createMiddleware({
   locales,
-  // If this locale is matched, pathnames work without a prefix (e.g. `/about`)
   defaultLocale,
-  // The default locale will be used when visiting a non-localized path
-  localePrefix: "always", // Always include the locale prefix
-  // This function is called when a locale is detected
-  localeDetection: false, // Disable automatic locale detection to ensure we only use the URL locale
+  localePrefix: "always",
+  localeDetection: false,
 })
 
+export default async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Handle internationalization first
+  const response = intlMiddleware(request)
+
+  // Check for protected routes
+  if (pathname.includes("/profile") || pathname.includes("/admin")) {
+    const sessionId = request.cookies.get("session_id")?.value
+
+    if (!sessionId) {
+      // Get locale from URL
+      const locale = pathname.split("/")[1] || defaultLocale
+
+      // Redirect to login page
+      const redirectUrl = new URL(`/${locale}/auth/signin`, request.url)
+      redirectUrl.searchParams.set("redirect", pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // For admin routes, we should check if the user is an admin
+    // This would require a database lookup, which is not ideal in middleware
+    // For a more robust solution, this check should be done in the page itself
+  }
+
+  return response
+}
+
 export const config = {
-  // Skip all paths that should not be internationalized. This includes
-  // api routes, _next/static, _next/image, assets, favicon.ico, etc.
   matcher: ["/((?!api|_next|.*\\..*).*)"],
 }

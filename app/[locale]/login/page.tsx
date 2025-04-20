@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter, useParams } from "next/navigation"
+import { useParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,37 +13,39 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
 import { Eye, EyeOff, Smartphone } from "lucide-react"
+import { loginWithRedirect } from "@/app/actions/auth"
 
 export default function LoginPage() {
   const t = useTranslations("Login")
-  const { locale } = useParams()
-  const router = useRouter()
+  const { locale } = useParams() as { locale: string }
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [activeTab, setActiveTab] = useState("user")
+  const [error, setError] = useState("")
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
-    // Simulate login
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const formData = new FormData(e.currentTarget)
 
-    // Mock successful login
-    toast({
-      title: t("successTitle"),
-      description: activeTab === "admin" ? t("adminSuccessMessage") : t("userSuccessMessage"),
-    })
+      // Add role to form data based on active tab
+      formData.append("role", activeTab)
 
-    // Redirect to appropriate dashboard
-    if (activeTab === "admin") {
-      router.push(`/${locale}/admin`)
-    } else {
-      router.push(`/${locale}/profile`)
+      const result = await loginWithRedirect(formData, locale as string)
+
+      if (!result.success) {
+        setError(result.message || t("loginFailed"))
+      }
+    } catch (error) {
+      console.error("Login error:", error)
+      setError(t("somethingWentWrong"))
+    } finally {
+      setIsLoading(false)
     }
-
-    setIsLoading(false)
   }
 
   return (
@@ -71,7 +73,7 @@ export default function LoginPage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="user-email">{t("emailLabel")}</Label>
-                    <Input id="user-email" type="email" placeholder={t("emailPlaceholder")} required />
+                    <Input id="user-email" name="email" type="email" placeholder={t("emailPlaceholder")} required />
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -83,6 +85,7 @@ export default function LoginPage() {
                     <div className="relative">
                       <Input
                         id="user-password"
+                        name="password"
                         type={showPassword ? "text" : "password"}
                         placeholder={t("passwordPlaceholder")}
                         required
@@ -103,6 +106,7 @@ export default function LoginPage() {
                       </Button>
                     </div>
                   </div>
+                  {error && <div className="text-sm text-destructive">{error}</div>}
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full" disabled={isLoading}>
@@ -113,7 +117,7 @@ export default function LoginPage() {
             </Card>
             <div className="mt-4 text-center text-sm">
               {t("noAccount")}{" "}
-              <Link href={`/${locale}/register`} className="text-primary hover:underline">
+              <Link href={`/${locale}/auth/signin?tab=signup`} className="text-primary hover:underline">
                 {t("register")}
               </Link>
             </div>
@@ -128,7 +132,7 @@ export default function LoginPage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="admin-email">{t("emailLabel")}</Label>
-                    <Input id="admin-email" type="email" placeholder={t("emailPlaceholder")} required />
+                    <Input id="admin-email" name="email" type="email" placeholder={t("emailPlaceholder")} required />
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -140,6 +144,7 @@ export default function LoginPage() {
                     <div className="relative">
                       <Input
                         id="admin-password"
+                        name="password"
                         type={showPassword ? "text" : "password"}
                         placeholder={t("passwordPlaceholder")}
                         required
@@ -160,6 +165,7 @@ export default function LoginPage() {
                       </Button>
                     </div>
                   </div>
+                  {error && <div className="text-sm text-destructive">{error}</div>}
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full" disabled={isLoading}>
