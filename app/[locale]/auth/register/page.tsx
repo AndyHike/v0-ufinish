@@ -1,29 +1,29 @@
 import { getTranslations } from "next-intl/server"
 import Link from "next/link"
-import { register } from "../actions"
+import { registerWithRedirect } from "@/app/actions/auth"
 import { getLocale } from "next-intl/server"
-import RegisterForm from "./register-form"
 
 export default async function Register() {
   const locale = await getLocale()
   const t = await getTranslations("Auth")
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+    <div className="container flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">{t("createAccount")}</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight">{t("createAccount")}</h2>
+          <p className="mt-2 text-center text-sm text-muted-foreground">
             {t("alreadyHaveAccount")}{" "}
-            <Link href={`/${locale}/auth/signin`} className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href={`/${locale}/auth/signin`} className="font-medium text-primary hover:text-primary/90">
               {t("signIn")}
             </Link>
           </p>
         </div>
-        <RegisterForm action={register.bind(null, locale)}>
-          <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+
+        <form action={registerWithRedirect.bind(null, locale)} className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="name" className="text-sm font-medium">
                 {t("name")}
               </label>
               <input
@@ -31,12 +31,13 @@ export default async function Register() {
                 name="name"
                 type="text"
                 required
-                className="relative block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 placeholder={t("namePlaceholder")}
               />
             </div>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium">
                 {t("email")}
               </label>
               <input
@@ -45,24 +46,26 @@ export default async function Register() {
                 type="email"
                 autoComplete="email"
                 required
-                className="relative block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 placeholder={t("emailPlaceholder")}
               />
             </div>
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+
+            <div className="space-y-2">
+              <label htmlFor="phone" className="text-sm font-medium">
                 {t("phone")}
               </label>
               <input
                 id="phone"
                 name="phone"
                 type="tel"
-                className="relative block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 placeholder={t("phonePlaceholder")}
               />
             </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium">
                 {t("password")}
               </label>
               <input
@@ -72,13 +75,20 @@ export default async function Register() {
                 autoComplete="new-password"
                 required
                 minLength={8}
-                className="relative block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 placeholder={t("passwordPlaceholder")}
               />
-              <p className="mt-1 text-xs text-gray-500">{t("passwordRequirements")}</p>
+              <p className="text-xs text-muted-foreground">{t("passwordRequirements")}</p>
             </div>
           </div>
-        </RegisterForm>
+
+          <button
+            type="submit"
+            className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            {t("register")}
+          </button>
+        </form>
       </div>
     </div>
   )
