@@ -24,6 +24,11 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   ]
 
   const handleLanguageChange = (newLocale: string) => {
+    if (newLocale === currentLocale) {
+      setIsOpen(false)
+      return
+    }
+
     // Get the current path segments
     const segments = pathname.split("/")
 
@@ -35,11 +40,18 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
     // Reconstruct the path with the new locale
     const newPath = segments.join("/")
 
-    // Navigate to the new path
-    router.push(newPath)
+    // For homepage, ensure we're using the correct format
+    const finalPath = newPath === `/${newLocale}` ? `/${newLocale}` : newPath
 
-    // Force a full page refresh to ensure all components update with the new locale
-    window.location.href = newPath
+    // Navigate to the new path
+    try {
+      // Use window.location for a full page refresh to ensure all components update
+      window.location.href = finalPath
+    } catch (error) {
+      console.error("Navigation error:", error)
+      // Fallback to the homepage of the selected locale
+      window.location.href = `/${newLocale}`
+    }
 
     setIsOpen(false)
   }

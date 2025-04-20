@@ -4,8 +4,8 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useTranslations, useLocale } from "next-intl" // Add useLocale
+import { useRouter, useParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,7 +16,7 @@ import { Eye, EyeOff, Smartphone } from "lucide-react"
 
 export default function LoginPage() {
   const t = useTranslations("Login")
-  const locale = useLocale() // Get current locale
+  const { locale } = useParams()
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)

@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
+import { defaultLocale } from "@/i18n"
 
 // In a real app, this would be a database call
 const users = [
@@ -63,7 +64,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: "/{locale}/auth/signin", // Update to use dynamic locale
+    signIn: `/${defaultLocale}/auth/signin`,
   },
   session: {
     strategy: "jwt",

@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui/use-toast"
 export default function SignInPage() {
   const t = useTranslations("Auth")
   const router = useRouter()
+  const { locale } = useParams()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -42,7 +43,7 @@ export default function SignInPage() {
           variant: "destructive",
         })
       } else {
-        router.push("/")
+        router.push(`/${locale}`)
         router.refresh()
       }
     } catch (error) {
@@ -87,7 +88,7 @@ export default function SignInPage() {
           redirect: false,
         })
 
-        router.push("/")
+        router.push(`/${locale}`)
         router.refresh()
       } else {
         const data = await response.json()
@@ -130,7 +131,10 @@ export default function SignInPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">{t("password")}</Label>
-                    <Link href="/auth/forgot-password" className="text-xs text-muted-foreground hover:text-primary">
+                    <Link
+                      href={`/${locale}/auth/forgot-password`}
+                      className="text-xs text-muted-foreground hover:text-primary"
+                    >
                       {t("forgotPassword")}
                     </Link>
                   </div>
