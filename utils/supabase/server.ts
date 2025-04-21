@@ -1,29 +1,22 @@
-import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 
-export const createClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+export function createServerSupabaseClient() {
+  const cookieStore = cookies()
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Missing Supabase environment variables")
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Missing Supabase credentials")
   }
 
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get(name: string) {
-        return cookies().get(name)?.value
-      },
-      set(name: string, value: string, options: any) {
-        cookies().set({ name, value, ...options })
-      },
-      remove(name: string, options: any) {
-        cookies().delete({ name, ...options })
-      },
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      persistSession: false,
     },
   })
 }
 
-// Export the createServerClient function that's being referenced elsewhere
-export const createServerClient = createClient
-export const createServerSupabaseClient = createClient
+// Export createServerClient for compatibility with existing code
+export const createServerClient = createServerSupabaseClient

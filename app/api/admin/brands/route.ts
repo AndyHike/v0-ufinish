@@ -1,98 +1,98 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase"
-import { getSession } from "@/lib/auth/session"
+import { createClient } from "@supabase/supabase-js"
+import { logAdminActivity } from "@/lib/admin/activity-logger"
 
 export async function GET() {
   try {
-    const supabase = createClient()
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json({ error: "Supabase credentials not configured" }, { status: 500 })
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
     // First try to get brands ordered by position
-    let { data, error } = await supabase
+    let { data: brands, error } = await supabase
       .from("brands")
       .select("*")
       .order("position", { ascending: true, nullsLast: true })
 
-    // If there's an error or no brands with position, try fetching without ordering
-    if (error || !data || data.length === 0) {
-      const { data: fallbackData, error: fallbackError } = await supabase.from("brands").select("*").order("name")
+    // If there's an error (like position column doesn't exist), fall back to ordering by name
+    if (error) {
+      console.error("Error fetching brands by position:", error)
+      const { data: fallbackBrands, error: fallbackError } = await supabase
+        .from("brands")
+        .select("*")
+        .order("name", { ascending: true })
 
-      if (fallbackError) throw fallbackError
-      data = fallbackData
+      if (fallbackError) {
+        console.error("Error fetching brands by name:", fallbackError)
+        return NextResponse.json({ error: "Failed to fetch brands" }, { status: 500 })
+      }
+
+      brands = fallbackBrands
     }
 
-    // Sort brands by position if available, otherwise by name
-    const sortedData = data.sort((a, b) => {
-      // If both have position, sort by position
-      if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
-        return a.position - b.position
-      }
-      // If only one has position, prioritize the one with position
-      if (a.position !== null && a.position !== undefined) return -1
-      if (b.position !== null && b.position !== undefined) return 1
-      // If neither has position, sort by name
-      return a.name.localeCompare(b.name)
-    })
-
-    return NextResponse.json(sortedData)
+    return NextResponse.json(brands || [])
   } catch (error) {
-    console.error("Error fetching brands:", error)
-    return NextResponse.json({ error: "Failed to fetch brands" }, { status: 500 })
+    console.error("Unexpected error in brands API:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const supabase = createClient()
-    const body = await request.json()
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-    // Get the current user for activity logging
-    const session = await getSession()
-    const userId = session?.user?.id
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json({ error: "Supabase credentials not configured" }, { status: 500 })
+    }
 
-    // Get the highest position value
-    const { data: existingBrands, error: fetchError } = await supabase
+    const supabase = createClient(supabaseUrl, supabaseKey)
+    const data = await request.json()
+
+    // Get the maximum position value
+    const { data: maxPositionResult, error: maxPositionError } = await supabase
       .from("brands")
       .select("position")
       .order("position", { ascending: false })
       .limit(1)
 
-    if (fetchError) throw fetchError
-
-    const nextPosition =
-      existingBrands && existingBrands.length > 0 && existingBrands[0].position !== null
-        ? (existingBrands[0].position || 0) + 1
-        : 1
-
-    const { data, error } = await supabase
-      .from("brands")
-      .insert([
-        {
-          name: body.name,
-          logo_url: body.logo_url || null,
-          position: body.position || nextPosition,
-        },
-      ])
-      .select()
-      .single()
-
-    if (error) throw error
-
-    // Log activity if user is logged in
-    if (userId) {
-      await supabase.from("activities").insert([
-        {
-          user_id: userId,
-          action_type: "create",
-          entity_type: "brand",
-          entity_id: data.id,
-          details: { name: data.name },
-        },
-      ])
+    if (maxPositionError) {
+      console.error("Error getting max position:", maxPositionError)
     }
 
-    return NextResponse.json(data)
+    // Calculate the next position (max + 1 or 1 if no brands exist)
+    const maxPosition = maxPositionResult && maxPositionResult.length > 0 ? maxPositionResult[0].position || 0 : 0
+    const nextPosition = maxPosition + 1
+
+    // Add the position to the brand data
+    const brandData = {
+      ...data,
+      position: nextPosition,
+    }
+
+    const { data: brand, error } = await supabase.from("brands").insert(brandData).select().single()
+
+    if (error) {
+      console.error("Error creating brand:", error)
+      return NextResponse.json({ error: "Failed to create brand" }, { status: 500 })
+    }
+
+    // Log the activity
+    await logAdminActivity({
+      action: "create",
+      entity: "brand",
+      entityId: brand.id,
+      details: `Created brand: ${brand.name}`,
+    })
+
+    return NextResponse.json(brand)
   } catch (error) {
-    console.error("Error creating brand:", error)
-    return NextResponse.json({ error: "Failed to create brand" }, { status: 500 })
+    console.error("Unexpected error in brands API:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
