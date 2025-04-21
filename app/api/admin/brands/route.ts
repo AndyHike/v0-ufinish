@@ -50,10 +50,17 @@ export async function GET() {
       brands = fallbackBrands
     }
 
-    // Apply consistent sorting
-    const sortedBrands = sortBrandsByPosition(brands || [])
+    // Sort brands by position
+    if (brands) {
+      brands.sort((a, b) => {
+        // Handle null positions by placing them at the end
+        if (a.position === null) return 1
+        if (b.position === null) return -1
+        return a.position - b.position
+      })
+    }
 
-    return NextResponse.json(sortedBrands)
+    return NextResponse.json(brands)
   } catch (error) {
     console.error("Unexpected error in brands API:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

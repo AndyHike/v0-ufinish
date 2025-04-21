@@ -21,6 +21,7 @@ const users = [
 ]
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET || "THIS_IS_AN_EXAMPLE_SECRET_THAT_SHOULD_BE_CHANGED",
   providers: [
     CredentialsProvider({
       name: "Credentials",
