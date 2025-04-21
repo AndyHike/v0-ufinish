@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
-import { defaultLocale } from "../i18n.js"
 
 export default function Home() {
-  redirect(`/${defaultLocale}`)
+  // Hardcode the default locale to avoid importing from i18n.js
+  redirect("/uk")
 }

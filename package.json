@@ -63,11 +63,11 @@
     "@supabase/supabase-js": "latest",
     "next-auth": "latest",
     "next-intl": "latest",
-    "@formatjs/intl-localematcher": "latest",
-    "negotiator": "latest",
     "crypto": "latest",
     "@supabase/auth-helpers-nextjs": "latest",
-    "@hello-pangea/dnd": "latest"
+    "@hello-pangea/dnd": "latest",
+    "@formatjs/intl-localematcher": "latest",
+    "negotiator": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

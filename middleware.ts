@@ -1,7 +1,10 @@
 import createMiddleware from "next-intl/middleware"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { locales, defaultLocale } from "./i18n.js"
+
+// Hardcode the locales and defaultLocale to avoid importing from i18n.js
+const locales = ["uk", "cs", "en"]
+const defaultLocale = "uk"
 
 // Create the next-intl middleware
 const intlMiddleware = createMiddleware({
