@@ -75,7 +75,11 @@
   "Brands": {
     "title": "Brands We Work With",
     "subtitle": "We repair phones of all popular brands.",
-    "allBrandsButton": "All Brands"
+    "allBrandsButton": "All Brands",
+    "brandModelsDescription": "Explore all available models for {brand} phones that we repair.",
+    "availableModels": "Available Models",
+    "noModelsAvailable": "No models available for {brand} yet.",
+    "backToAllBrands": "Back to all brands"
   },
   "Testimonials": {
     "title": "Customer Testimonials",

@@ -75,7 +75,11 @@
   "Brands": {
     "title": "Бренди, з якими ми працюємо",
     "subtitle": "Ми ремонтуємо телефони всіх популярних брендів.",
-    "allBrandsButton": "Всі бренди"
+    "allBrandsButton": "Всі бренди",
+    "brandModelsDescription": "Перегляньте всі доступні моделі телефонів {brand}, які ми ремонтуємо.",
+    "availableModels": "Доступні моделі",
+    "noModelsAvailable": "Поки що немає доступних моделей для {brand}.",
+    "backToAllBrands": "Назад до всіх брендів"
   },
   "Testimonials": {
     "title": "Відгуки клієнтів",

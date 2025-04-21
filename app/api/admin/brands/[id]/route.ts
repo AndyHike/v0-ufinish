@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
-import { getSession } from "@/lib/auth/session"
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -21,10 +20,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const supabase = createClient()
     const body = await request.json()
 
-    // Get the current user for activity logging
-    const session = await getSession()
-    const userId = session?.user?.id
-
     const { data, error } = await supabase
       .from("brands")
       .update({
@@ -38,19 +33,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     if (error) throw error
 
-    // Log activity if user is logged in
-    if (userId) {
-      await supabase.from("activities").insert([
-        {
-          user_id: userId,
-          action_type: "update",
-          entity_type: "brand",
-          entity_id: data.id,
-          details: { name: data.name },
-        },
-      ])
-    }
-
     return NextResponse.json(data)
   } catch (error) {
     console.error("Error updating brand:", error)
@@ -61,30 +43,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const supabase = createClient()
-
-    // Get the current user for activity logging
-    const session = await getSession()
-    const userId = session?.user?.id
-
-    // Get the brand name before deleting for activity log
-    const { data: brand } = await supabase.from("brands").select("name").eq("id", params.id).single()
-
     const { error } = await supabase.from("brands").delete().eq("id", params.id)
 
     if (error) throw error
-
-    // Log activity if user is logged in and brand was found
-    if (userId && brand) {
-      await supabase.from("activities").insert([
-        {
-          user_id: userId,
-          action_type: "delete",
-          entity_type: "brand",
-          entity_id: params.id,
-          details: { name: brand.name },
-        },
-      ])
-    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

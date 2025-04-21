@@ -3,20 +3,38 @@
 import { useTranslations } from "next-intl"
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 
+type Brand = {
+  id: string
+  name: string
+  logo_url: string | null
+}
+
 export function BrandsSection() {
   const t = useTranslations("Brands")
+  const [brands, setBrands] = useState<Brand[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const brands = [
-    { name: "Apple", logo: "/bitten-fruit-silhouette.png" },
-    { name: "Samsung", logo: "/samsung-wordmark.png" },
-    { name: "Xiaomi", logo: "/xiaomi-logo-abstract.png" },
-    { name: "Huawei", logo: "/abstract-petal-design.png" },
-    { name: "Google", logo: "/placeholder.svg?height=80&width=80&query=google+logo" },
-    { name: "OnePlus", logo: "/placeholder.svg?height=80&width=80&query=oneplus+logo" },
-  ]
+  useEffect(() => {
+    async function fetchBrands() {
+      try {
+        const response = await fetch("/api/admin/brands")
+        if (response.ok) {
+          const data = await response.json()
+          setBrands(data)
+        }
+      } catch (error) {
+        console.error("Error fetching brands:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBrands()
+  }, [])
 
   return (
     <section className="py-12 md:py-24 bg-muted/50">
@@ -30,22 +48,35 @@ export function BrandsSection() {
           </div>
         </div>
         <div className="mx-auto max-w-5xl py-12">
-          <Carousel className="w-full">
-            <CarouselContent>
-              {brands.map((brand, index) => (
-                <CarouselItem key={index} className="md:basis-1/3 lg:basis-1/6">
-                  <div className="flex flex-col items-center justify-center p-4">
-                    <div className="relative h-20 w-20">
-                      <Image src={brand.logo || "/placeholder.svg"} alt={brand.name} fill className="object-contain" />
-                    </div>
-                    <span className="mt-2 text-sm font-medium">{brand.name}</span>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="hidden md:flex" />
-            <CarouselNext className="hidden md:flex" />
-          </Carousel>
+          {loading ? (
+            <div className="flex justify-center items-center h-20">
+              <p>Loading brands...</p>
+            </div>
+          ) : (
+            <Carousel className="w-full">
+              <CarouselContent>
+                {brands.map((brand) => (
+                  <CarouselItem key={brand.id} className="md:basis-1/3 lg:basis-1/6">
+                    <Link href={`/brands/${brand.id}`} className="block">
+                      <div className="flex flex-col items-center justify-center p-4">
+                        <div className="relative h-20 w-20">
+                          <Image
+                            src={brand.logo_url || "/placeholder.svg?height=80&width=80&query=phone+brand+logo"}
+                            alt={brand.name}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                        <span className="mt-2 text-sm font-medium">{brand.name}</span>
+                      </div>
+                    </Link>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex" />
+              <CarouselNext className="hidden md:flex" />
+            </Carousel>
+          )}
         </div>
         <div className="flex justify-center">
           <Button asChild size="lg">

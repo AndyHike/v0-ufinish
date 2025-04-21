@@ -75,7 +75,11 @@
   "Brands": {
     "title": "Značky, se kterými pracujeme",
     "subtitle": "Opravujeme telefony všech populárních značek.",
-    "allBrandsButton": "Všechny značky"
+    "allBrandsButton": "Všechny značky",
+    "brandModelsDescription": "Prozkoumejte všechny dostupné modely telefonů {brand}, které opravujeme.",
+    "availableModels": "Dostupné modely",
+    "noModelsAvailable": "Zatím nejsou k dispozici žádné modely pro {brand}.",
+    "backToAllBrands": "Zpět na všechny značky"
   },
   "Testimonials": {
     "title": "Recenze zákazníků",
