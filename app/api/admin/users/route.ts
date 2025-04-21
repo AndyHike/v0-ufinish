@@ -12,25 +12,12 @@ export async function GET(request: NextRequest) {
     const limit = Number.parseInt(searchParams.get("limit") || "10")
     const offset = (page - 1) * limit
 
-    // Build the query
-    let query = supabase.from("users").select(
-      `
-        id, 
-        email, 
-        created_at, 
-        role,
-        phone,
-        profiles (
-          full_name,
-          address
-        )
-      `,
-      { count: "exact" },
-    )
+    // First, get users
+    let query = supabase.from("users").select("*", { count: "exact" })
 
     // Add search if provided
     if (search) {
-      query = query.or(`email.ilike.%${search}%, profiles.full_name.ilike.%${search}%, phone.ilike.%${search}%`)
+      query = query.or(`email.ilike.%${search}%, name.ilike.%${search}%, phone.ilike.%${search}%`)
     }
 
     // Add sorting
@@ -44,6 +31,35 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error("Error fetching users:", error)
       return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
+    }
+
+    // If we have users, get their profiles
+    if (users && users.length > 0) {
+      const userIds = users.map((user) => user.id)
+
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("user_id", userIds)
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError)
+        // Continue without profiles
+      } else if (profiles) {
+        // Merge profiles with users
+        const profilesByUserId = profiles.reduce(
+          (acc, profile) => {
+            acc[profile.user_id] = profile
+            return acc
+          },
+          {} as Record<string, any>,
+        )
+
+        // Add profiles to users
+        users.forEach((user) => {
+          user.profiles = profilesByUserId[user.id] || null
+        })
+      }
     }
 
     return NextResponse.json({

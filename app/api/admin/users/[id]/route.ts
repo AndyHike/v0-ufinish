@@ -5,23 +5,10 @@ import { logActivity } from "@/lib/admin/activity-logger"
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = createClient()
-    const { data: user, error } = await supabase
-      .from("users")
-      .select(
-        `
-        id, 
-        email, 
-        created_at, 
-        role,
-        phone,
-        profiles (
-          full_name,
-          address
-        )
-      `,
-      )
-      .eq("id", params.id)
-      .single()
+    const userId = params.id
+
+    // Get user
+    const { data: user, error } = await supabase.from("users").select("*").eq("id", userId).single()
 
     if (error) {
       console.error("Error fetching user:", error)
@@ -31,6 +18,21 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
+
+    // Get profile
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .single()
+
+    if (profileError && profileError.code !== "PGRST116") {
+      console.error("Error fetching profile:", profileError)
+      // Continue without profile
+    }
+
+    // Add profile to user
+    user.profiles = profile || null
 
     return NextResponse.json(user)
   } catch (error) {
@@ -42,46 +44,70 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = createClient()
-    const body = await request.json()
-    const { email, role, phone, full_name, address } = body
+    const userId = params.id
+    const data = await request.json()
 
-    // Update user table
-    const { error: userError } = await supabase
-      .from("users")
-      .update({
-        email,
-        role,
-        phone,
-      })
-      .eq("id", params.id)
+    // Extract profile data
+    const { full_name, address, ...userData } = data
+
+    // Update user
+    const { error: userError } = await supabase.from("users").update(userData).eq("id", userId)
 
     if (userError) {
       console.error("Error updating user:", userError)
       return NextResponse.json({ error: "Failed to update user" }, { status: 500 })
     }
 
-    // Update profile table
-    const { error: profileError } = await supabase
+    // Check if profile exists
+    const { data: existingProfile, error: profileCheckError } = await supabase
       .from("profiles")
-      .update({
-        full_name,
-        address,
-        phone,
-      })
-      .eq("user_id", params.id)
+      .select("id")
+      .eq("user_id", userId)
+      .single()
 
-    if (profileError) {
-      console.error("Error updating profile:", profileError)
-      return NextResponse.json({ error: "Failed to update profile" }, { status: 500 })
+    if (profileCheckError && profileCheckError.code !== "PGRST116") {
+      console.error("Error checking profile:", profileCheckError)
+      return NextResponse.json({ error: "Failed to check profile" }, { status: 500 })
     }
 
-    // Log the activity
+    // Update or insert profile
+    if (existingProfile) {
+      const { error: profileUpdateError } = await supabase
+        .from("profiles")
+        .update({
+          full_name,
+          address,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId)
+
+      if (profileUpdateError) {
+        console.error("Error updating profile:", profileUpdateError)
+        return NextResponse.json({ error: "Failed to update profile" }, { status: 500 })
+      }
+    } else {
+      const { error: profileInsertError } = await supabase.from("profiles").insert({
+        id: crypto.randomUUID(),
+        user_id: userId,
+        full_name,
+        address,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+
+      if (profileInsertError) {
+        console.error("Error inserting profile:", profileInsertError)
+        return NextResponse.json({ error: "Failed to create profile" }, { status: 500 })
+      }
+    }
+
+    // Log activity
     await logActivity({
-      userId: params.id,
-      actionType: "update",
+      userId,
+      entityId: userId,
       entityType: "user",
-      entityId: params.id,
-      details: { email, role },
+      actionType: "update",
+      details: { updatedFields: Object.keys(data) },
     })
 
     return NextResponse.json({ success: true })
@@ -94,32 +120,15 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = createClient()
+    const userId = params.id
 
-    // First delete from profiles (due to foreign key constraint)
-    const { error: profileError } = await supabase.from("profiles").delete().eq("user_id", params.id)
+    // Delete user (profiles will be deleted via cascade)
+    const { error } = await supabase.from("users").delete().eq("id", userId)
 
-    if (profileError) {
-      console.error("Error deleting profile:", profileError)
-      return NextResponse.json({ error: "Failed to delete profile" }, { status: 500 })
-    }
-
-    // Then delete from users
-    const { error: userError } = await supabase.from("users").delete().eq("id", params.id)
-
-    if (userError) {
-      console.error("Error deleting user:", userError)
+    if (error) {
+      console.error("Error deleting user:", error)
       return NextResponse.json({ error: "Failed to delete user" }, { status: 500 })
     }
-
-    // Log the activity
-    const adminId = request.headers.get("x-admin-id") || "system"
-    await logActivity({
-      userId: adminId,
-      actionType: "delete",
-      entityType: "user",
-      entityId: params.id,
-      details: { deletedUserId: params.id },
-    })
 
     return NextResponse.json({ success: true })
   } catch (error) {
