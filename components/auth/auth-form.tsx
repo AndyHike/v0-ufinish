@@ -3,18 +3,18 @@
 import type React from "react"
 
 import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 interface AuthFormProps {
   children: React.ReactNode
-  action: (formData: FormData) => Promise<{ success: boolean; message?: string }>
+  action: (
+    formData: FormData,
+  ) => Promise<{ success: boolean; message?: string; blocked?: boolean; remainingAttempts?: number }>
   successRedirect?: string
   submitText?: string
 }
 
 export function AuthForm({ children, action, successRedirect, submitText }: AuthFormProps) {
-  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const t = useTranslations("Auth")
@@ -31,16 +31,14 @@ export function AuthForm({ children, action, successRedirect, submitText }: Auth
 
         if (!result.success) {
           setError(result.message || t("somethingWentWrong"))
-          return
+          return result
         }
 
-        if (successRedirect) {
-          router.push(successRedirect)
-          router.refresh()
-        }
+        return result
       } catch (error) {
         console.error("Authentication error:", error)
         setError(t("unexpectedError"))
+        return { success: false, message: t("unexpectedError") }
       }
     })
   }

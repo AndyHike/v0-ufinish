@@ -64,8 +64,8 @@
     "next-intl": "latest",
     "@formatjs/intl-localematcher": "latest",
     "negotiator": "latest",
-    "@supabase/supabase-js": "latest",
-    "crypto": "latest"
+    "crypto": "latest",
+    "@supabase/supabase-js": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
