@@ -1,9 +1,9 @@
-import { createServerClient } from "@/lib/supabase"
+import { createServerSupabaseClient } from "@/lib/supabase"
 
 // Check if a user is rate limited
 export async function checkLoginRateLimit(email: string) {
   try {
-    const supabase = createServerClient()
+    const supabase = createServerSupabaseClient()
 
     // Get the current login attempts for this email
     const { data, error } = await supabase
@@ -55,7 +55,7 @@ export async function checkLoginRateLimit(email: string) {
 // Record a failed login attempt
 export async function recordFailedLoginAttempt(email: string) {
   try {
-    const supabase = createServerClient()
+    const supabase = createServerSupabaseClient()
 
     // Get current attempts
     const { data, error } = await supabase
@@ -135,7 +135,7 @@ export async function recordFailedLoginAttempt(email: string) {
 // Reset login attempts after successful login
 export async function resetLoginAttempts(email: string) {
   try {
-    const supabase = createServerClient()
+    const supabase = createServerSupabaseClient()
 
     // Delete the login attempts record
     const { error } = await supabase.from("login_attempts").delete().eq("email", email.toLowerCase())

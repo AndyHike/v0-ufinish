@@ -22,6 +22,9 @@ export async function hash(password: string): Promise<string> {
   })
 }
 
+// Adding the hashPassword function as an alias to hash for compatibility
+export const hashPassword = hash
+
 // Verify a password against a hash
 export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
   try {

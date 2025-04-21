@@ -1,111 +1,56 @@
-import { createServerClient } from "@/lib/supabase"
-import { generateToken } from "@/lib/auth/token"
-import { hash } from "@/lib/auth/utils"
+import { createServerSupabaseClient } from "@/lib/supabase"
+import { randomBytes } from "crypto"
 
-// Create a password reset token
-export async function createPasswordResetToken(email: string): Promise<string | null> {
-  try {
-    const supabase = createServerClient()
+// Generate a password reset token
+export async function generatePasswordResetToken(userId: string): Promise<string> {
+  const supabase = createServerSupabaseClient()
 
-    // Find the user by email
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("id")
-      .eq("email", email.toLowerCase())
-      .maybeSingle()
+  // Generate a random token
+  const token = randomBytes(32).toString("hex")
 
-    if (userError || !userData) {
-      console.error("User not found:", userError)
-      return null
-    }
+  // Set expiration time (1 hour from now)
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000)
 
-    // Generate a token
-    const token = generateToken()
-    const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000) // 1 hour
+  // Delete any existing tokens for this user
+  await supabase.from("password_reset_tokens").delete().eq("user_id", userId)
 
-    // Delete any existing tokens for this user
-    await supabase.from("password_reset_tokens").delete().eq("user_id", userData.id)
+  // Insert the new token
+  const { error } = await supabase.from("password_reset_tokens").insert({
+    user_id: userId,
+    token,
+    expires_at: expiresAt.toISOString(),
+  })
 
-    // Create a new token
-    const { error } = await supabase.from("password_reset_tokens").insert([
-      {
-        user_id: userData.id,
-        token,
-        expires_at: expiresAt.toISOString(),
-      },
-    ])
-
-    if (error) {
-      console.error("Error creating password reset token:", error)
-      return null
-    }
-
-    return token
-  } catch (error) {
-    console.error("Error in createPasswordResetToken:", error)
-    return null
+  if (error) {
+    console.error("Error generating password reset token:", error)
+    throw new Error("Failed to generate password reset token")
   }
+
+  return token
 }
 
 // Verify a password reset token
-export async function verifyPasswordResetToken(token: string): Promise<string | null> {
-  try {
-    const supabase = createServerClient()
+export async function verifyPasswordResetToken(
+  token: string,
+): Promise<{ valid: boolean; userId?: string; error?: string }> {
+  const supabase = createServerSupabaseClient()
 
-    // Get the token
-    const { data: tokenData, error: tokenError } = await supabase
-      .from("password_reset_tokens")
-      .select("id, user_id, expires_at")
-      .eq("token", token)
-      .single()
+  // Get the token
+  const { data, error } = await supabase
+    .from("password_reset_tokens")
+    .select("user_id, expires_at")
+    .eq("token", token)
+    .single()
 
-    if (tokenError || !tokenData) {
-      console.error("Token not found or error:", tokenError)
-      return null
-    }
-
-    // Check if token is expired
-    if (new Date(tokenData.expires_at) < new Date()) {
-      console.error("Token expired")
-      return null
-    }
-
-    return tokenData.user_id
-  } catch (error) {
-    console.error("Error in verifyPasswordResetToken:", error)
-    return null
+  if (error || !data) {
+    return { valid: false, error: "Invalid token" }
   }
-}
 
-// Reset password using a token
-export async function resetPassword(token: string, newPassword: string): Promise<boolean> {
-  try {
-    const supabase = createServerClient()
-
-    // Verify the token and get the user ID
-    const userId = await verifyPasswordResetToken(token)
-
-    if (!userId) {
-      return false
-    }
-
-    // Hash the new password
-    const passwordHash = await hash(newPassword)
-
-    // Update the user's password
-    const { error: updateError } = await supabase.from("users").update({ password_hash: passwordHash }).eq("id", userId)
-
-    if (updateError) {
-      console.error("Error updating password:", updateError)
-      return false
-    }
-
-    // Delete the token
-    await supabase.from("password_reset_tokens").delete().eq("user_id", userId)
-
-    return true
-  } catch (error) {
-    console.error("Error in resetPassword:", error)
-    return false
+  // Check if token is expired
+  const expiresAt = new Date(data.expires_at)
+  if (expiresAt < new Date()) {
+    return { valid: false, error: "Token expired" }
   }
+
+  return { valid: true, userId: data.user_id }
 }
