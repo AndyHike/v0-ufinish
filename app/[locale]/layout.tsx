@@ -15,14 +15,20 @@ export default async function LocaleLayout({
   try {
     messages = (await import(`../../messages/${locale}.json`)).default
   } catch (error) {
-    console.error("Failed to load messages:", error)
-    messages = {}
+    console.error(`Failed to load messages for locale ${locale}:`, error)
+    // Fallback to default locale
+    try {
+      messages = (await import(`../../messages/uk.json`)).default
+    } catch (fallbackError) {
+      console.error("Failed to load fallback messages:", fallbackError)
+      messages = {}
+    }
   }
 
   const user = await getCurrentUser()
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages} timeZone="Europe/Kiev">
+    <NextIntlClientProvider locale={locale} messages={messages}>
       <div className="flex min-h-screen flex-col">
         <Header user={user} />
         <main className="flex-1">{children}</main>
