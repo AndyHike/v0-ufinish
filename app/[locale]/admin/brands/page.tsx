@@ -1,9 +1,7 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
-import { BrandsList } from "@/components/admin/brands-list"
+import { getSession } from "@/lib/auth/session"
 
 export async function generateMetadata({
   params: { locale },
@@ -24,7 +22,7 @@ export default async function AdminBrandsPage({
   params: { locale: string }
 }) {
   const t = await getTranslations({ locale, namespace: "Admin" })
-  const session = await getServerSession(authOptions)
+  const session = await getSession()
 
   if (!session || session.user.role !== "admin") {
     redirect(`/${locale}/auth/signin`)
@@ -47,7 +45,20 @@ export default async function AdminBrandsPage({
         <h1 className="text-3xl font-bold">{t("brands.title")}</h1>
         <p className="mt-2 text-muted-foreground">{t("brands.subtitle")}</p>
       </div>
-      <BrandsList brands={brands} />
+      <div className="space-y-4">
+        {/* Render your brands list here */}
+        {brands.map((brand) => (
+          <div key={brand.id} className="flex items-center justify-between p-4 border rounded-md">
+            <div className="flex items-center space-x-4">
+              {brand.logo_url && (
+                <img src={brand.logo_url || "/placeholder.svg"} alt={brand.name} className="w-10 h-10 object-contain" />
+              )}
+              <span className="font-medium">{brand.name}</span>
+            </div>
+            <div className="flex space-x-2">{/* Add your action buttons here */}</div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

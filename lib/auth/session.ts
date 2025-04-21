@@ -4,7 +4,10 @@ import { createClient } from "@/lib/supabase"
 export async function getCurrentUser() {
   const sessionId = cookies().get("session_id")?.value
 
+  console.log("Session ID from cookie:", sessionId)
+
   if (!sessionId) {
+    console.log("No session ID found in cookies")
     return null
   }
 
@@ -17,8 +20,12 @@ export async function getCurrentUser() {
     .eq("id", sessionId)
     .single()
 
+  console.log("Session data:", sessionData)
+  console.log("Session error:", sessionError)
+
   if (sessionError || !sessionData || new Date(sessionData.expires_at) < new Date()) {
     // Session expired or not found
+    console.log("Session expired or not found")
     cookies().delete("session_id")
     return null
   }
@@ -30,7 +37,11 @@ export async function getCurrentUser() {
     .eq("id", sessionData.user_id)
     .single()
 
+  console.log("User data:", userData)
+  console.log("User error:", userError)
+
   if (userError || !userData) {
+    console.log("User not found")
     cookies().delete("session_id")
     return null
   }
@@ -42,7 +53,6 @@ export async function getCurrentUser() {
     .eq("id", userData.id)
     .single()
 
-  // Debug log
   console.log("Profile data in session:", profileData)
 
   return {
@@ -57,6 +67,7 @@ export async function getCurrentUser() {
 
 export async function getSession() {
   const user = await getCurrentUser()
+  console.log("Session user:", user)
   if (user) {
     return { user }
   }
