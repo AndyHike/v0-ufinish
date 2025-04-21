@@ -5,6 +5,7 @@ import { UserProfile } from "@/components/profile/user-profile"
 import { UserOrders } from "@/components/profile/user-orders"
 import { UserDiscounts } from "@/components/profile/user-discounts"
 import { createClient } from "@/lib/supabase"
+import { syncUserProfile } from "@/lib/user/profile-sync"
 
 export default async function ProfilePage() {
   const session = await getSession()
@@ -12,6 +13,9 @@ export default async function ProfilePage() {
   if (!session || !session.user) {
     redirect("/auth/signin")
   }
+
+  // Sync user profile data
+  await syncUserProfile(session.user.id)
 
   // Get user profile data from database
   const supabase = createClient()
@@ -21,11 +25,19 @@ export default async function ProfilePage() {
     .eq("id", session.user.id)
     .single()
 
-  // Combine session user data with profile data
+  // If profile data is missing, get from users table
   const userData = {
     ...session.user,
     phone: profile?.phone || null,
     address: profile?.address || null,
+  }
+
+  if (!profile?.phone) {
+    const { data: user } = await supabase.from("users").select("phone").eq("id", session.user.id).single()
+
+    if (user?.phone) {
+      userData.phone = user.phone
+    }
   }
 
   return (
