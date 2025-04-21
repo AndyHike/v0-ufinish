@@ -52,14 +52,15 @@ export async function getSession() {
       return null
     }
 
-    // Get profile
+    // Get profile with phone number
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("name, phone, avatar_url")
+      .select("name, phone, avatar_url, address")
       .eq("id", user.id)
       .single()
 
     if (profileError) {
+      console.error("Error fetching profile:", profileError)
       return {
         user: {
           id: user.id,
@@ -69,6 +70,9 @@ export async function getSession() {
       }
     }
 
+    // Debug log to check what data we're getting from profiles
+    console.log("Profile data in session:", profile)
+
     return {
       user: {
         id: user.id,
@@ -77,6 +81,7 @@ export async function getSession() {
         name: profile.name,
         phone: profile.phone,
         avatar_url: profile.avatar_url,
+        address: profile.address,
       },
     }
   } catch (error) {

@@ -32,13 +32,9 @@ export default async function ProfilePage() {
     address: profile?.address || null,
   }
 
-  if (!profile?.phone) {
-    const { data: user } = await supabase.from("users").select("phone").eq("id", session.user.id).single()
-
-    if (user?.phone) {
-      userData.phone = user.phone
-    }
-  }
+  // Debug log to check what data we're getting
+  console.log("Profile data:", profile)
+  console.log("User data:", userData)
 
   return (
     <div className="container py-10">
