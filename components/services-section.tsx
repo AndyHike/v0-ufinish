@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl"
 import Link from "next/link"
+import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Smartphone, Battery, Wifi, Shield } from "lucide-react"
@@ -16,13 +17,15 @@ type Service = {
 
 export function ServicesSection() {
   const t = useTranslations("Services")
+  const params = useParams()
+  const locale = (params.locale as string) || "uk"
   const [services, setServices] = useState<Service[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch("/api/admin/services")
+        const response = await fetch(`/api/services?locale=${locale}`)
         if (!response.ok) throw new Error("Failed to fetch services")
         const data = await response.json()
         setServices(data.slice(0, 4)) // Get first 4 services for the homepage
@@ -34,7 +37,7 @@ export function ServicesSection() {
     }
 
     fetchServices()
-  }, [])
+  }, [locale])
 
   const serviceIcons = [{ icon: Smartphone }, { icon: Battery }, { icon: Wifi }, { icon: Shield }]
 
@@ -80,7 +83,7 @@ export function ServicesSection() {
                     <CardContent className="flex-1" />
                     <CardFooter>
                       <Button variant="outline" asChild className="w-full">
-                        <Link href={`/services/${service.id}`}>{t("learnMore")}</Link>
+                        <Link href={`/${locale}/services/${service.id}`}>{t("learnMore")}</Link>
                       </Button>
                     </CardFooter>
                   </Card>
@@ -89,7 +92,7 @@ export function ServicesSection() {
         </div>
         <div className="flex justify-center">
           <Button asChild size="lg">
-            <Link href="/services">{t("allServicesButton")}</Link>
+            <Link href={`/${locale}/services`}>{t("allServicesButton")}</Link>
           </Button>
         </div>
       </div>
