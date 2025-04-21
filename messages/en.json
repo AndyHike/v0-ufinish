@@ -278,5 +278,27 @@
     "storyPart1": "Founded in 2010, our phone repair service began with a simple mission: to provide fast, reliable, and affordable repairs for all types of mobile devices. What started as a small workshop has grown into a trusted service center with multiple locations.",
     "storyPart2": "We take pride in our technical expertise, quality parts, and commitment to customer satisfaction. Every repair is backed by our warranty, giving you peace of mind that your device is in good hands.",
     "storyPart3": "Today, we continue to expand our services to meet the evolving needs of our customers, while maintaining the personalized approach that has been our hallmark from the beginning."
+  },
+  "AdminDashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of your repair service",
+    "overview": "Overview",
+    "analytics": "Analytics",
+    "reports": "Reports",
+    "totalBrands": "Total Brands",
+    "totalModels": "Total Models",
+    "totalUsers": "Total Users",
+    "totalRepairs": "Total Repairs",
+    "fromLastMonth": "from last month",
+    "repairsOverTime": "Repairs Over Time",
+    "recentActivity": "Recent Activity",
+    "recentActivityDescription": "Latest actions in the system",
+    "activityTitle": "Activity #{id}",
+    "activityTime": "{minutes} minutes ago",
+    "chartPlaceholder": "Chart placeholder",
+    "analyticsTitle": "Analytics",
+    "analyticsDescription": "Detailed analytics will be available soon",
+    "reportsTitle": "Reports",
+    "reportsDescription": "Detailed reports will be available soon"
   }
 }

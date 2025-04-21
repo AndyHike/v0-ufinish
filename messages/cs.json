@@ -255,6 +255,28 @@
     "logout": "Odhlásit se",
     "loggingOut": "Odhlašování..."
   },
+  "AdminDashboard": {
+    "title": "Nástěnka",
+    "subtitle": "Přehled vašeho servisu oprav",
+    "overview": "Přehled",
+    "analytics": "Analytika",
+    "reports": "Zprávy",
+    "totalBrands": "Celkem značek",
+    "totalModels": "Celkem modelů",
+    "totalUsers": "Celkem uživatelů",
+    "totalRepairs": "Celkem oprav",
+    "fromLastMonth": "od minulého měsíce",
+    "repairsOverTime": "Opravy v průběhu času",
+    "recentActivity": "Nedávná aktivita",
+    "recentActivityDescription": "Poslední akce v systému",
+    "activityTitle": "Aktivita #{id}",
+    "activityTime": "před {minutes} minutami",
+    "chartPlaceholder": "Místo pro graf",
+    "analyticsTitle": "Analytika",
+    "analyticsDescription": "Podrobná analytika bude brzy k dispozici",
+    "reportsTitle": "Zprávy",
+    "reportsDescription": "Podrobné zprávy budou brzy k dispozici"
+  },
   "Pricing": {
     "pricing": "Ceník",
     "pricingSubtitle": "Transparentní ceny pro všechny naše opravárenské služby",

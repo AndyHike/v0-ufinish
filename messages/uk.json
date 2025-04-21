@@ -255,6 +255,28 @@
     "logout": "Вийти",
     "loggingOut": "Вихід..."
   },
+  "AdminDashboard": {
+    "title": "Панель керування",
+    "subtitle": "Огляд вашого сервісу ремонту",
+    "overview": "Огляд",
+    "analytics": "Аналітика",
+    "reports": "Звіти",
+    "totalBrands": "Всього брендів",
+    "totalModels": "Всього моделей",
+    "totalUsers": "Всього користувачів",
+    "totalRepairs": "Всього ремонтів",
+    "fromLastMonth": "з минулого місяця",
+    "repairsOverTime": "Ремонти з часом",
+    "recentActivity": "Остання активність",
+    "recentActivityDescription": "Останні дії в системі",
+    "activityTitle": "Активність #{id}",
+    "activityTime": "{minutes} хвилин тому",
+    "chartPlaceholder": "Місце для графіка",
+    "analyticsTitle": "Аналітика",
+    "analyticsDescription": "Детальна аналітика буде доступна незабаром",
+    "reportsTitle": "Звіти",
+    "reportsDescription": "Детальні звіти будуть доступні незабаром"
+  },
   "Pricing": {
     "pricing": "Ціни",
     "pricingSubtitle": "Прозорі ціни на всі наші послуги з ремонту",
