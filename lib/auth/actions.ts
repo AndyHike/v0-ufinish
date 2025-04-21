@@ -136,9 +136,10 @@ export async function login(email: string, password: string) {
     // Set session cookie
     cookies().set("session_id", session.id, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true, // Always use secure cookies in production
       maxAge: 30 * 24 * 60 * 60, // 30 days
       path: "/",
+      sameSite: "lax",
     })
 
     return { success: true, role: user.role }

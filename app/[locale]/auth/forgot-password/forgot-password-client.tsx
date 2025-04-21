@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { sendPasswordResetEmail } from "@/lib/auth/actions"
 
 export default function ForgotPasswordClient() {
   const t = useTranslations("Auth")
@@ -19,16 +20,28 @@ export default function ForgotPasswordClient() {
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [sent, setSent] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
-    // Simulate sending reset email
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Call the server action to send password reset email
+      const result = await sendPasswordResetEmail(email, locale)
 
-    setSent(true)
-    setIsLoading(false)
+      if (result.success) {
+        setSent(true)
+      } else {
+        setError(result.error || t("genericError"))
+      }
+    } catch (error) {
+      console.error("Error sending reset email:", error)
+      setError(t("genericError"))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -52,6 +65,11 @@ export default function ForgotPasswordClient() {
           </>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">{t("email")}</Label>
               <Input
