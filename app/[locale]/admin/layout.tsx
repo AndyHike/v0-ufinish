@@ -2,8 +2,6 @@ import type React from "react"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
-import { getSession } from "@/lib/auth/session"
-import { redirect } from "next/navigation"
 
 export async function generateMetadata({
   params: { locale },
@@ -16,19 +14,13 @@ export async function generateMetadata({
   }
 }
 
-export default async function AdminLayout({
+export default function AdminLayout({
   children,
   params: { locale },
 }: {
   children: React.ReactNode
   params: { locale: string }
 }) {
-  const session = await getSession()
-
-  if (!session || session.user.role !== "admin") {
-    redirect(`/${locale}/auth/signin`)
-  }
-
   return (
     <div className="flex h-screen">
       <AdminSidebar />

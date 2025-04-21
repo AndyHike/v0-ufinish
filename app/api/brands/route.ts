@@ -1,41 +1,40 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase"
 
 export async function GET() {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+    const supabase = createClient()
 
-    if (!supabaseUrl || !supabaseKey) {
-      return NextResponse.json({ error: "Supabase credentials not configured" }, { status: 500 })
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey)
-
-    // Get brands ordered by position
-    const { data: brands, error } = await supabase
+    // First try to get brands ordered by position
+    let { data, error } = await supabase
       .from("brands")
       .select("*")
       .order("position", { ascending: true, nullsLast: true })
 
-    if (error) {
-      console.error("Error fetching brands:", error)
-      return NextResponse.json({ error: "Failed to fetch brands" }, { status: 500 })
+    // If there's an error or no brands with position, try fetching without ordering
+    if (error || !data || data.length === 0) {
+      const { data: fallbackData, error: fallbackError } = await supabase.from("brands").select("*").order("name")
+
+      if (fallbackError) throw fallbackError
+      data = fallbackData
     }
 
-    // Sort brands by position
-    if (brands) {
-      brands.sort((a, b) => {
-        // Handle null positions by placing them at the end
-        if (a.position === null) return 1
-        if (b.position === null) return -1
+    // Sort brands by position if available, otherwise by name
+    const sortedData = data.sort((a, b) => {
+      // If both have position, sort by position
+      if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
         return a.position - b.position
-      })
-    }
+      }
+      // If only one has position, prioritize the one with position
+      if (a.position !== null && a.position !== undefined) return -1
+      if (b.position !== null && b.position !== undefined) return 1
+      // If neither has position, sort by name
+      return a.name.localeCompare(b.name)
+    })
 
-    return NextResponse.json(brands || [])
+    return NextResponse.json(sortedData)
   } catch (error) {
-    console.error("Unexpected error in brands API:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Error fetching brands:", error)
+    return NextResponse.json({ error: "Failed to fetch brands" }, { status: 500 })
   }
 }
