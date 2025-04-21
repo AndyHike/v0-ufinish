@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Smartphone, Eye, EyeOff } from "lucide-react"
-import { loginWithRedirect } from "@/app/actions/auth"
+import { login } from "@/app/actions/auth"
 
 export default function SignInClient() {
   const t = useTranslations("Auth")
@@ -33,13 +33,26 @@ export default function SignInClient() {
       formData.append("email", email)
       formData.append("password", password)
 
-      const result = await loginWithRedirect(formData, locale)
+      // Use the regular login function instead of loginWithRedirect
+      const result = await login(formData)
 
       if (!result.success) {
-        setError(result.message || t("loginFailed"))
+        // Use translated error messages
+        if (result.message === "Invalid email or password") {
+          setError(t("invalidCredentials"))
+        } else {
+          setError(result.message || t("loginFailed"))
+        }
         setIsLoading(false)
+        return
       }
-      // No need to handle success case as the server action will redirect
+
+      // Handle successful login manually
+      if (result.role === "admin") {
+        router.push(`/${locale}/admin`)
+      } else {
+        router.push(`/${locale}/profile`)
+      }
     } catch (error) {
       console.error("Login error:", error)
       setError(t("somethingWentWrong"))

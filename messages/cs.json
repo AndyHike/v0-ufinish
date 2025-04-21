@@ -152,6 +152,8 @@
     "submit": "Odeslat",
     "somethingWentWrong": "Něco se pokazilo. Zkuste to prosím znovu.",
     "loginError": "Chyba přihlášení",
+    "loginFailed": "Přihlášení se nezdařilo. Zkuste to prosím znovu.",
+    "invalidCredentials": "Neplatný e-mail nebo heslo",
     "accountBlocked": "Účet dočasně zablokován",
     "verificationSuccess": "E-mail ověřen",
     "verificationSuccessDescription": "Váš e-mail byl úspěšně ověřen.",
@@ -189,7 +191,9 @@
     "missingTokenDescription": "Token pro obnovení hesla chybí. Požádejte prosím o nový odkaz pro obnovení hesla.",
     "invalidToken": "Neplatný token",
     "invalidTokenDescription": "Token pro obnovení hesla je neplatný nebo vypršel. Požádejte prosím o nový odkaz pro obnovení hesla.",
-    "passwordsDoNotMatch": "Hesla se neshodují"
+    "passwordsDoNotMatch": "Hesla se neshodují",
+    "hidePassword": "Skrýt heslo",
+    "showPassword": "Zobrazit heslo"
   },
   "Login": {
     "title": "Přihlášení k účtu",

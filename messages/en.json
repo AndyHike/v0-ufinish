@@ -152,6 +152,8 @@
     "submit": "Submit",
     "somethingWentWrong": "Something went wrong. Please try again.",
     "loginError": "Login Error",
+    "loginFailed": "Login failed. Please try again.",
+    "invalidCredentials": "Invalid email or password",
     "accountBlocked": "Account Temporarily Blocked",
     "verificationSuccess": "Email Verified",
     "verificationSuccessDescription": "Your email has been successfully verified.",
@@ -189,7 +191,9 @@
     "missingTokenDescription": "The password reset token is missing. Please request a new password reset link.",
     "invalidToken": "Invalid Token",
     "invalidTokenDescription": "The password reset token is invalid or has expired. Please request a new password reset link.",
-    "passwordsDoNotMatch": "Passwords do not match"
+    "passwordsDoNotMatch": "Passwords do not match",
+    "hidePassword": "Hide password",
+    "showPassword": "Show password"
   },
   "Login": {
     "title": "Account Login",

@@ -140,14 +140,14 @@ export async function login(formData: FormData) {
       .maybeSingle()
 
     if (userError || !userData) {
-      return { success: false, message: "Invalid email or password" }
+      return { success: false, message: "invalidCredentials" }
     }
 
     // Verify password
     const isPasswordValid = await verifyPassword(password, userData.password_hash)
 
     if (!isPasswordValid) {
-      return { success: false, message: "Invalid email or password" }
+      return { success: false, message: "invalidCredentials" }
     }
 
     // Generate session
@@ -164,7 +164,7 @@ export async function login(formData: FormData) {
 
     if (sessionError) {
       console.error("Error creating session:", sessionError)
-      return { success: false, message: "Failed to create session" }
+      return { success: false, message: "loginFailed" }
     }
 
     // Set session cookie
@@ -178,7 +178,7 @@ export async function login(formData: FormData) {
     return { success: true, role: userData.role }
   } catch (error) {
     console.error("Login error:", error)
-    return { success: false, message: "An unexpected error occurred" }
+    return { success: false, message: "unexpectedError" }
   }
 }
 

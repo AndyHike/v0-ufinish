@@ -87,6 +87,7 @@ export async function login(email: string, password: string) {
         blocked: true,
         remainingAttempts: 0,
         minutesRemaining: rateLimitCheck.minutesRemaining,
+        message: "accountBlocked",
       }
     }
 
@@ -102,12 +103,13 @@ export async function login(email: string, password: string) {
       return {
         success: false,
         remainingAttempts: rateLimitCheck.remainingAttempts - 1,
+        message: "invalidCredentials",
       }
     }
 
     // Check if email is verified
     if (!user.email_verified) {
-      return { success: false, emailNotVerified: true, userId: user.id }
+      return { success: false, emailNotVerified: true, userId: user.id, message: "emailNotVerified" }
     }
 
     // Verify password
@@ -117,6 +119,7 @@ export async function login(email: string, password: string) {
       return {
         success: false,
         remainingAttempts: rateLimitCheck.remainingAttempts - 1,
+        message: "invalidCredentials",
       }
     }
 
@@ -135,7 +138,7 @@ export async function login(email: string, password: string) {
 
     if (sessionError) {
       console.error("Error creating session:", sessionError)
-      return { success: false, error: "Failed to create session" }
+      return { success: false, message: "loginFailed" }
     }
 
     // Set session cookie
@@ -150,7 +153,7 @@ export async function login(email: string, password: string) {
     return { success: true, role: user.role }
   } catch (error) {
     console.error("Error in login function:", error)
-    return { success: false, error: "An unexpected error occurred" }
+    return { success: false, message: "unexpectedError" }
   }
 }
 
