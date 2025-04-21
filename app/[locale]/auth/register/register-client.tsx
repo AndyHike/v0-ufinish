@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Smartphone } from "lucide-react"
-import { registerWithRedirect } from "@/app/actions/auth"
 
 export default function RegisterClient() {
   const t = useTranslations("Auth")
@@ -29,18 +28,27 @@ export default function RegisterClient() {
     setError("")
 
     try {
+      // Create form data
       const formData = new FormData()
       formData.append("name", name)
       formData.append("email", email)
       formData.append("password", password)
 
-      const result = await registerWithRedirect(formData, locale)
+      // Send registration request
+      const response = await fetch(`/api/auth/register`, {
+        method: "POST",
+        body: formData,
+      })
 
-      if (!result.success) {
+      const result = await response.json()
+
+      if (result.success) {
+        // Manually navigate instead of relying on server redirect
+        router.push(`/${locale}`)
+      } else {
         setError(result.message || t("registrationFailed"))
         setIsLoading(false)
       }
-      // If successful, registerWithRedirect will handle the redirect
     } catch (error) {
       console.error("Registration error:", error)
       setError(t("somethingWentWrong"))

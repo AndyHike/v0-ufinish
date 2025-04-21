@@ -1,29 +1,135 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
+import { cookies } from "next/headers"
+import { createClient } from "@supabase/supabase-js"
+import { hash } from "@/utils/auth"
 
-// In a real app, this would save to a database
-export async function POST(request: Request) {
+// Create a Supabase client for server-side operations
+function createServerClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
+
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false },
+  })
+}
+
+// Validate password strength
+function validatePassword(password: string): { valid: boolean; message?: string } {
+  if (password.length < 8) {
+    return { valid: false, message: "Password must be at least 8 characters long" }
+  }
+  return { valid: true }
+}
+
+export async function POST(request: NextRequest) {
   try {
-    const { name, email, password } = await request.json()
+    const formData = await request.formData()
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+    const name = formData.get("name") as string
+    const phone = (formData.get("phone") as string) || null
 
-    // Validate input
-    if (!name || !email || !password) {
-      return NextResponse.json({ message: "Missing required fields" }, { status: 400 })
+    // Validate inputs
+    if (!email || !password || !name) {
+      return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 })
     }
 
-    // Check if email is already in use (mock implementation)
-    // For testing purposes, let's allow all emails to register
-    // In a real app, you would check against a database
+    // Validate password
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.valid) {
+      return NextResponse.json({ success: false, message: passwordValidation.message }, { status: 400 })
+    }
 
-    // Mock successful registration
-    return NextResponse.json(
-      {
-        message: "User registered successfully",
-        user: { name, email, id: Math.random().toString(36).substring(2, 15) },
-      },
-      { status: 201 },
-    )
+    const supabase = createServerClient()
+
+    // Check if email already exists
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email.toLowerCase())
+      .maybeSingle()
+
+    if (existingUser) {
+      return NextResponse.json({ success: false, message: "Email is already registered" }, { status: 400 })
+    }
+
+    // Hash password
+    const passwordHash = await hash(password)
+
+    // Insert user
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .insert([{ email: email.toLowerCase(), password_hash: passwordHash, role: "user" }])
+      .select("id")
+      .single()
+
+    if (userError) {
+      console.error("Error creating user:", userError)
+      return NextResponse.json({ success: false, message: "Failed to create user account" }, { status: 500 })
+    }
+
+    // Check if profiles table has a phone column
+    const { data: profileColumns, error: columnsError } = await supabase.from("profiles").select("*").limit(1)
+
+    if (columnsError) {
+      console.error("Error checking profile columns:", columnsError)
+    }
+
+    // Determine if we should include phone in the profile
+    const hasPhoneColumn =
+      profileColumns && profileColumns.length > 0 && Object.keys(profileColumns[0] || {}).includes("phone")
+
+    // Insert profile with or without phone based on schema
+    const profileData = hasPhoneColumn
+      ? {
+          id: userData.id,
+          name,
+          phone,
+          avatar_url: `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(name)}`,
+        }
+      : {
+          id: userData.id,
+          name,
+          avatar_url: `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(name)}`,
+        }
+
+    const { error: profileError } = await supabase.from("profiles").insert([profileData])
+
+    if (profileError) {
+      console.error("Error creating profile:", profileError)
+      // Delete user if profile creation fails
+      await supabase.from("users").delete().eq("id", userData.id)
+      return NextResponse.json({ success: false, message: "Failed to create user profile" }, { status: 500 })
+    }
+
+    // Create a session
+    const { data: session, error: sessionError } = await supabase
+      .from("sessions")
+      .insert([
+        {
+          user_id: userData.id,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        },
+      ])
+      .select("id")
+      .single()
+
+    if (sessionError) {
+      console.error("Error creating session:", sessionError)
+      return NextResponse.json({ success: false, message: "Failed to create session" }, { status: 500 })
+    }
+
+    // Set a cookie with the session ID
+    cookies().set("session_id", session.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: "/",
+    })
+
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Registration error:", error)
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ success: false, message: "An unexpected error occurred" }, { status: 500 })
   }
 }
