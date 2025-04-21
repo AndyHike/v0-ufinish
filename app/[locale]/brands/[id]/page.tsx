@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server"
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import { createServerClient } from "@/utils/supabase/server"
+import Link from "next/link"
 
 type Props = {
   params: {
@@ -73,10 +74,14 @@ export default async function BrandPage({ params }: Props) {
         {models && models.length > 0 ? (
           <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
             {models.map((model) => (
-              <div key={model.id} className="flex flex-col items-center rounded-lg border p-4 shadow-sm">
+              <Link
+                href={`/${locale}/models/${model.id}`}
+                key={model.id}
+                className="flex flex-col items-center rounded-lg border p-4 shadow-sm transition-all hover:shadow-md"
+              >
                 <h3 className="text-lg font-medium">{model.name}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{t("startingFrom", { price: model.base_price })}</p>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (

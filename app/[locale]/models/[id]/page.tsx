@@ -37,6 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ModelPage({ params }: Props) {
   const { id, locale } = params
   const t = await getTranslations({ locale, namespace: "Models" })
+  const commonT = await getTranslations({ locale, namespace: "Common" })
 
   const supabase = createServerClient()
 
@@ -54,9 +55,23 @@ export default async function ModelPage({ params }: Props) {
   // Fetch services for this model
   const { data: modelServices } = await supabase
     .from("model_services")
-    .select("*, services(id, name, description)")
+    .select("*, services(id, name, description, position)")
     .eq("model_id", id)
     .order("price", { ascending: true })
+
+  // If no model services are found, fetch all services and display them without prices
+  const { data: allServices } = await supabase.from("services").select("*").order("position", { ascending: true })
+
+  // Determine which services to display
+  const servicesToDisplay =
+    modelServices && modelServices.length > 0
+      ? modelServices
+      : allServices?.map((service) => ({
+          services: service,
+          price: null,
+          model_id: id,
+          service_id: service.id,
+        }))
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
@@ -102,23 +117,25 @@ export default async function ModelPage({ params }: Props) {
 
         <h2 className="mb-6 text-2xl font-bold">{t("availableServices")}</h2>
 
-        {modelServices && modelServices.length > 0 ? (
+        {servicesToDisplay && servicesToDisplay.length > 0 ? (
           <div className="grid gap-4">
-            {modelServices.map((modelService) => (
-              <div key={modelService.id} className="flex flex-col rounded-lg border p-6 shadow-sm">
+            {servicesToDisplay.map((modelService) => (
+              <div key={modelService.services?.id} className="flex flex-col rounded-lg border p-6 shadow-sm">
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-xl font-medium">{modelService.services?.name}</h3>
                     <p className="mt-2 text-muted-foreground">{modelService.services?.description}</p>
                   </div>
                   <div className="text-xl font-bold">
-                    {new Intl.NumberFormat(locale, { style: "currency", currency: "USD" }).format(modelService.price)}
+                    {modelService.price
+                      ? new Intl.NumberFormat(locale, { style: "currency", currency: "USD" }).format(modelService.price)
+                      : t("priceOnRequest")}
                   </div>
                 </div>
                 <div className="mt-4 flex justify-end">
                   <Button variant="outline" asChild>
                     <Link href={`/${locale}/contact?service=${modelService.services?.name}&model=${model.name}`}>
-                      {t("requestService")}
+                      {commonT("requestService")}
                     </Link>
                   </Button>
                 </div>

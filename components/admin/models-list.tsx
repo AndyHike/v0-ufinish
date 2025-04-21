@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Search } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 
 export function ModelsList() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -25,7 +26,7 @@ export function ModelsList() {
       name: "iPhone 13",
       brand: "Apple",
       brandLogo: "/bitten-fruit-silhouette.png",
-      image: "/placeholder.svg?height=40&width=40&query=iphone 13",
+      image: "/sleek-slate-iphone.png",
       year: "2021",
       createdAt: "10.03.2023",
     },
@@ -34,7 +35,7 @@ export function ModelsList() {
       name: "Galaxy S21",
       brand: "Samsung",
       brandLogo: "/samsung-wordmark.png",
-      image: "/placeholder.svg?height=40&width=40&query=galaxy s21",
+      image: "/phantom-violet-s21.png",
       year: "2021",
       createdAt: "15.02.2023",
     },
@@ -43,7 +44,7 @@ export function ModelsList() {
       name: "Redmi Note 10",
       brand: "Xiaomi",
       brandLogo: "/xiaomi-logo-abstract.png",
-      image: "/placeholder.svg?height=40&width=40&query=redmi note 10",
+      image: "/redmi-note-10-on-desk.png",
       year: "2021",
       createdAt: "22.04.2023",
     },
@@ -52,7 +53,7 @@ export function ModelsList() {
       name: "P40 Pro",
       brand: "Huawei",
       brandLogo: "/abstract-petal-design.png",
-      image: "/placeholder.svg?height=40&width=40&query=huawei p40 pro",
+      image: "/huawei-p40-pro-on-table.png",
       year: "2020",
       createdAt: "05.01.2023",
     },
@@ -60,7 +61,7 @@ export function ModelsList() {
       id: "5",
       name: "9 Pro",
       brand: "OnePlus",
-      brandLogo: "/placeholder.svg?height=40&width=40&query=oneplus logo",
+      brandLogo: "/abstract-red-white-lines.png",
       image: "/placeholder.svg?height=40&width=40&query=oneplus 9 pro",
       year: "2021",
       createdAt: "18.05.2023",
@@ -143,6 +144,9 @@ export function ModelsList() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>Редагувати</DropdownMenuItem>
                     <DropdownMenuItem>Переглянути опис</DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href={`/admin/models/${model.id}/services`}>Керувати послугами</Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="text-destructive">Видалити</DropdownMenuItem>
                   </DropdownMenuContent>
