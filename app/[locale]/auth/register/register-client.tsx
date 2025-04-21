@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Smartphone } from "lucide-react"
+import { registerWithRedirect } from "@/app/actions/auth"
 
 export default function RegisterClient() {
   const t = useTranslations("Auth")
@@ -20,16 +21,31 @@ export default function RegisterClient() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
-    // Simulate registration
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const formData = new FormData()
+      formData.append("name", name)
+      formData.append("email", email)
+      formData.append("password", password)
 
-    // Redirect to sign-in
-    router.push(`/${locale}/auth/signin`)
+      const result = await registerWithRedirect(formData, locale)
+
+      if (!result.success) {
+        setError(result.message || t("registrationFailed"))
+        setIsLoading(false)
+      }
+      // If successful, registerWithRedirect will handle the redirect
+    } catch (error) {
+      console.error("Registration error:", error)
+      setError(t("somethingWentWrong"))
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -78,6 +94,7 @@ export default function RegisterClient() {
             />
             <p className="text-xs text-muted-foreground">{t("passwordRequirements")}</p>
           </div>
+          {error && <div className="text-sm text-destructive">{error}</div>}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? t("processing") : t("register")}
           </Button>

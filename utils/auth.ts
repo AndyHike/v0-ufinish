@@ -1,41 +1,36 @@
 import crypto from "crypto"
 
-// Generate a salt
-export function generateSalt(length = 16): string {
-  return crypto.randomBytes(length).toString("hex")
-}
-
-// Hash a password with PBKDF2
+// Hash a password using PBKDF2
 export async function hash(password: string): Promise<string> {
-  const salt = generateSalt()
-  const iterations = 10000
-  const keylen = 64
-  const digest = "sha512"
-
   return new Promise((resolve, reject) => {
-    crypto.pbkdf2(password, salt, iterations, keylen, digest, (err, derivedKey) => {
+    // Generate a random salt
+    const salt = crypto.randomBytes(16).toString("hex")
+
+    // Use PBKDF2 to hash the password
+    crypto.pbkdf2(password, salt, 10000, 64, "sha512", (err, derivedKey) => {
       if (err) reject(err)
       // Format: iterations:salt:hash
-      resolve(`${iterations}:${salt}:${derivedKey.toString("hex")}`)
+      resolve(`10000:${salt}:${derivedKey.toString("hex")}`)
     })
   })
 }
 
-// Verify a password against a hash
+// Verify a password against a stored hash
 export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
-  try {
-    const [iterations, salt, hash] = storedHash.split(":")
-    const keylen = 64
-    const digest = "sha512"
+  return new Promise((resolve, reject) => {
+    try {
+      // Extract the salt and iteration count from the stored hash
+      const [iterations, salt, hash] = storedHash.split(":")
+      const iterCount = Number.parseInt(iterations)
 
-    return new Promise((resolve, reject) => {
-      crypto.pbkdf2(password, salt, Number.parseInt(iterations), keylen, digest, (err, derivedKey) => {
+      // Hash the provided password with the same salt and iterations
+      crypto.pbkdf2(password, salt, iterCount, 64, "sha512", (err, derivedKey) => {
         if (err) reject(err)
+        // Compare the hashes
         resolve(derivedKey.toString("hex") === hash)
       })
-    })
-  } catch (error) {
-    console.error("Error verifying password:", error)
-    return false
-  }
+    } catch (error) {
+      reject(error)
+    }
+  })
 }
