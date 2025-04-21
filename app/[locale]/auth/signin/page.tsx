@@ -2,6 +2,8 @@ import { getTranslations } from "next-intl/server"
 import { getLocale } from "next-intl/server"
 import SignInForm from "./signin-form"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Card, CardContent } from "@/components/ui/card"
+import { Smartphone } from "lucide-react"
 
 export default async function SignInPage({
   searchParams,
@@ -20,13 +22,10 @@ export default async function SignInPage({
     <div className="container flex min-h-screen flex-col items-center justify-center py-12">
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
         <div className="flex flex-col space-y-2 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <Smartphone className="h-6 w-6 text-primary" />
+          </div>
           <h1 className="text-2xl font-semibold tracking-tight">{t("signInToAccount")}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t("noAccount")}{" "}
-            <a href={`/${locale}/auth/register`} className="underline underline-offset-4 hover:text-primary">
-              {t("register")}
-            </a>
-          </p>
         </div>
 
         {showError && (
@@ -57,7 +56,11 @@ export default async function SignInPage({
           </Alert>
         )}
 
-        <SignInForm />
+        <Card>
+          <CardContent className="pt-6">
+            <SignInForm />
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

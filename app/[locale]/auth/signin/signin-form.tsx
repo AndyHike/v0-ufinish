@@ -99,6 +99,12 @@ export default function SignInForm() {
           </Button>
         </div>
       </form>
+      <div className="text-center text-sm">
+        <span className="text-muted-foreground">{t("noAccount")}</span>{" "}
+        <Link href={`/${locale}/auth/register`} className="text-primary hover:underline">
+          {t("register")}
+        </Link>
+      </div>
     </div>
   )
 }
