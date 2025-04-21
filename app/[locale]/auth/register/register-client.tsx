@@ -5,15 +5,16 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Smartphone } from "lucide-react"
 
-export default function RegisterClient({ locale }: { locale: string }) {
+export default function RegisterClient() {
   const t = useTranslations("Auth")
+  const locale = useLocale()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [name, setName] = useState("")

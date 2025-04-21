@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter, usePathname, useParams } from "next/navigation"
+import { usePathname, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Globe } from "lucide-react"
@@ -11,7 +11,6 @@ interface LanguageSwitcherProps {
 }
 
 export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
-  const router = useRouter()
   const pathname = usePathname()
   const params = useParams()
   const currentLocale = params.locale as string
@@ -43,15 +42,8 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
     // For homepage, ensure we're using the correct format
     const finalPath = newPath === `/${newLocale}` ? `/${newLocale}` : newPath
 
-    // Navigate to the new path
-    try {
-      // Use window.location for a full page refresh to ensure all components update
-      window.location.href = finalPath
-    } catch (error) {
-      console.error("Navigation error:", error)
-      // Fallback to the homepage of the selected locale
-      window.location.href = `/${newLocale}`
-    }
+    // Use window.location for a full page refresh to ensure all components update
+    window.location.href = finalPath
 
     setIsOpen(false)
   }

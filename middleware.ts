@@ -13,7 +13,13 @@ const intlMiddleware = createMiddleware({
 export default async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // Handle internationalization first
+  // Special handling for root path
+  if (pathname === "/") {
+    // Redirect to the default locale
+    return NextResponse.redirect(new URL(`/${defaultLocale}`, request.url))
+  }
+
+  // Handle internationalization
   const response = intlMiddleware(request)
 
   // Check for protected routes
