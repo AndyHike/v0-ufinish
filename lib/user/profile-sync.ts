@@ -7,7 +7,7 @@ export async function syncUserProfile(userId: string) {
     // Check if profile exists
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id")
+      .select("id, phone")
       .eq("id", userId)
       .single()
 
@@ -16,19 +16,21 @@ export async function syncUserProfile(userId: string) {
       return
     }
 
+    // Get user data
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("email, name")
+      .eq("id", userId)
+      .single()
+
+    if (userError) {
+      console.error("Error getting user:", userError)
+      return
+    }
+
     // If profile doesn't exist, create it
     if (!profile) {
-      // Get user data
-      const { data: user, error: userError } = await supabase
-        .from("users")
-        .select("email, name")
-        .eq("id", userId)
-        .single()
-
-      if (userError) {
-        console.error("Error getting user:", userError)
-        return
-      }
+      console.log("Creating new profile for user:", userId)
 
       // Create profile
       const { error: insertError } = await supabase.from("profiles").insert({
@@ -41,6 +43,8 @@ export async function syncUserProfile(userId: string) {
       if (insertError) {
         console.error("Error creating profile:", insertError)
       }
+    } else {
+      console.log("Existing profile found:", profile)
     }
 
     // Debug log to check what's happening in the sync function

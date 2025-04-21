@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CalendarDays, Mail, Phone, UserIcon } from "lucide-react"
@@ -18,6 +19,11 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ user }: UserProfileProps) {
+  // Debug log to see what user data we have
+  useEffect(() => {
+    console.log("User profile data in component:", user)
+  }, [user])
+
   // Format date
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Не вказано"

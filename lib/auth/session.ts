@@ -11,36 +11,39 @@ export async function getCurrentUser() {
   const supabase = createClient()
 
   // Get session
-  const { data: sessionData } = await supabase
+  const { data: sessionData, error: sessionError } = await supabase
     .from("sessions")
     .select("user_id, expires_at")
     .eq("id", sessionId)
     .single()
 
-  if (!sessionData || new Date(sessionData.expires_at) < new Date()) {
+  if (sessionError || !sessionData || new Date(sessionData.expires_at) < new Date()) {
     // Session expired or not found
     cookies().delete("session_id")
     return null
   }
 
   // Get user
-  const { data: userData } = await supabase
+  const { data: userData, error: userError } = await supabase
     .from("users")
     .select("id, email, role, name")
     .eq("id", sessionData.user_id)
     .single()
 
-  if (!userData) {
+  if (userError || !userData) {
     cookies().delete("session_id")
     return null
   }
 
-  // Get profile
+  // Get profile with phone number
   const { data: profileData } = await supabase
     .from("profiles")
     .select("phone, avatar_url")
     .eq("id", userData.id)
     .single()
+
+  // Debug log
+  console.log("Profile data in session:", profileData)
 
   return {
     id: userData.id,
