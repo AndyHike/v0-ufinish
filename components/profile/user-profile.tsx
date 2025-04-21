@@ -1,8 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useTranslations } from "next-intl"
-import type { User } from "next-auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CalendarDays, Mail, Phone, UserIcon } from "lucide-react"
 
 interface UserProfileProps {
-  user: User & {
+  user: {
     id?: string
     name?: string | null
     email?: string | null
@@ -25,15 +23,11 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ user }: UserProfileProps) {
-  const t = useTranslations("Profile")
   const [isEditing, setIsEditing] = useState(false)
-
-  // Debug log to see what user data we have
-  console.log("User profile data:", user)
 
   // Format date
   const formatDate = (dateString?: string) => {
-    if (!dateString) return t("notSpecified")
+    if (!dateString) return "Не вказано"
     return new Date(dateString).toLocaleDateString()
   }
 
@@ -52,16 +46,16 @@ export function UserProfile({ user }: UserProfileProps) {
             <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
           </Avatar>
           <div className="space-y-1 text-center sm:text-left">
-            <CardTitle className="text-2xl">{user?.name || t("unnamed")}</CardTitle>
+            <CardTitle className="text-2xl">{user?.name || "Не вказано"}</CardTitle>
             <CardDescription className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
               <span className="flex items-center justify-center sm:justify-start">
                 <Mail className="mr-1 h-4 w-4" />
-                {user?.email || t("notSpecified")}
+                {user?.email || "Не вказано"}
               </span>
               <span className="hidden sm:inline">•</span>
               <span className="flex items-center justify-center sm:justify-start">
                 <Phone className="mr-1 h-4 w-4" />
-                {user?.phone || t("notSpecified")}
+                {user?.phone || "Не вказано"}
               </span>
             </CardDescription>
           </div>
@@ -70,14 +64,14 @@ export function UserProfile({ user }: UserProfileProps) {
       <CardContent>
         <Tabs defaultValue="details" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="details">{t("details")}</TabsTrigger>
-            <TabsTrigger value="security">{t("security")}</TabsTrigger>
+            <TabsTrigger value="details">Деталі</TabsTrigger>
+            <TabsTrigger value="security">Безпека</TabsTrigger>
           </TabsList>
           <TabsContent value="details" className="space-y-4">
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="name">{t("name")}</Label>
+                  <Label htmlFor="name">Ім'я</Label>
                   <div className="flex items-center space-x-2">
                     <UserIcon className="h-4 w-4 text-muted-foreground" />
                     <div className="w-full">
@@ -85,14 +79,14 @@ export function UserProfile({ user }: UserProfileProps) {
                         <Input id="name" defaultValue={user?.name || ""} />
                       ) : (
                         <div className="rounded-md border border-transparent px-3 py-2">
-                          {user?.name || t("notSpecified")}
+                          {user?.name || "Не вказано"}
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">{t("email")}</Label>
+                  <Label htmlFor="email">Email</Label>
                   <div className="flex items-center space-x-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <div className="w-full">
@@ -100,14 +94,14 @@ export function UserProfile({ user }: UserProfileProps) {
                         <Input id="email" defaultValue={user?.email || ""} />
                       ) : (
                         <div className="rounded-md border border-transparent px-3 py-2">
-                          {user?.email || t("notSpecified")}
+                          {user?.email || "Не вказано"}
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">{t("phone")}</Label>
+                  <Label htmlFor="phone">Телефон</Label>
                   <div className="flex items-center space-x-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <div className="w-full">
@@ -115,14 +109,14 @@ export function UserProfile({ user }: UserProfileProps) {
                         <Input id="phone" defaultValue={user?.phone || ""} />
                       ) : (
                         <div className="rounded-md border border-transparent px-3 py-2">
-                          {user?.phone || t("notSpecified")}
+                          {user?.phone || "Не вказано"}
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="created">{t("memberSince")}</Label>
+                  <Label htmlFor="created">Дата реєстрації</Label>
                   <div className="flex items-center space-x-2">
                     <CalendarDays className="h-4 w-4 text-muted-foreground" />
                     <div className="rounded-md border border-transparent px-3 py-2 w-full">
@@ -136,15 +130,15 @@ export function UserProfile({ user }: UserProfileProps) {
           <TabsContent value="security" className="space-y-4">
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="current-password">{t("currentPassword")}</Label>
+                <Label htmlFor="current-password">Поточний пароль</Label>
                 <Input id="current-password" type="password" disabled={!isEditing} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="new-password">{t("newPassword")}</Label>
+                <Label htmlFor="new-password">Новий пароль</Label>
                 <Input id="new-password" type="password" disabled={!isEditing} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">{t("confirmPassword")}</Label>
+                <Label htmlFor="confirm-password">Підтвердження паролю</Label>
                 <Input id="confirm-password" type="password" disabled={!isEditing} />
               </div>
             </div>
@@ -153,9 +147,9 @@ export function UserProfile({ user }: UserProfileProps) {
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="outline" onClick={() => setIsEditing(!isEditing)}>
-          {isEditing ? t("cancel") : t("edit")}
+          {isEditing ? "Скасувати" : "Редагувати"}
         </Button>
-        {isEditing && <Button type="submit">{t("save")}</Button>}
+        {isEditing && <Button type="submit">Зберегти</Button>}
       </CardFooter>
     </Card>
   )

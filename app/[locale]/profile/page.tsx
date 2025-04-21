@@ -21,20 +21,18 @@ export default async function ProfilePage() {
   const supabase = createClient()
   const { data: profile } = await supabase
     .from("profiles")
-    .select("name, phone, address")
+    .select("name, phone, address, created_at")
     .eq("id", session.user.id)
     .single()
 
   // If profile data is missing, get from users table
   const userData = {
     ...session.user,
+    name: session.user.name || profile?.name || null,
     phone: profile?.phone || null,
     address: profile?.address || null,
+    created_at: profile?.created_at || new Date().toISOString(),
   }
-
-  // Debug log to check what data we're getting
-  console.log("Profile data:", profile)
-  console.log("User data:", userData)
 
   return (
     <div className="container py-10">
