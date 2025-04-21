@@ -66,8 +66,7 @@
     "@formatjs/intl-localematcher": "latest",
     "negotiator": "latest",
     "crypto": "latest",
-    "@supabase/auth-helpers-nextjs": "latest",
-    "@hello-pangea/dnd": "latest"
+    "@supabase/auth-helpers-nextjs": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

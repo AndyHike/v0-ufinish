@@ -1,22 +1,41 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase"
+import { createServerClient } from "@/utils/supabase/server"
+import { logActivity } from "@/lib/admin/activity-logger"
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { models } = body
-    const supabase = createClient()
+    const { orderedIds, userId } = body
 
-    // Update each model's position
-    for (const model of models) {
-      const { error } = await supabase.from("models").update({ position: model.position }).eq("id", model.id)
+    if (!orderedIds || !Array.isArray(orderedIds)) {
+      return NextResponse.json({ error: "Ordered IDs are required" }, { status: 400 })
+    }
 
-      if (error) throw error
+    const supabase = createServerClient()
+
+    // Update positions for each model
+    const updates = orderedIds.map((id, index) => {
+      return supabase
+        .from("models")
+        .update({ position: index + 1 })
+        .eq("id", id)
+    })
+
+    await Promise.all(updates)
+
+    // Log activity
+    if (userId) {
+      await logActivity({
+        userId,
+        entityType: "model",
+        actionType: "reorder",
+        details: { orderedIds },
+      })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error reordering models:", error)
-    return NextResponse.json({ error: "Failed to reorder models" }, { status: 500 })
+    console.error("Unexpected error:", error)
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
   }
 }
