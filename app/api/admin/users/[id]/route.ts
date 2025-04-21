@@ -1,38 +1,56 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase"
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { cookies } from "next/headers"
+import { NextResponse } from "next/server"
 import { logActivity } from "@/lib/admin/activity-logger"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const supabase = createClient()
+    const userId = params.id
+    const supabase = createRouteHandlerClient({ cookies })
 
-    const { data: user, error } = await supabase.from("users").select("*").eq("id", params.id).single()
+    // Fetch the user
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("id, email, name, phone, role, created_at")
+      .eq("id", userId)
+      .single()
 
     if (error) {
       console.error("Error fetching user:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        {
+          error: "Failed to fetch user",
+          details: error.message,
+        },
+        { status: 500 },
+      )
     }
 
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
-    }
-
-    return NextResponse.json(user)
+    return NextResponse.json({ user })
   } catch (error) {
-    console.error("Error in user API:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Unexpected error fetching user:", error)
+    return NextResponse.json(
+      {
+        error: "An unexpected error occurred",
+      },
+      { status: 500 },
+    )
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
-    const supabase = createClient()
+    const userId = params.id
+    const supabase = createRouteHandlerClient({ cookies })
     const body = await request.json()
 
-    // Get the current user data for logging
-    const { data: currentUser } = await supabase.from("users").select("*").eq("id", params.id).single()
+    // Get the current user for activity logging
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser()
 
-    const { data: user, error } = await supabase
+    // Update the user
+    const { data: updatedUser, error } = await supabase
       .from("users")
       .update({
         name: body.name,
@@ -41,62 +59,94 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         role: body.role,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", params.id)
-      .select()
+      .eq("id", userId)
+      .select("id, email, name")
       .single()
 
     if (error) {
       console.error("Error updating user:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        {
+          error: "Failed to update user",
+          details: error.message,
+        },
+        { status: 500 },
+      )
     }
 
     // Log the activity
     await logActivity({
+      user_id: currentUser?.id,
       action_type: "update",
       entity_type: "user",
-      entity_id: params.id,
-      user_id: params.id, // Using the same ID as the entity for simplicity
+      entity_id: userId,
       details: {
-        before: currentUser,
-        after: user,
+        name: updatedUser.name,
+        email: updatedUser.email,
       },
     })
 
-    return NextResponse.json(user)
+    return NextResponse.json({ user: updatedUser })
   } catch (error) {
-    console.error("Error in user API:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Unexpected error updating user:", error)
+    return NextResponse.json(
+      {
+        error: "An unexpected error occurred",
+      },
+      { status: 500 },
+    )
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const supabase = createClient()
+    const userId = params.id
+    const supabase = createRouteHandlerClient({ cookies })
 
-    // Get the current user data for logging
-    const { data: currentUser } = await supabase.from("users").select("*").eq("id", params.id).single()
+    // Get the current user for activity logging
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser()
 
-    const { error } = await supabase.from("users").delete().eq("id", params.id)
+    // Get user details before deletion for activity logging
+    const { data: userToDelete } = await supabase.from("users").select("id, email, name").eq("id", userId).single()
+
+    // Delete the user
+    const { error } = await supabase.from("users").delete().eq("id", userId)
 
     if (error) {
       console.error("Error deleting user:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        {
+          error: "Failed to delete user",
+          details: error.message,
+        },
+        { status: 500 },
+      )
     }
 
     // Log the activity
-    await logActivity({
-      action_type: "delete",
-      entity_type: "user",
-      entity_id: params.id,
-      user_id: params.id, // Using the same ID as the entity for simplicity
-      details: {
-        user: currentUser,
-      },
-    })
+    if (userToDelete) {
+      await logActivity({
+        user_id: currentUser?.id,
+        action_type: "delete",
+        entity_type: "user",
+        entity_id: userId,
+        details: {
+          name: userToDelete.name,
+          email: userToDelete.email,
+        },
+      })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error in user API:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Unexpected error deleting user:", error)
+    return NextResponse.json(
+      {
+        error: "An unexpected error occurred",
+      },
+      { status: 500 },
+    )
   }
 }
