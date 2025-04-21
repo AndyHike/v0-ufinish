@@ -15,7 +15,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   DropdownMenu,
@@ -31,6 +30,7 @@ import { Plus, Pencil, Trash, MoveVertical, MoreHorizontal, DollarSign } from "l
 import Image from "next/image"
 import Link from "next/link"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
+import { AddModelDialog } from "@/components/admin/add-model-dialog"
 
 type Brand = {
   id: string
@@ -56,7 +56,6 @@ export default function ModelsPage() {
   const [models, setModels] = useState<Model[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
-  const [newModel, setNewModel] = useState({ name: "", brandId: "", imageUrl: "" })
   const [editModel, setEditModel] = useState<Model | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -98,41 +97,6 @@ export default function ModelsPage() {
       toast({
         title: "Error",
         description: "Failed to fetch brands",
-        variant: "destructive",
-      })
-    }
-  }
-
-  async function handleAddModel() {
-    try {
-      const response = await fetch("/api/admin/models", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...newModel,
-          userId: session?.user?.id,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to add model")
-      }
-
-      await fetchModels()
-      setNewModel({ name: "", brandId: "", imageUrl: "" })
-      setIsAddDialogOpen(false)
-
-      toast({
-        title: t("success"),
-        description: t("modelAddedSuccess"),
-      })
-    } catch (error) {
-      console.error("Error adding model:", error)
-      toast({
-        title: t("error"),
-        description: t("modelAddedError"),
         variant: "destructive",
       })
     }
@@ -267,66 +231,10 @@ export default function ModelsPage() {
             <MoveVertical className="mr-2 h-4 w-4" />
             {isReorderMode ? t("doneReordering") : t("reorderModels")}
           </Button>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                {t("addModel")}
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{t("addNewModel")}</DialogTitle>
-                <DialogDescription>{t("addNewModelDescription")}</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">{t("modelName")}</Label>
-                  <Input
-                    id="name"
-                    value={newModel.name}
-                    onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
-                    placeholder={t("modelNamePlaceholder")}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="brand">{t("brand")}</Label>
-                  <Select
-                    value={newModel.brandId}
-                    onValueChange={(value) => setNewModel({ ...newModel, brandId: value })}
-                  >
-                    <SelectTrigger id="brand">
-                      <SelectValue placeholder={t("selectBrand")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {brands.map((brand) => (
-                        <SelectItem key={brand.id} value={brand.id}>
-                          {brand.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="image">{t("imageUrl")}</Label>
-                  <Input
-                    id="image"
-                    value={newModel.imageUrl}
-                    onChange={(e) => setNewModel({ ...newModel, imageUrl: e.target.value })}
-                    placeholder={t("imageUrlPlaceholder")}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  {t("cancel")}
-                </Button>
-                <Button onClick={handleAddModel} disabled={!newModel.name || !newModel.brandId}>
-                  {t("add")}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t("addModel")}
+          </Button>
         </div>
       </div>
 
@@ -469,6 +377,9 @@ export default function ModelsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Add Model Dialog */}
+      <AddModelDialog isOpen={isAddDialogOpen} onClose={() => setIsAddDialogOpen(false)} onModelAdded={fetchModels} />
 
       {/* Edit Model Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
