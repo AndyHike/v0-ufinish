@@ -26,6 +26,7 @@ type Model = {
   brand_name: string
   brand_logo_url?: string
   image_url?: string
+  year: string
   created_at: string
 }
 
@@ -49,7 +50,7 @@ export function ModelsList() {
 
         // Build API URL with optional brand filter
         let url = "/api/admin/models"
-        if (brandId && brandId !== "all") {
+        if (brandId) {
           url += `?brand=${brandId}`
         }
 
@@ -137,48 +138,45 @@ export function ModelsList() {
             <TableRow>
               <TableHead>{t("name")}</TableHead>
               <TableHead>{t("brand")}</TableHead>
-              <TableHead>{t("image")}</TableHead>
+              <TableHead>{t("year")}</TableHead>
               <TableHead>{t("createdAt")}</TableHead>
-              <TableHead className="text-right">{t("actions")}</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredModels.map((model) => (
               <TableRow key={model.id}>
-                <TableCell className="font-medium">{model.name}</TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-2">
-                    {model.brand_logo_url && (
-                      <div className="h-5 w-5 overflow-hidden rounded-full">
-                        <Image
-                          src={model.brand_logo_url || "/placeholder.svg"}
-                          alt={model.brand_name}
-                          width={20}
-                          height={20}
-                          className="h-full w-full object-contain"
-                        />
-                      </div>
-                    )}
-                    {model.brand_name}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {model.image_url ? (
+                  <div className="flex items-center gap-3">
                     <div className="h-8 w-8 overflow-hidden rounded-md">
                       <Image
-                        src={model.image_url || "/placeholder.svg"}
+                        src={model.image_url || "/placeholder.svg?height=32&width=32&query=phone"}
                         alt={model.name}
                         width={32}
                         height={32}
                         className="h-full w-full object-contain"
                       />
                     </div>
-                  ) : (
-                    <span className="text-muted-foreground">{t("noImage")}</span>
-                  )}
+                    <span className="font-medium">{model.name}</span>
+                  </div>
                 </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <div className="h-5 w-5 overflow-hidden rounded-full">
+                      <Image
+                        src={model.brand_logo_url || "/placeholder.svg?height=20&width=20&query=brand"}
+                        alt={model.brand_name}
+                        width={20}
+                        height={20}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                    {model.brand_name}
+                  </div>
+                </TableCell>
+                <TableCell>{model.year}</TableCell>
                 <TableCell>{new Date(model.created_at).toLocaleDateString()}</TableCell>
-                <TableCell className="text-right">
+                <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">
