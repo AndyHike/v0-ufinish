@@ -11,6 +11,7 @@ export async function GET() {
       .from("brands")
       .select("*")
       .order("position", { ascending: true, nullsLast: true })
+      .order("name", { ascending: true })
 
     if (error) {
       console.error("Error fetching brands:", error)
@@ -18,22 +19,7 @@ export async function GET() {
     }
 
     console.log(`Successfully fetched ${data?.length || 0} brands`)
-
-    // Sort brands by position first, then by name
-    const sortedData =
-      data?.sort((a, b) => {
-        // If both have position, sort by position
-        if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
-          return a.position - b.position
-        }
-        // If only one has position, prioritize the one with position
-        if (a.position !== null && a.position !== undefined) return -1
-        if (b.position !== null && b.position !== undefined) return 1
-        // If neither has position, sort by name
-        return a.name.localeCompare(b.name)
-      }) || []
-
-    return NextResponse.json(sortedData)
+    return NextResponse.json(data)
   } catch (error) {
     console.error("Unexpected error fetching brands:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

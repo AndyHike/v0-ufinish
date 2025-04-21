@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Smartphone, CheckCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { saveUserName } from "@/lib/auth/actions"
 
 export default function RegisterClient() {
   const t = useTranslations("Auth")
@@ -48,6 +49,9 @@ export default function RegisterClient() {
       const result = await response.json()
 
       if (result.success) {
+        // Save the user's name in both tables
+        await saveUserName(result.userId, formData.get("name") as string)
+
         setIsSuccess(true)
         setIsLoading(false)
       } else {

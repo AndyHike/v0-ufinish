@@ -31,25 +31,28 @@ export async function getCurrentUser() {
     .single()
 
   if (userError || !userData) {
+    console.error("Error fetching user data:", userError)
     cookies().delete("session_id")
     return null
   }
 
-  // Get profile with phone number
+  // Get profile with phone number and name
   const { data: profileData } = await supabase
     .from("profiles")
-    .select("phone, avatar_url")
+    .select("phone, avatar_url, name")
     .eq("id", userData.id)
     .single()
 
   // Debug log
+  console.log("User data:", userData)
   console.log("Profile data in session:", profileData)
 
   return {
     id: userData.id,
     email: userData.email,
     role: userData.role,
-    name: userData.name || null,
+    // Use name from profile if available, otherwise from user table, or null as fallback
+    name: profileData?.name || userData.name || null,
     phone: profileData?.phone || null,
     avatar_url: profileData?.avatar_url || null,
   }

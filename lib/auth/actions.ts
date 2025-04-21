@@ -346,3 +346,26 @@ export async function verifyEmail(token: string) {
     return { success: false, error: "An unexpected error occurred" }
   }
 }
+
+// Add this function to ensure the user's name is saved in both users and profiles tables
+export async function saveUserName(userId: string, name: string) {
+  const supabase = createServerSupabaseClient()
+
+  // Update the users table
+  const { error: userError } = await supabase.from("users").update({ name }).eq("id", userId)
+
+  if (userError) {
+    console.error("Error updating user name:", userError)
+    return false
+  }
+
+  // Update the profiles table
+  const { error: profileError } = await supabase.from("profiles").update({ name }).eq("id", userId)
+
+  if (profileError) {
+    console.error("Error updating profile name:", profileError)
+    return false
+  }
+
+  return true
+}

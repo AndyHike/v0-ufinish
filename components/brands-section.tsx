@@ -1,33 +1,33 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 
-type Brand = {
+interface Brand {
   id: string
   name: string
-  logo_url: string | null
-  position?: number | null
+  logo_url: string
+  position: number
 }
 
 export function BrandsSection() {
-  const t = useTranslations("Brands")
+  const t = useTranslations("BrandsSection")
   const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function fetchBrands() {
+    const fetchBrands = async () => {
       try {
         setLoading(true)
-        setError(null)
         const response = await fetch("/api/brands")
 
         if (!response.ok) {
-          console.error("Failed to fetch brands:", response.status, response.statusText)
           throw new Error(`Failed to fetch brands: ${response.status}`)
         }
 
@@ -36,18 +36,21 @@ export function BrandsSection() {
 
         // Sort brands by position first, then by name
         const sortedBrands = [...data].sort((a, b) => {
-          if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
+          // If both have position, sort by position
+          if (a.position !== null && b.position !== null) {
             return a.position - b.position
           }
-          if (a.position !== null && a.position !== undefined) return -1
-          if (b.position !== null && b.position !== undefined) return 1
+          // If only one has position, prioritize the one with position
+          if (a.position !== null) return -1
+          if (b.position !== null) return 1
+          // If neither has position, sort by name
           return a.name.localeCompare(b.name)
         })
 
         setBrands(sortedBrands)
-      } catch (error) {
-        console.error("Error fetching brands:", error)
-        setError("Failed to load brands. Please try again later.")
+      } catch (err) {
+        console.error("Error fetching brands:", err)
+        setError("Failed to load brands")
       } finally {
         setLoading(false)
       }
@@ -56,59 +59,62 @@ export function BrandsSection() {
     fetchBrands()
   }, [])
 
+  if (error) {
+    return (
+      <div className="py-12 text-center">
+        <h2 className="text-2xl font-bold mb-4">{t("title")}</h2>
+        <p className="text-red-500">{error}</p>
+      </div>
+    )
+  }
+
   return (
     <section className="py-12 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold mb-4">{t("title")}</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">{t("subtitle")}</p>
-        </div>
+      <div className="container px-4 mx-auto">
+        <h2 className="text-3xl font-bold text-center mb-8">{t("title")}</h2>
+        <p className="text-center text-gray-600 mb-10 max-w-2xl mx-auto">{t("description")}</p>
 
         {loading ? (
-          <div className="flex justify-center items-center h-40">
-            <p className="text-gray-500">{t("loading")}</p>
-          </div>
-        ) : error ? (
-          <div className="flex justify-center items-center h-40">
-            <p className="text-red-500">{error}</p>
-          </div>
-        ) : brands.length === 0 ? (
-          <div className="flex justify-center items-center h-40">
-            <p className="text-gray-500">No brands available</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-10">
-            {brands.map((brand) => (
-              <Link
-                key={brand.id}
-                href={`/brands/${brand.id}`}
-                className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col items-center justify-center h-32"
-              >
-                {brand.logo_url ? (
-                  <div className="relative h-16 w-full">
-                    <Image
-                      src={brand.logo_url || "/placeholder.svg"}
-                      alt={brand.name}
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                ) : (
-                  <div className="h-16 w-full flex items-center justify-center">
-                    <span className="text-lg font-medium">{brand.name}</span>
-                  </div>
-                )}
-                <span className="mt-2 text-sm text-center">{brand.name}</span>
-              </Link>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <Card key={i} className="border-none shadow-sm">
+                <CardContent className="p-6 flex items-center justify-center">
+                  <Skeleton className="h-16 w-full" />
+                </CardContent>
+              </Card>
             ))}
           </div>
+        ) : brands.length > 0 ? (
+          <Carousel className="w-full max-w-4xl mx-auto">
+            <CarouselContent>
+              {brands.map((brand) => (
+                <CarouselItem key={brand.id} className="md:basis-1/3 lg:basis-1/4">
+                  <Link href={`/brands/${brand.id}`}>
+                    <Card className="border-none shadow-sm hover:shadow-md transition-shadow duration-300">
+                      <CardContent className="p-6 flex items-center justify-center h-32">
+                        {brand.logo_url ? (
+                          <Image
+                            src={brand.logo_url || "/placeholder.svg"}
+                            alt={brand.name}
+                            width={120}
+                            height={80}
+                            className="max-h-16 w-auto object-contain"
+                          />
+                        ) : (
+                          <div className="text-lg font-medium">{brand.name}</div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-0" />
+            <CarouselNext className="right-0" />
+          </Carousel>
+        ) : (
+          <p className="text-center text-gray-500">{t("noBrands")}</p>
         )}
-
-        <div className="text-center">
-          <Button asChild variant="outline">
-            <Link href="/brands">{t("allBrandsButton")}</Link>
-          </Button>
-        </div>
       </div>
     </section>
   )
