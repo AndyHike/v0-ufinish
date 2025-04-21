@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 import Image from "next/image"
 import Link from "next/link"
-import { createServerClient } from "@/utils/supabase/server"
+import { createClient } from "@/lib/supabase"
 
 export async function generateMetadata({
   params: { locale },
@@ -23,7 +23,7 @@ export default async function BrandsPage({
   params: { locale: string }
 }) {
   const t = await getTranslations({ locale, namespace: "Brands" })
-  const supabase = createServerClient()
+  const supabase = createClient()
 
   // Fetch brands with error handling
   let { data: brands, error } = await supabase
