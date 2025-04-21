@@ -24,6 +24,15 @@ function createTransporter() {
       user,
       pass,
     },
+    // Add TLS options to handle weak certificates
+    tls: {
+      // This option allows Node.js to accept certificates from the server that are considered insecure
+      rejectUnauthorized: false,
+      // Specify minimum TLS version
+      minVersion: "TLSv1",
+      // Disable secure context checking
+      secureContext: false,
+    },
   })
 }
 

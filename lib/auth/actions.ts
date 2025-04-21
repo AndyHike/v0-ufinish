@@ -200,11 +200,18 @@ export async function sendPasswordResetEmail(email: string, locale: string) {
     } catch (emailError) {
       console.error("Error generating or sending reset token:", emailError)
 
-      // Check for DNS errors
+      // Check for specific errors
       if (emailError.code === "EDNS" || emailError.syscall === "queryA") {
         return {
           success: false,
           error: "Email server configuration error. Please contact support.",
+        }
+      }
+
+      if (emailError.code === "ESOCKET" && emailError.message?.includes("certificate")) {
+        return {
+          success: false,
+          error: "Email server security configuration issue. Please contact support.",
         }
       }
 
@@ -275,11 +282,18 @@ export async function resendVerificationEmail(userId: string, locale: string) {
     } catch (emailError) {
       console.error("Error sending verification email:", emailError)
 
-      // Check for DNS errors
+      // Check for specific errors
       if (emailError.code === "EDNS" || emailError.syscall === "queryA") {
         return {
           success: false,
           error: "Email server configuration error. Please contact support.",
+        }
+      }
+
+      if (emailError.code === "ESOCKET" && emailError.message?.includes("certificate")) {
+        return {
+          success: false,
+          error: "Email server security configuration issue. Please contact support.",
         }
       }
 
