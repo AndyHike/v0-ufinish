@@ -237,5 +237,30 @@
     "order": "Pořadí",
     "brandReorderedSuccess": "Pořadí značek bylo úspěšně aktualizováno",
     "brandReorderedError": "Nepodařilo se aktualizovat pořadí značek"
+  },
+  "About": {
+    "about": "O nás",
+    "aboutSubtitle": "Zjistěte více o našem servisu oprav telefonů",
+    "ourStory": "Náš příběh",
+    "storyPart1": "Založený v roce 2010, náš servis oprav telefonů začal jako malý obchod s velkou vizí: poskytovat vysoce kvalitní, cenově dostupné opravy pro všechny typy mobilních zařízení.",
+    "storyPart2": "V průběhu let jsme se stali důvěryhodným jménem v oboru, s týmem certifikovaných techniků, kteří jsou vášniví pro to, co dělají.",
+    "storyPart3": "Dnes pokračujeme v rozšiřování našich služeb při zachování našeho závazku ke kvalitě, dostupnosti a spokojenosti zákazníků.",
+    "ourShop": "Náš obchod"
+  },
+  "Pricing": {
+    "pricing": "Ceník",
+    "pricingSubtitle": "Transparentní ceny pro všechny naše opravárenské služby",
+    "serviceRates": "Sazby služeb",
+    "service": "Služba",
+    "priceRange": "Cenové rozpětí",
+    "priceNote": "Všechny ceny jsou přibližné a mohou se lišit v závislosti na konkrétním modelu a rozsahu poškození.",
+    "repairPlans": "Plány oprav",
+    "basic": "Základní",
+    "standard": "Standardní",
+    "premium": "Premium",
+    "free": "Zdarma",
+    "basicDescription": "Bezplatná diagnostika a konzultace",
+    "standardDescription": "Nejběžnější opravy se zárukou",
+    "premiumDescription": "Komplexní opravy s prodlouženou zárukou a prioritním servisem"
   }
 }

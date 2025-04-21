@@ -297,5 +297,30 @@
       "loading": "Loading brands...",
       "allBrandsButton": "All Brands"
     }
+  },
+  "About": {
+    "about": "About Us",
+    "aboutSubtitle": "Learn more about our phone repair service",
+    "ourStory": "Our Story",
+    "storyPart1": "Founded in 2010, our phone repair service started as a small shop with a big vision: to provide high-quality, affordable repairs for all types of mobile devices.",
+    "storyPart2": "Over the years, we've grown into a trusted name in the industry, with a team of certified technicians who are passionate about what they do.",
+    "storyPart3": "Today, we continue to expand our services while maintaining our commitment to quality, affordability, and customer satisfaction.",
+    "ourShop": "Our Shop"
+  },
+  "Pricing": {
+    "pricing": "Pricing",
+    "pricingSubtitle": "Transparent pricing for all our repair services",
+    "serviceRates": "Service Rates",
+    "service": "Service",
+    "priceRange": "Price Range",
+    "priceNote": "All prices are approximate and may vary depending on the specific model and extent of damage.",
+    "repairPlans": "Repair Plans",
+    "basic": "Basic",
+    "standard": "Standard",
+    "premium": "Premium",
+    "free": "Free",
+    "basicDescription": "Free diagnostics and consultation",
+    "standardDescription": "Most common repairs with warranty",
+    "premiumDescription": "Complex repairs with extended warranty and priority service"
   }
 }
