@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await hash(password)
 
-    // Insert user with phone number
+    // Insert user - DO NOT include phone in users table
     const { data: userData, error: userError } = await supabase
       .from("users")
       .insert([
@@ -64,7 +64,6 @@ export async function POST(request: NextRequest) {
           email: email.toLowerCase(),
           password_hash: passwordHash,
           role: "user",
-          phone: phone, // Store phone in users table
           name: name, // Store name in users table
         },
       ])
@@ -76,12 +75,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Failed to create user account" }, { status: 500 })
     }
 
-    // Insert profile
+    // Insert profile with phone
     const { error: profileError } = await supabase.from("profiles").insert([
       {
         id: userData.id,
         name,
-        phone,
+        phone, // Store phone in profiles table
         avatar_url: `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(name)}`,
       },
     ])

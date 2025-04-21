@@ -7,10 +7,17 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const id = params.id
     const supabase = createClient()
 
-    // Remove phone from the select
+    // Join with profiles to get phone
     const { data: user, error } = await supabase
       .from("users")
-      .select("id, email, name, role, created_at")
+      .select(`
+        id, 
+        email, 
+        name, 
+        role, 
+        created_at,
+        profiles!inner(phone)
+      `)
       .eq("id", id)
       .single()
 
@@ -28,7 +35,17 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    return NextResponse.json(user)
+    // Transform to flatten the structure
+    const transformedUser = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      created_at: user.created_at,
+      phone: user.profiles?.phone || null,
+    }
+
+    return NextResponse.json(transformedUser)
   } catch (error) {
     console.error("Error fetching user:", error)
     return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
@@ -39,11 +56,11 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   try {
     const id = params.id
     const body = await request.json()
-    const { name, email, role } = body // Remove phone from destructuring
+    const { name, email, role, phone } = body
 
     const supabase = createClient()
 
-    // Update user - remove phone from the update
+    // Update user in users table (without phone)
     const { data: user, error } = await supabase
       .from("users")
       .update({
@@ -66,6 +83,27 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       )
     }
 
+    // Update phone in profiles table
+    if (phone !== undefined) {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          phone,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+
+      if (profileError) {
+        return NextResponse.json(
+          {
+            error: "Failed to update user profile",
+            details: profileError.message,
+          },
+          { status: 500 },
+        )
+      }
+    }
+
     // Log activity
     await logActivity({
       action: "update",
@@ -74,7 +112,30 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       details: `Updated user: ${email}`,
     })
 
-    return NextResponse.json(user)
+    // Return updated user with phone
+    const { data: updatedUser } = await supabase
+      .from("users")
+      .select(`
+        id, 
+        email, 
+        name, 
+        role, 
+        created_at,
+        profiles!inner(phone)
+      `)
+      .eq("id", id)
+      .single()
+
+    const transformedUser = {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      name: updatedUser.name,
+      role: updatedUser.role,
+      created_at: updatedUser.created_at,
+      phone: updatedUser.profiles?.phone || null,
+    }
+
+    return NextResponse.json(transformedUser)
   } catch (error) {
     console.error("Error updating user:", error)
     return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
