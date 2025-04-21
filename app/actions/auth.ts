@@ -70,15 +70,31 @@ export async function register(formData: FormData) {
       return { success: false, message: "Failed to create user account" }
     }
 
-    // Insert profile
-    const { error: profileError } = await supabase.from("profiles").insert([
-      {
-        id: userData.id,
-        name,
-        phone,
-        avatar_url: `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(name)}`,
-      },
-    ])
+    // Check if profiles table has a phone column
+    const { data: profileColumns, error: columnsError } = await supabase.from("profiles").select("*").limit(1)
+
+    if (columnsError) {
+      console.error("Error checking profile columns:", columnsError)
+    }
+
+    // Determine if we should include phone in the profile
+    const hasPhoneColumn = profileColumns && Object.keys(profileColumns[0] || {}).includes("phone")
+
+    // Insert profile with or without phone based on schema
+    const profileData = hasPhoneColumn
+      ? {
+          id: userData.id,
+          name,
+          phone,
+          avatar_url: `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(name)}`,
+        }
+      : {
+          id: userData.id,
+          name,
+          avatar_url: `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(name)}`,
+        }
+
+    const { error: profileError } = await supabase.from("profiles").insert([profileData])
 
     if (profileError) {
       console.error("Error creating profile:", profileError)
@@ -206,12 +222,17 @@ export async function loginWithRedirect(formData: FormData, locale: string) {
 
 // Register with redirect
 export async function registerWithRedirect(formData: FormData, locale: string) {
-  const result = await register(formData)
+  try {
+    const result = await register(formData)
 
-  if (result.success) {
-    // Redirect to home page after successful registration
-    redirect(`/${locale}`)
+    if (result.success) {
+      // Redirect to home page after successful registration
+      redirect(`/${locale}`)
+    }
+
+    return result
+  } catch (error) {
+    console.error("Registration redirect error:", error)
+    return { success: false, message: "An unexpected error occurred during registration" }
   }
-
-  return result
 }
