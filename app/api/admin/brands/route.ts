@@ -2,6 +2,21 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { logAdminActivity } from "@/lib/admin/activity-logger"
 
+// Create a consistent sorting function that can be reused
+function sortBrandsByPosition(brands: any[]) {
+  return [...brands].sort((a, b) => {
+    // If both have position, sort by position
+    if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
+      return a.position - b.position
+    }
+    // If only one has position, prioritize the one with position
+    if (a.position !== null && a.position !== undefined) return -1
+    if (b.position !== null && b.position !== undefined) return 1
+    // If neither has position, sort by name
+    return a.name.localeCompare(b.name)
+  })
+}
+
 export async function GET() {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -35,7 +50,10 @@ export async function GET() {
       brands = fallbackBrands
     }
 
-    return NextResponse.json(brands || [])
+    // Apply consistent sorting
+    const sortedBrands = sortBrandsByPosition(brands || [])
+
+    return NextResponse.json(sortedBrands)
   } catch (error) {
     console.error("Unexpected error in brands API:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

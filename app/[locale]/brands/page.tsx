@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 import Image from "next/image"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase"
 
 export async function generateMetadata({
   params: { locale },
@@ -23,36 +22,17 @@ export default async function BrandsPage({
   params: { locale: string }
 }) {
   const t = await getTranslations({ locale, namespace: "Brands" })
-  const supabase = createClient()
 
-  // Fetch brands with error handling
-  let { data: brands, error } = await supabase
-    .from("brands")
-    .select("*")
-    .order("position", { ascending: true, nullsLast: true })
+  // Fetch brands from our unified API
+  const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/brands`, {
+    cache: "no-store",
+  })
 
-  // If there's an error or no brands with position, try fetching without ordering
-  if (error || !brands || brands.length === 0) {
-    const { data: fallbackBrands, error: fallbackError } = await supabase.from("brands").select("*").order("name")
-
-    if (!fallbackError && fallbackBrands) {
-      brands = fallbackBrands
-    }
+  if (!response.ok) {
+    console.error(`Failed to fetch brands: ${response.status}`)
   }
 
-  // Sort brands by position if available, otherwise by name
-  const sortedBrands =
-    brands?.sort((a, b) => {
-      // If both have position, sort by position
-      if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
-        return a.position - b.position
-      }
-      // If only one has position, prioritize the one with position
-      if (a.position !== null && a.position !== undefined) return -1
-      if (b.position !== null && b.position !== undefined) return 1
-      // If neither has position, sort by name
-      return a.name.localeCompare(b.name)
-    }) || []
+  const brands = await response.json()
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
@@ -65,7 +45,7 @@ export default async function BrandsPage({
         </div>
       </div>
       <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 py-12 md:grid-cols-3 lg:grid-cols-5">
-        {sortedBrands.map((brand) => (
+        {brands.map((brand: any) => (
           <Link key={brand.id} href={`/brands/${brand.id}`} className="group flex flex-col items-center justify-center">
             <div className="relative mb-4 h-24 w-24 overflow-hidden rounded-lg">
               <Image
