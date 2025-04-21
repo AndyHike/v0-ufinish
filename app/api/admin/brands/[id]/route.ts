@@ -24,8 +24,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       .from("brands")
       .update({
         name: body.name,
-        logo_url: body.logo_url,
-        position: body.position,
+        logo_url: body.logo_url || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", params.id)

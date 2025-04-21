@@ -5,11 +5,7 @@ import { getSession } from "@/lib/auth/session"
 export async function GET() {
   try {
     const supabase = createClient()
-    const { data, error } = await supabase
-      .from("brands")
-      .select("*")
-      .order("position", { ascending: true })
-      .order("name", { ascending: true })
+    const { data, error } = await supabase.from("brands").select("*").order("name")
 
     if (error) throw error
 
@@ -29,24 +25,12 @@ export async function POST(request: Request) {
     const session = await getSession()
     const userId = session?.user?.id
 
-    // Get the highest position value
-    const { data: existingBrands, error: fetchError } = await supabase
-      .from("brands")
-      .select("position")
-      .order("position", { ascending: false })
-      .limit(1)
-
-    if (fetchError) throw fetchError
-
-    const nextPosition = existingBrands && existingBrands.length > 0 ? (existingBrands[0].position || 0) + 1 : 1
-
     const { data, error } = await supabase
       .from("brands")
       .insert([
         {
           name: body.name,
           logo_url: body.logo_url || null,
-          position: body.position || nextPosition,
         },
       ])
       .select()

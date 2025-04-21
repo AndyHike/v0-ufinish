@@ -74,9 +74,6 @@
     "imageUploadError": "Failed to upload image",
     "invalidFileType": "Invalid file type. Please upload an image.",
     "fileTooLarge": "File is too large. Maximum size is 2MB.",
-    "order": "Order",
-    "brandReorderedSuccess": "Brand order updated successfully",
-    "brandReorderedError": "Failed to update brand order",
     "Users": {
       "title": "Users Management",
       "subtitle": "Manage users in your system",

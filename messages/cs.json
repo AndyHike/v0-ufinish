@@ -304,10 +304,7 @@
     "imageDeletedError": "Nepodařilo se smazat obrázek",
     "imageUploadError": "Nepodařilo se nahrát obrázek",
     "invalidFileType": "Neplatný typ souboru. Nahrajte prosím obrázek.",
-    "fileTooLarge": "Soubor je příliš velký. Maximální velikost je 2 MB.",
-    "order": "Pořadí",
-    "brandReorderedSuccess": "Pořadí značek bylo úspěšně aktualizováno",
-    "brandReorderedError": "Nepodařilo se aktualizovat pořadí značek"
+    "fileTooLarge": "Soubor je příliš velký. Maximální velikost je 2 MB."
   },
   "AdminDashboard": {
     "title": "Nástěnka",

@@ -1,39 +1,43 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import Link from "next/link"
 import Image from "next/image"
-import { Card, CardContent } from "@/components/ui/card"
+import Link from "next/link"
+import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+
+type Brand = {
+  id: string
+  name: string
+  logo_url: string | null
+}
 
 export function BrandsSection() {
   const t = useTranslations("Brands")
+  const [brands, setBrands] = useState<Brand[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Mock brands data - replace with actual data fetching in a real app
-  const brands = [
-    {
-      id: "apple",
-      name: "Apple",
-      logo: "/bitten-fruit-silhouette.png",
-    },
-    {
-      id: "samsung",
-      name: "Samsung",
-      logo: "/samsung-wordmark.png",
-    },
-    {
-      id: "xiaomi",
-      name: "Xiaomi",
-      logo: "/xiaomi-logo-abstract.png",
-    },
-    {
-      id: "huawei",
-      name: "Huawei",
-      logo: "/abstract-petal-design.png",
-    },
-  ]
+  useEffect(() => {
+    async function fetchBrands() {
+      try {
+        const response = await fetch("/api/admin/brands")
+        if (response.ok) {
+          const data = await response.json()
+          setBrands(data)
+        }
+      } catch (error) {
+        console.error("Error fetching brands:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBrands()
+  }, [])
 
   return (
-    <section className="py-12 md:py-24" id="brands">
+    <section className="py-12 md:py-24 bg-muted/50">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center justify-center space-y-4 text-center">
           <div className="space-y-2">
@@ -43,31 +47,41 @@ export function BrandsSection() {
             </p>
           </div>
         </div>
-        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 py-12 sm:grid-cols-3 lg:grid-cols-4">
-          {brands.map((brand) => (
-            <Link key={brand.id} href={`/brands/${brand.id}`}>
-              <Card className="h-full transition-all hover:shadow-md">
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <div className="relative h-24 w-24 mb-4">
-                    <Image
-                      src={brand.logo || "/placeholder.svg?height=96&width=96&query=phone+brand+logo"}
-                      alt={brand.name}
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <h3 className="text-xl font-semibold text-center">{brand.name}</h3>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+        <div className="mx-auto max-w-5xl py-12">
+          {loading ? (
+            <div className="flex justify-center items-center h-20">
+              <p>Loading brands...</p>
+            </div>
+          ) : (
+            <Carousel className="w-full">
+              <CarouselContent>
+                {brands.map((brand) => (
+                  <CarouselItem key={brand.id} className="md:basis-1/3 lg:basis-1/6">
+                    <Link href={`/brands/${brand.id}`} className="block">
+                      <div className="flex flex-col items-center justify-center p-4">
+                        <div className="relative h-20 w-20">
+                          <Image
+                            src={brand.logo_url || "/placeholder.svg?height=80&width=80&query=phone+brand+logo"}
+                            alt={brand.name}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                        <span className="mt-2 text-sm font-medium">{brand.name}</span>
+                      </div>
+                    </Link>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex" />
+              <CarouselNext className="hidden md:flex" />
+            </Carousel>
+          )}
         </div>
         <div className="flex justify-center">
-          <Link href="/brands">
-            <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 py-2 px-4">
-              {t("allBrandsButton")}
-            </button>
-          </Link>
+          <Button asChild size="lg">
+            <Link href="/brands">{t("allBrandsButton")}</Link>
+          </Button>
         </div>
       </div>
     </section>
