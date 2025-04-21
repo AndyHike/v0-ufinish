@@ -3,14 +3,13 @@
 import type React from "react"
 
 import { useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslations, useLocale } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Smartphone } from "lucide-react"
 import { sendPasswordResetEmail } from "@/lib/auth/actions"
 
 export default function ForgotPasswordClient() {
@@ -19,7 +18,7 @@ export default function ForgotPasswordClient() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
-  const [sent, setSent] = useState(false)
+  const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,18 +27,15 @@ export default function ForgotPasswordClient() {
     setError(null)
 
     try {
-      // Call the server action to send password reset email
       const result = await sendPasswordResetEmail(email, locale)
 
       if (result.success) {
-        setSent(true)
+        setSuccess(true)
       } else {
-        console.error("Password reset error:", result.error)
-        setError(result.error || t("genericError"))
+        setError(t("somethingWentWrong"))
       }
     } catch (error) {
-      console.error("Error sending reset email:", error)
-      setError(t("genericError"))
+      setError(t("unexpectedError"))
     } finally {
       setIsLoading(false)
     }
@@ -48,29 +44,16 @@ export default function ForgotPasswordClient() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-center">{t("resetPassword")}</CardTitle>
-        <p className="text-center text-sm text-muted-foreground">{t("enterEmail")}</p>
+        <div className="flex flex-col items-center space-y-2">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <Smartphone className="h-6 w-6 text-primary" />
+          </div>
+          <CardTitle>{t("resetPassword")}</CardTitle>
+        </div>
       </CardHeader>
       <CardContent>
-        {sent ? (
-          <>
-            <Alert className="bg-green-50 border-green-200 mb-4">
-              <AlertTitle className="text-green-800">{t("resetLinkSent")}</AlertTitle>
-              <AlertDescription className="text-green-700">{t("checkEmailForResetLink")}</AlertDescription>
-            </Alert>
-            <div className="text-center">
-              <Link href={`/${locale}/auth/signin`} className="text-sm text-muted-foreground hover:text-foreground">
-                {t("backToSignIn")}
-              </Link>
-            </div>
-          </>
-        ) : (
+        {!success ? (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
             <div className="space-y-2">
               <Label htmlFor="email">{t("email")}</Label>
               <Input
@@ -82,15 +65,15 @@ export default function ForgotPasswordClient() {
                 required
               />
             </div>
+            {error && <p className="text-sm text-red-500">{error}</p>}
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? t("processing") : t("sendResetLink")}
             </Button>
-            <div className="text-center">
-              <Link href={`/${locale}/auth/signin`} className="text-sm text-muted-foreground hover:text-foreground">
-                {t("backToSignIn")}
-              </Link>
-            </div>
           </form>
+        ) : (
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">{t("checkEmailForResetLink")}</p>
+          </div>
         )}
       </CardContent>
     </Card>

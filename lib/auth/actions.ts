@@ -59,7 +59,12 @@ export async function register(email: string, password: string, name: string, lo
 
     if (token) {
       // Send verification email
-      await sendVerificationEmail(email, token, locale)
+      try {
+        await sendVerificationEmail(email, token, locale)
+      } catch (emailError) {
+        console.error("Error sending verification email:", emailError)
+        // Continue with registration even if email fails
+      }
     }
 
     return { success: true, userId: user.id }
@@ -192,8 +197,17 @@ export async function sendPasswordResetEmail(email: string, locale: string) {
       await sendResetEmail(email, token, locale)
 
       return { success: true }
-    } catch (tokenError) {
-      console.error("Error generating or sending reset token:", tokenError)
+    } catch (emailError) {
+      console.error("Error generating or sending reset token:", emailError)
+
+      // Check for DNS errors
+      if (emailError.code === "EDNS" || emailError.syscall === "queryA") {
+        return {
+          success: false,
+          error: "Email server configuration error. Please contact support.",
+        }
+      }
+
       return { success: false, error: "Failed to send reset email" }
     }
   } catch (error) {
@@ -255,9 +269,22 @@ export async function resendVerificationEmail(userId: string, locale: string) {
     }
 
     // Send verification email
-    await sendVerificationEmail(user.email, token, locale)
+    try {
+      await sendVerificationEmail(user.email, token, locale)
+      return { success: true }
+    } catch (emailError) {
+      console.error("Error sending verification email:", emailError)
 
-    return { success: true }
+      // Check for DNS errors
+      if (emailError.code === "EDNS" || emailError.syscall === "queryA") {
+        return {
+          success: false,
+          error: "Email server configuration error. Please contact support.",
+        }
+      }
+
+      return { success: false, error: "Failed to send verification email" }
+    }
   } catch (error) {
     console.error("Error resending verification email:", error)
     return { success: false, error: "An unexpected error occurred" }

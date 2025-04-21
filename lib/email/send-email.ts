@@ -2,18 +2,33 @@ import nodemailer from "nodemailer"
 import { getVerificationEmailTemplate, getPasswordResetEmailTemplate } from "./templates"
 
 // Configure email transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_SERVER_HOST,
-  port: Number.parseInt(process.env.EMAIL_SERVER_PORT || "587"),
-  secure: process.env.EMAIL_SERVER_SECURE === "true",
-  auth: {
-    user: process.env.EMAIL_SERVER_USER,
-    pass: process.env.EMAIL_SERVER_PASSWORD,
-  },
-})
+function createTransporter() {
+  // Trim any whitespace from the hostname to prevent DNS errors
+  const host = process.env.EMAIL_SERVER_HOST ? process.env.EMAIL_SERVER_HOST.trim() : ""
+  const port = Number.parseInt(process.env.EMAIL_SERVER_PORT || "587")
+  const secure = process.env.EMAIL_SERVER_SECURE === "true"
+  const user = process.env.EMAIL_SERVER_USER ? process.env.EMAIL_SERVER_USER.trim() : ""
+  const pass = process.env.EMAIL_SERVER_PASSWORD || ""
+
+  // Validate the hostname
+  if (!host) {
+    console.error("Email server host is missing or invalid")
+    throw new Error("Email configuration error: Invalid host")
+  }
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: {
+      user,
+      pass,
+    },
+  })
+}
 
 export async function sendVerificationEmail(email: string, token: string, locale: string) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ? process.env.NEXT_PUBLIC_APP_URL.trim() : ""
   const verificationLink = `${appUrl}/${locale}/auth/verify?token=${token}`
 
   const emailTemplate = getVerificationEmailTemplate(verificationLink, locale)
@@ -30,7 +45,7 @@ export async function sendVerificationEmail(email: string, token: string, locale
 }
 
 export async function sendPasswordResetEmail(email: string, token: string, locale: string) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ? process.env.NEXT_PUBLIC_APP_URL.trim() : ""
   const resetLink = `${appUrl}/${locale}/auth/reset-password?token=${token}`
 
   const emailTemplate = getPasswordResetEmailTemplate(resetLink, locale)
@@ -47,15 +62,17 @@ export async function sendPasswordResetEmail(email: string, token: string, local
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
-  if (!process.env.EMAIL_SERVER_HOST || !process.env.EMAIL_SERVER_USER || !process.env.EMAIL_SERVER_PASSWORD) {
-    console.error("Email configuration is incomplete. Missing required environment variables.")
-    throw new Error("Email configuration is incomplete")
-  }
-
   try {
+    // Create a new transporter for each email to ensure we have the latest config
+    const transporter = createTransporter()
+
+    const from = process.env.EMAIL_FROM
+      ? process.env.EMAIL_FROM.trim()
+      : `"Mobile Repair Service" <noreply@example.com>`
+
     const result = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || `"Mobile Repair Service" <noreply@example.com>`,
-      to,
+      from,
+      to: to.trim(),
       subject,
       html,
     })
