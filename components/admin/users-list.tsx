@@ -1,7 +1,9 @@
-"\"use client"
+"use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
@@ -15,113 +17,137 @@ import {
 import { MoreHorizontal, Search } from "lucide-react"
 
 export function UsersList() {
-  const [users, setUsers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch("/api/admin/users-simple")
+  // In a real app, this would fetch data from an API
+  const users = [
+    {
+      id: "1",
+      name: "Олександр Петренко",
+      email: "alex@example.com",
+      role: "Користувач",
+      status: "Активний",
+      avatar: "/placeholder.svg?height=40&width=40&query=user",
+    },
+    {
+      id: "2",
+      name: "Марія Ковальчук",
+      email: "maria@example.com",
+      role: "Адміністратор",
+      status: "Активний",
+      avatar: "/placeholder.svg?height=40&width=40&query=user",
+    },
+    {
+      id: "3",
+      name: "Іван Сидоренко",
+      email: "ivan@example.com",
+      role: "Користувач",
+      status: "Неактивний",
+      avatar: "/placeholder.svg?height=40&width=40&query=user",
+    },
+    {
+      id: "4",
+      name: "Наталія Василенко",
+      email: "natalia@example.com",
+      role: "Користувач",
+      status: "Активний",
+      avatar: "/placeholder.svg?height=40&width=40&query=user",
+    },
+    {
+      id: "5",
+      name: "Сергій Мельник",
+      email: "sergey@example.com",
+      role: "Користувач",
+      status: "Активний",
+      avatar: "/placeholder.svg?height=40&width=40&query=user",
+    },
+  ]
 
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`)
-        }
-
-        const data = await response.json()
-        setUsers(data)
-      } catch (error) {
-        console.error("Error fetching users:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchUsers()
-  }, [])
-
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value)
-  }
-
-  const filteredUsers = users.filter((user) => {
-    const searchLower = searchTerm.toLowerCase()
-    return (
-      user.email?.toLowerCase().includes(searchLower) ||
-      user.name?.toLowerCase().includes(searchLower) ||
-      user.phone?.toLowerCase().includes(searchLower)
-    )
-  })
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
 
   return (
-    <div>
-      <div className="mb-4 flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search by email, name or phone..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={handleSearch}
-          />
+    <Card>
+      <CardContent className="p-0">
+        <div className="p-4">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Пошук користувачів..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
-      </div>
-
-      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Role</TableHead>
+              <TableHead>Користувач</TableHead>
+              <TableHead>Роль</TableHead>
+              <TableHead>Статус</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  Loading users...
+            {filteredUsers.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                      <AvatarFallback>
+                        {user.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>{user.role}</TableCell>
+                <TableCell>
+                  <div className="flex items-center">
+                    <div
+                      className={`mr-2 h-2 w-2 rounded-full ${
+                        user.status === "Активний" ? "bg-green-500" : "bg-gray-300"
+                      }`}
+                    />
+                    {user.status}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Меню</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Дії</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>Переглянути профіль</DropdownMenuItem>
+                      <DropdownMenuItem>Редагувати</DropdownMenuItem>
+                      <DropdownMenuItem>Змінити роль</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-destructive">Видалити</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ) : filteredUsers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  No users found
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.name || "—"}</TableCell>
-                  <TableCell>{user.phone || "—"}</TableCell>
-                  <TableCell>{user.role || "user"}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+            ))}
           </TableBody>
         </Table>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
