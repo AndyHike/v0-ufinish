@@ -111,10 +111,10 @@
       "roleAdmin": "Admin"
     },
     "Brands": {
-      "title": "Brands We Service",
-      "subtitle": "We specialize in repairing all major smartphone brands",
+      "title": "Brands We Work With",
+      "subtitle": "We repair phones of all popular brands.",
       "loading": "Loading brands...",
-      "allBrandsButton": "View All Brands"
+      "allBrandsButton": "All Brands"
     }
   },
   "Auth": {

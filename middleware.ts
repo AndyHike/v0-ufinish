@@ -35,10 +35,6 @@ export default async function middleware(request: NextRequest) {
       redirectUrl.searchParams.set("redirect", pathname)
       return NextResponse.redirect(redirectUrl)
     }
-
-    // For admin routes, we should check if the user is an admin
-    // This would require a database lookup, which is not ideal in middleware
-    // For a more robust solution, this check should be done in the page itself
   }
 
   return response

@@ -1,5 +1,6 @@
 import type React from "react"
 import { NextIntlClientProvider } from "next-intl"
+import { notFound } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { getCurrentUser } from "@/lib/auth/session"
@@ -16,13 +17,7 @@ export default async function LocaleLayout({
     messages = (await import(`../../messages/${locale}.json`)).default
   } catch (error) {
     console.error(`Failed to load messages for locale ${locale}:`, error)
-    // Fallback to default locale
-    try {
-      messages = (await import(`../../messages/uk.json`)).default
-    } catch (fallbackError) {
-      console.error("Failed to load fallback messages:", fallbackError)
-      messages = {}
-    }
+    notFound()
   }
 
   const user = await getCurrentUser()

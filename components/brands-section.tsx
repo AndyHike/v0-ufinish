@@ -5,7 +5,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 
 type Brand = {
   id: string
@@ -26,10 +25,14 @@ export function BrandsSection() {
         setLoading(true)
         setError(null)
         const response = await fetch("/api/brands")
+
         if (!response.ok) {
+          console.error("Failed to fetch brands:", response.status, response.statusText)
           throw new Error(`Failed to fetch brands: ${response.status}`)
         }
+
         const data = await response.json()
+        console.log("Fetched brands:", data)
 
         // Sort brands by position first, then by name
         const sortedBrands = [...data].sort((a, b) => {
@@ -54,63 +57,55 @@ export function BrandsSection() {
   }, [])
 
   return (
-    <section className="py-12 md:py-24 bg-muted/50">
-      <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("title")}</h2>
-            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              {t("subtitle")}
-            </p>
+    <section className="py-12 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold mb-4">{t("title")}</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">{t("subtitle")}</p>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-40">
+            <p className="text-gray-500">{t("loading")}</p>
           </div>
-        </div>
-        <div className="mx-auto max-w-5xl py-12">
-          {loading ? (
-            <div className="flex justify-center items-center h-20">
-              <p>Loading brands...</p>
-            </div>
-          ) : error ? (
-            <div className="flex justify-center items-center h-20 text-destructive">
-              <p>{error}</p>
-            </div>
-          ) : brands.length === 0 ? (
-            <div className="flex justify-center items-center h-20">
-              <p>No brands available.</p>
-            </div>
-          ) : (
-            <Carousel className="w-full">
-              <CarouselContent>
-                {brands.map((brand) => (
-                  <CarouselItem key={brand.id} className="md:basis-1/3 lg:basis-1/5">
-                    <Link href={`/brands/${brand.id}`} className="block">
-                      <div className="flex flex-col items-center justify-center p-4 h-32 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        {brand.logo_url ? (
-                          <div className="relative h-16 w-full">
-                            <Image
-                              src={brand.logo_url || "/placeholder.svg"}
-                              alt={brand.name}
-                              fill
-                              className="object-contain"
-                            />
-                          </div>
-                        ) : (
-                          <div className="h-16 w-full flex items-center justify-center">
-                            <span className="text-lg font-medium">{brand.name}</span>
-                          </div>
-                        )}
-                        <span className="mt-2 text-sm font-medium">{brand.name}</span>
-                      </div>
-                    </Link>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden md:flex" />
-              <CarouselNext className="hidden md:flex" />
-            </Carousel>
-          )}
-        </div>
-        <div className="flex justify-center">
-          <Button asChild size="lg">
+        ) : error ? (
+          <div className="flex justify-center items-center h-40">
+            <p className="text-red-500">{error}</p>
+          </div>
+        ) : brands.length === 0 ? (
+          <div className="flex justify-center items-center h-40">
+            <p className="text-gray-500">No brands available</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-10">
+            {brands.map((brand) => (
+              <Link
+                key={brand.id}
+                href={`/brands/${brand.id}`}
+                className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col items-center justify-center h-32"
+              >
+                {brand.logo_url ? (
+                  <div className="relative h-16 w-full">
+                    <Image
+                      src={brand.logo_url || "/placeholder.svg"}
+                      alt={brand.name}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-16 w-full flex items-center justify-center">
+                    <span className="text-lg font-medium">{brand.name}</span>
+                  </div>
+                )}
+                <span className="mt-2 text-sm text-center">{brand.name}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <div className="text-center">
+          <Button asChild variant="outline">
             <Link href="/brands">{t("allBrandsButton")}</Link>
           </Button>
         </div>

@@ -37,6 +37,7 @@ export default function RegisterClient() {
       formData.append("email", email)
       formData.append("phone", phone)
       formData.append("password", password)
+      formData.append("locale", locale)
 
       // Send registration request
       const response = await fetch(`/api/auth/register`, {
