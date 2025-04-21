@@ -72,9 +72,10 @@ export function ModelsFilter() {
 
   return (
     <div className="mb-4">
+      <p className="mb-2 text-sm font-medium">{t("filterByBrand")}</p>
       <Select value={selectedBrand} onValueChange={handleBrandChange} disabled={isLoading}>
-        <SelectTrigger className="w-full md:w-[200px]">
-          <SelectValue placeholder={t("filterByBrand")} />
+        <SelectTrigger className="w-full md:w-[300px]">
+          <SelectValue placeholder={t("allBrands")} />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">{t("allBrands")}</SelectItem>

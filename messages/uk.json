@@ -200,11 +200,12 @@
     "dashboard": "Панель",
     "brands": "Бренди",
     "models": "Моделі",
-    "modelsDescription": "Керуйте моделями телефонів у вашій системі",
+    "manageModels": "Керуйте моделями телефонів у вашій системі",
+    "modelsDescription": "Список усіх моделей телефонів у вашій системі",
     "modelsList": "Список моделей",
     "modelsListDescription": "Перегляд та керування всіма моделями телефонів у вашій системі",
     "addModel": "Додати модель",
-    "reorderModels": "Змінити порядок моделей",
+    "reorderModels": "Змінити порядок",
     "reorderModelsDescription": "Змінити порядок відображення моделей",
     "dragAndDropToReorder": "Перетягніть моделі, щоб змінити їх порядок",
     "saveOrder": "Зберегти порядок",
@@ -342,7 +343,8 @@
     "errorUpdatingService": "Помилка при оновленні послуги.",
     "errorDeletingService": "Помилка при видаленні послуги.",
     "errorFetchingData": "Помилка при отриманні даних.",
-    "confirmDeleteService": "Ви впевнені, що хочете видалити цю послугу?"
+    "confirmDeleteService": "Ви впевнені, що хочете видалити цю послугу?",
+    "errorFetchingBrands": "Помилка при отриманні брендів"
   },
   "About": {
     "about": "Про нас",

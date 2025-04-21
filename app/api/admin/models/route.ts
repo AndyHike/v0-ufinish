@@ -14,7 +14,6 @@ export async function GET(request: Request) {
       .select(`
         id, 
         name, 
-        year, 
         image_url, 
         created_at, 
         position,
@@ -27,7 +26,7 @@ export async function GET(request: Request) {
       `)
       .order("position", { ascending: true })
 
-    if (brandId) {
+    if (brandId && brandId !== "all") {
       query = query.eq("brand_id", brandId)
     }
 
@@ -42,7 +41,6 @@ export async function GET(request: Request) {
     const transformedData = data.map((model) => ({
       id: model.id,
       name: model.name,
-      year: model.year,
       image_url: model.image_url,
       created_at: model.created_at,
       position: model.position,
@@ -61,7 +59,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, brandId, year, imageUrl, userId } = body
+    const { name, brandId, imageUrl, userId } = body
 
     if (!name || !brandId) {
       return NextResponse.json({ error: "Name and brand are required" }, { status: 400 })
@@ -89,7 +87,6 @@ export async function POST(request: Request) {
       .insert({
         name,
         brand_id: brandId,
-        year: year || null,
         image_url: imageUrl || null,
         position: nextPosition,
       })
