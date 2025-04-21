@@ -38,7 +38,7 @@ export function getVerificationEmailTemplate(verificationLink: string, locale: s
       <title>${t.subject}</title>
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .button { display: inline-block; background-color: #4F46E5; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; }
+        .button { display: inline-block; background-color: #4F46E5; color: white !important; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; font-weight: bold; }
         .footer { margin-top: 40px; font-size: 12px; color: #666; }
       </style>
     </head>
@@ -46,7 +46,7 @@ export function getVerificationEmailTemplate(verificationLink: string, locale: s
       <h2>${t.subject}</h2>
       <p>${t.greeting}</p>
       <p>${t.message}</p>
-      <a href="${verificationLink}" class="button">${t.buttonText}</a>
+      <a href="${verificationLink}" class="button" style="color: white !important;">${t.buttonText}</a>
       <p>${t.alternativeText}</p>
       <p><a href="${verificationLink}">${verificationLink}</a></p>
       <div class="footer">
@@ -100,7 +100,7 @@ export function getPasswordResetEmailTemplate(resetLink: string, locale: string)
       <title>${t.subject}</title>
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .button { display: inline-block; background-color: #4F46E5; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; }
+        .button { display: inline-block; background-color: #4F46E5; color: white !important; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; font-weight: bold; }
         .footer { margin-top: 40px; font-size: 12px; color: #666; }
       </style>
     </head>
@@ -108,7 +108,7 @@ export function getPasswordResetEmailTemplate(resetLink: string, locale: string)
       <h2>${t.subject}</h2>
       <p>${t.greeting}</p>
       <p>${t.message}</p>
-      <a href="${resetLink}" class="button">${t.buttonText}</a>
+      <a href="${resetLink}" class="button" style="color: white !important;">${t.buttonText}</a>
       <p>${t.alternativeText}</p>
       <p><a href="${resetLink}">${resetLink}</a></p>
       <p>${t.expiry}</p>
@@ -126,7 +126,7 @@ function getFallbackVerificationEmailTemplate(verificationLink: string): string 
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2>Verify your email address</h2>
       <p>Thank you for registering. Please click the link below to verify your email address:</p>
-      <p><a href="${verificationLink}" style="display: inline-block; padding: 10px 20px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 4px;">Verify Email</a></p>
+      <p><a href="${verificationLink}" style="display: inline-block; padding: 10px 20px; background-color: #3b82f6; color: white !important; text-decoration: none; border-radius: 4px; font-weight: bold;">Verify Email</a></p>
       <p>If you did not request this verification, please ignore this email.</p>
       <p>This link will expire in 24 hours.</p>
     </div>
@@ -138,7 +138,7 @@ function getFallbackPasswordResetEmailTemplate(resetLink: string): string {
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2>Reset your password</h2>
       <p>You requested to reset your password. Please click the link below to set a new password:</p>
-      <p><a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 4px;">Reset Password</a></p>
+      <p><a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #3b82f6; color: white !important; text-decoration: none; border-radius: 4px; font-weight: bold;">Reset Password</a></p>
       <p>If you did not request a password reset, please ignore this email.</p>
       <p>This link will expire in 1 hour.</p>
     </div>
@@ -163,7 +163,7 @@ function getEnVerificationEmailTemplate(verificationLink: string): string {
       <title>${translations.subject}</title>
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .button { display: inline-block; background-color: #4F46E5; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; }
+        .button { display: inline-block; background-color: #4F46E5; color: white !important; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; font-weight: bold; }
         .footer { margin-top: 40px; font-size: 12px; color: #666; }
       </style>
     </head>
@@ -171,7 +171,7 @@ function getEnVerificationEmailTemplate(verificationLink: string): string {
       <h2>${translations.subject}</h2>
       <p>${translations.greeting}</p>
       <p>${translations.message}</p>
-      <a href="${verificationLink}" class="button">${translations.buttonText}</a>
+      <a href="${verificationLink}" class="button" style="color: white !important;">${translations.buttonText}</a>
       <p>${translations.alternativeText}</p>
       <p><a href="${verificationLink}">${verificationLink}</a></p>
       <div class="footer">
@@ -201,7 +201,7 @@ function getUkVerificationEmailTemplate(verificationLink: string): string {
       <title>${translations.subject}</title>
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .button { display: inline-block; background-color: #4F46E5; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; }
+        .button { display: inline-block; background-color: #4F46E5; color: white !important; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; font-weight: bold; }
         .footer { margin-top: 40px; font-size: 12px; color: #666; }
       </style>
     </head>
@@ -209,7 +209,7 @@ function getUkVerificationEmailTemplate(verificationLink: string): string {
       <h2>${translations.subject}</h2>
       <p>${translations.greeting}</p>
       <p>${translations.message}</p>
-      <a href="${verificationLink}" class="button">${translations.buttonText}</a>
+      <a href="${verificationLink}" class="button" style="color: white !important;">${translations.buttonText}</a>
       <p>${translations.alternativeText}</p>
       <p><a href="${verificationLink}">${verificationLink}</a></p>
       <div class="footer">
@@ -238,7 +238,7 @@ function getCsVerificationEmailTemplate(verificationLink: string): string {
       <title>${translations.subject}</title>
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .button { display: inline-block; background-color: #4F46E5; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; }
+        .button { display: inline-block; background-color: #4F46E5; color: white !important; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; font-weight: bold; }
         .footer { margin-top: 40px; font-size: 12px; color: #666; }
       </style>
     </head>
@@ -246,7 +246,7 @@ function getCsVerificationEmailTemplate(verificationLink: string): string {
       <h2>${translations.subject}</h2>
       <p>${translations.greeting}</p>
       <p>${translations.message}</p>
-      <a href="${verificationLink}" class="button">${translations.buttonText}</a>
+      <a href="${verificationLink}" class="button" style="color: white !important;">${translations.buttonText}</a>
       <p>${translations.alternativeText}</p>
       <p><a href="${verificationLink}">${verificationLink}</a></p>
       <div class="footer">
@@ -276,7 +276,7 @@ function getEnPasswordResetEmailTemplate(resetLink: string): string {
       <title>${translations.subject}</title>
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .button { display: inline-block; background-color: #4F46E5; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; }
+        .button { display: inline-block; background-color: #4F46E5; color: white !important; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; font-weight: bold; }
         .footer { margin-top: 40px; font-size: 12px; color: #666; }
       </style>
     </head>
@@ -284,7 +284,7 @@ function getEnPasswordResetEmailTemplate(resetLink: string): string {
       <h2>${translations.subject}</h2>
       <p>${translations.greeting}</p>
       <p>${translations.message}</p>
-      <a href="${resetLink}" class="button">${translations.buttonText}</a>
+      <a href="${resetLink}" class="button" style="color: white !important;">${translations.buttonText}</a>
       <p>${translations.alternativeText}</p>
       <p><a href="${resetLink}">${resetLink}</a></p>
       <p>${translations.expiry}</p>
@@ -316,7 +316,7 @@ function getUkPasswordResetEmailTemplate(resetLink: string): string {
       <title>${translations.subject}</title>
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .button { display: inline-block; background-color: #4F46E5; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; }
+        .button { display: inline-block; background-color: #4F46E5; color: white !important; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; font-weight: bold; }
         .footer { margin-top: 40px; font-size: 12px; color: #666; }
       </style>
     </head>
@@ -324,7 +324,7 @@ function getUkPasswordResetEmailTemplate(resetLink: string): string {
       <h2>${translations.subject}</h2>
       <p>${translations.greeting}</p>
       <p>${translations.message}</p>
-      <a href="${resetLink}" class="button">${translations.buttonText}</a>
+      <a href="${resetLink}" class="button" style="color: white !important;">${translations.buttonText}</a>
       <p>${translations.alternativeText}</p>
       <p><a href="${resetLink}">${resetLink}</a></p>
       <p>${translations.expiry}</p>
@@ -355,7 +355,7 @@ function getCsPasswordResetEmailTemplate(resetLink: string): string {
       <title>${translations.subject}</title>
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .button { display: inline-block; background-color: #4F46E5; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; }
+        .button { display: inline-block; background-color: #4F46E5; color: white !important; text-decoration: none; padding: 10px 20px; border-radius: 4px; margin: 20px 0; font-weight: bold; }
         .footer { margin-top: 40px; font-size: 12px; color: #666; }
       </style>
     </head>
@@ -363,7 +363,7 @@ function getCsPasswordResetEmailTemplate(resetLink: string): string {
       <h2>${translations.subject}</h2>
       <p>${translations.greeting}</p>
       <p>${translations.message}</p>
-      <a href="${resetLink}" class="button">${translations.buttonText}</a>
+      <a href="${resetLink}" class="button" style="color: white !important;">${translations.buttonText}</a>
       <p>${translations.alternativeText}</p>
       <p><a href="${resetLink}">${resetLink}</a></p>
       <p>${translations.expiry}</p>

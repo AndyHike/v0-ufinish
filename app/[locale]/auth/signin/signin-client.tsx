@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Smartphone } from "lucide-react"
+import { Smartphone, Eye, EyeOff } from "lucide-react"
+import { loginWithRedirect } from "@/app/actions/auth"
 
 export default function SignInClient() {
   const t = useTranslations("Auth")
@@ -19,16 +20,31 @@ export default function SignInClient() {
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
-    // Simulate login
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const formData = new FormData()
+      formData.append("email", email)
+      formData.append("password", password)
 
-    // Redirect to home
-    router.push(`/${locale}`)
+      const result = await loginWithRedirect(formData, locale)
+
+      if (!result.success) {
+        setError(result.message || t("loginFailed"))
+        setIsLoading(false)
+      }
+      // No need to handle success case as the server action will redirect
+    } catch (error) {
+      console.error("Login error:", error)
+      setError(t("somethingWentWrong"))
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -64,15 +80,32 @@ export default function SignInClient() {
                 {t("forgotPassword")}
               </Link>
             </div>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t("passwordPlaceholder")}
-              required
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t("passwordPlaceholder")}
+                required
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                )}
+                <span className="sr-only">{showPassword ? t("hidePassword") : t("showPassword")}</span>
+              </Button>
+            </div>
           </div>
+          {error && <div className="text-sm text-destructive">{error}</div>}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? t("processing") : t("signIn")}
           </Button>

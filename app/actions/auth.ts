@@ -189,7 +189,7 @@ export async function logout() {
 }
 
 // Login with redirect
-export async function loginWithRedirect(locale: string, formData: FormData) {
+export async function loginWithRedirect(formData: FormData, locale: string) {
   const result = await login(formData)
 
   if (result.success) {
@@ -205,7 +205,7 @@ export async function loginWithRedirect(locale: string, formData: FormData) {
 }
 
 // Register with redirect
-export async function registerWithRedirect(locale: string, formData: FormData) {
+export async function registerWithRedirect(formData: FormData, locale: string) {
   const result = await register(formData)
 
   if (result.success) {
