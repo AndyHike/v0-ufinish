@@ -11,6 +11,7 @@ type Brand = {
   id: string
   name: string
   logo_url: string | null
+  position: number
 }
 
 export function BrandsSection() {
@@ -24,7 +25,9 @@ export function BrandsSection() {
         const response = await fetch("/api/admin/brands")
         if (response.ok) {
           const data = await response.json()
-          setBrands(data)
+          // Sort brands by position
+          const sortedBrands = data.sort((a: Brand, b: Brand) => a.position - b.position)
+          setBrands(sortedBrands)
         }
       } catch (error) {
         console.error("Error fetching brands:", error)

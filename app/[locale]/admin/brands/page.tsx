@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Plus, Pencil, Trash, Upload, X } from "lucide-react"
+import { Plus, Pencil, Trash, Upload, X, ArrowUp, ArrowDown } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase"
@@ -37,6 +37,7 @@ type Brand = {
   name: string
   logo_url: string | null
   created_at: string
+  position: number
 }
 
 export default function BrandsPage() {
@@ -56,6 +57,7 @@ export default function BrandsPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [reordering, setReordering] = useState(false)
 
   useEffect(() => {
     fetchBrands()
@@ -69,7 +71,9 @@ export default function BrandsPage() {
         throw new Error("Failed to fetch brands")
       }
       const data = await response.json()
-      setBrands(data)
+      // Sort brands by position
+      const sortedBrands = data.sort((a: Brand, b: Brand) => a.position - b.position)
+      setBrands(sortedBrands)
     } catch (error) {
       console.error("Error fetching brands:", error)
       toast({
@@ -93,6 +97,9 @@ export default function BrandsPage() {
         logoUrl = await uploadBrandLogo(selectedFile)
       }
 
+      // Get the highest position value
+      const maxPosition = brands.length > 0 ? Math.max(...brands.map((brand) => brand.position)) : 0
+
       const response = await fetch("/api/admin/brands", {
         method: "POST",
         headers: {
@@ -101,6 +108,7 @@ export default function BrandsPage() {
         body: JSON.stringify({
           name: newBrand.name,
           logo_url: logoUrl,
+          position: maxPosition + 1, // Add to the end of the list
         }),
       })
 
@@ -151,6 +159,7 @@ export default function BrandsPage() {
         body: JSON.stringify({
           name: editBrand.name,
           logo_url: logoUrl,
+          position: editBrand.position,
         }),
       })
 
@@ -191,6 +200,10 @@ export default function BrandsPage() {
       if (!response.ok) {
         throw new Error("Failed to delete brand")
       }
+
+      // After deleting, we need to reorder the remaining brands
+      const remainingBrands = brands.filter((brand) => brand.id !== brandToDelete.id)
+      await updateBrandPositions(remainingBrands)
 
       await fetchBrands() // Refresh the brands list
       setIsDeleteDialogOpen(false)
@@ -233,6 +246,7 @@ export default function BrandsPage() {
         body: JSON.stringify({
           name: editBrand.name,
           logo_url: null,
+          position: editBrand.position,
         }),
       })
 
@@ -291,6 +305,110 @@ export default function BrandsPage() {
       throw error
     } finally {
       setUploadingImage(false)
+    }
+  }
+
+  async function moveBrandUp(index: number) {
+    if (index <= 0 || reordering) return
+
+    setReordering(true)
+    try {
+      // Create a copy of the brands array
+      const updatedBrands = [...brands]
+
+      // Swap the positions
+      const temp = updatedBrands[index].position
+      updatedBrands[index].position = updatedBrands[index - 1].position
+      updatedBrands[index - 1].position = temp
+
+      // Swap the elements in the array
+      ;[updatedBrands[index], updatedBrands[index - 1]] = [updatedBrands[index - 1], updatedBrands[index]]
+
+      // Update the UI immediately
+      setBrands(updatedBrands)
+
+      // Update the positions in the database
+      await updateBrandPositions(updatedBrands)
+
+      toast({
+        title: t("success"),
+        description: t("brandReorderedSuccess"),
+      })
+    } catch (error) {
+      console.error("Error reordering brands:", error)
+      toast({
+        title: t("error"),
+        description: t("brandReorderedError"),
+        variant: "destructive",
+      })
+      // Revert to original order by refetching
+      await fetchBrands()
+    } finally {
+      setReordering(false)
+    }
+  }
+
+  async function moveBrandDown(index: number) {
+    if (index >= brands.length - 1 || reordering) return
+
+    setReordering(true)
+    try {
+      // Create a copy of the brands array
+      const updatedBrands = [...brands]
+
+      // Swap the positions
+      const temp = updatedBrands[index].position
+      updatedBrands[index].position = updatedBrands[index + 1].position
+      updatedBrands[index + 1].position = temp
+
+      // Swap the elements in the array
+      ;[updatedBrands[index], updatedBrands[index + 1]] = [updatedBrands[index + 1], updatedBrands[index]]
+
+      // Update the UI immediately
+      setBrands(updatedBrands)
+
+      // Update the positions in the database
+      await updateBrandPositions(updatedBrands)
+
+      toast({
+        title: t("success"),
+        description: t("brandReorderedSuccess"),
+      })
+    } catch (error) {
+      console.error("Error reordering brands:", error)
+      toast({
+        title: t("error"),
+        description: t("brandReorderedError"),
+        variant: "destructive",
+      })
+      // Revert to original order by refetching
+      await fetchBrands()
+    } finally {
+      setReordering(false)
+    }
+  }
+
+  async function updateBrandPositions(updatedBrands: Brand[]) {
+    try {
+      const response = await fetch("/api/admin/brands/reorder", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          brands: updatedBrands.map((brand, index) => ({
+            id: brand.id,
+            position: index + 1, // Ensure positions are sequential
+          })),
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update brand positions")
+      }
+    } catch (error) {
+      console.error("Error updating brand positions:", error)
+      throw error
     }
   }
 
@@ -459,6 +577,7 @@ export default function BrandsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[80px]">{t("order")}</TableHead>
                   <TableHead>{t("name")}</TableHead>
                   <TableHead>{t("logo")}</TableHead>
                   <TableHead>{t("createdAt")}</TableHead>
@@ -468,13 +587,35 @@ export default function BrandsPage() {
               <TableBody>
                 {brands.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center">
+                    <TableCell colSpan={5} className="text-center">
                       {t("noBrands")}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  brands.map((brand) => (
+                  brands.map((brand, index) => (
                     <TableRow key={brand.id}>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => moveBrandUp(index)}
+                            disabled={index === 0 || reordering}
+                          >
+                            <ArrowUp className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => moveBrandDown(index)}
+                            disabled={index === brands.length - 1 || reordering}
+                          >
+                            <ArrowDown className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
                       <TableCell className="font-medium">{brand.name}</TableCell>
                       <TableCell>
                         {brand.logo_url ? (
