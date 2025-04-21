@@ -37,11 +37,11 @@ export default function SignInClient() {
       const result = await login(formData)
 
       if (!result.success) {
-        // Use translated error messages
-        if (result.message === "Invalid email or password") {
-          setError(t("invalidCredentials"))
+        // Translate the error message using the message key
+        if (result.message) {
+          setError(t(result.message))
         } else {
-          setError(result.message || t("loginFailed"))
+          setError(t("loginFailed"))
         }
         setIsLoading(false)
         return
