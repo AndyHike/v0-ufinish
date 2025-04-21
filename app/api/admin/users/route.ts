@@ -5,10 +5,10 @@ export async function GET() {
   try {
     const supabase = createClient()
 
-    // Fetch all users - remove phone from the select since it doesn't exist
+    // Fetch all users - include phone in the select
     const { data: users, error } = await supabase
       .from("users")
-      .select("id, email, name, role, created_at")
+      .select("id, email, name, phone, role, created_at")
       .order("created_at", { ascending: false })
 
     if (error) {

@@ -41,6 +41,7 @@ type User = {
   id: string
   email: string
   name?: string | null
+  phone?: string | null
   role: string
   created_at: string
 }
@@ -95,7 +96,8 @@ export function UsersManagement() {
   const filteredUsers = users.filter(
     (user) =>
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.name && user.name.toLowerCase().includes(searchQuery.toLowerCase())),
+      (user.name && user.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (user.phone && user.phone.toLowerCase().includes(searchQuery.toLowerCase())),
   )
 
   const handleEditUser = (user: User) => {
@@ -125,6 +127,7 @@ export function UsersManagement() {
         body: JSON.stringify({
           name: editingUser.name,
           email: editingUser.email,
+          phone: editingUser.phone,
           role: editingUser.role,
         }),
       })
@@ -195,6 +198,7 @@ export function UsersManagement() {
             <TableRow>
               <TableHead>{t("user")}</TableHead>
               <TableHead>{t("email")}</TableHead>
+              <TableHead>{t("phone")}</TableHead>
               <TableHead>{t("role")}</TableHead>
               <TableHead>{t("registrationDate")}</TableHead>
               <TableHead className="text-right">{t("actions")}</TableHead>
@@ -203,7 +207,7 @@ export function UsersManagement() {
           <TableBody>
             {filteredUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   {t("noUsersFound")}
                 </TableCell>
               </TableRow>
@@ -212,6 +216,7 @@ export function UsersManagement() {
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name || t("notSpecified")}</TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.phone || t("notSpecified")}</TableCell>
                   <TableCell>{user.role}</TableCell>
                   <TableCell>
                     {user.created_at ? format(new Date(user.created_at), "dd.MM.yyyy") : t("notSpecified")}
@@ -274,6 +279,17 @@ export function UsersManagement() {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="phone" className="text-right">
+                  {t("phone")}
+                </Label>
+                <Input
+                  id="phone"
+                  value={editingUser.phone || ""}
+                  onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="role" className="text-right">
                   {t("role")}
                 </Label>
@@ -314,6 +330,10 @@ export function UsersManagement() {
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right font-medium">{t("email")}:</Label>
                 <div className="col-span-3">{viewingUser.email}</div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right font-medium">{t("phone")}:</Label>
+                <div className="col-span-3">{viewingUser.phone || t("notSpecified")}</div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right font-medium">{t("role")}:</Label>

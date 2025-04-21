@@ -1,21 +1,29 @@
 "use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/components/ui/use-toast"
+import { useState } from "react"
+
+interface User {
+  id?: string
+  email?: string | null
+  role?: string
+  name?: string | null
+  phone?: string | null
+  image?: string | null
+  address?: string | null
+}
 
 interface UserProfileProps {
-  user: {
-    id?: string
-    name?: string | null
-    email?: string | null
-    image?: string | null
-    phone?: string | null
-    address?: string | null
-  }
+  user: User
 }
 
 export function UserProfile({ user }: UserProfileProps) {
   const { toast } = useToast()
+  const [name, setName] = useState(user.name || "")
+  const [phone, setPhone] = useState(user.phone || "")
+  const [isSaving, setIsSaving] = useState(false)
 
   // Get user initials for avatar fallback
   const getInitials = () => {
@@ -24,6 +32,18 @@ export function UserProfile({ user }: UserProfileProps) {
       .split(" ")
       .map((n) => n[0])
       .join("")
+  }
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    toast({
+      title: "Профіль оновлено",
+      description: "Ваш профіль було успішно оновлено.",
+    })
+    setIsSaving(false)
   }
 
   return (
@@ -42,6 +62,7 @@ export function UserProfile({ user }: UserProfileProps) {
             <div className="space-y-1 text-center sm:text-left">
               <h3 className="text-2xl font-semibold">{user.name || "Користувач"}</h3>
               <p className="text-sm text-muted-foreground">{user.email || "Немає email"}</p>
+              {user.phone && <p className="text-sm text-muted-foreground">{user.phone}</p>}
             </div>
           </div>
 

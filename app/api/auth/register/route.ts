@@ -27,10 +27,10 @@ export async function POST(request: NextRequest) {
     const email = formData.get("email") as string
     const password = formData.get("password") as string
     const name = formData.get("name") as string
-    const phone = (formData.get("phone") as string) || null
+    const phone = formData.get("phone") as string
 
     // Validate inputs
-    if (!email || !password || !name) {
+    if (!email || !password || !name || !phone) {
       return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 })
     }
 
@@ -56,10 +56,18 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await hash(password)
 
-    // Insert user
+    // Insert user with phone number
     const { data: userData, error: userError } = await supabase
       .from("users")
-      .insert([{ email: email.toLowerCase(), password_hash: passwordHash, role: "user" }])
+      .insert([
+        {
+          email: email.toLowerCase(),
+          password_hash: passwordHash,
+          role: "user",
+          phone: phone, // Store phone in users table
+          name: name, // Store name in users table
+        },
+      ])
       .select("id")
       .single()
 
@@ -68,32 +76,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Failed to create user account" }, { status: 500 })
     }
 
-    // Check if profiles table has a phone column
-    const { data: profileColumns, error: columnsError } = await supabase.from("profiles").select("*").limit(1)
-
-    if (columnsError) {
-      console.error("Error checking profile columns:", columnsError)
-    }
-
-    // Determine if we should include phone in the profile
-    const hasPhoneColumn =
-      profileColumns && profileColumns.length > 0 && Object.keys(profileColumns[0] || {}).includes("phone")
-
-    // Insert profile with or without phone based on schema
-    const profileData = hasPhoneColumn
-      ? {
-          id: userData.id,
-          name,
-          phone,
-          avatar_url: `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(name)}`,
-        }
-      : {
-          id: userData.id,
-          name,
-          avatar_url: `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(name)}`,
-        }
-
-    const { error: profileError } = await supabase.from("profiles").insert([profileData])
+    // Insert profile
+    const { error: profileError } = await supabase.from("profiles").insert([
+      {
+        id: userData.id,
+        name,
+        phone,
+        avatar_url: `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(name)}`,
+      },
+    ])
 
     if (profileError) {
       console.error("Error creating profile:", profileError)
