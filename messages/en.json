@@ -109,6 +109,12 @@
       "selectRole": "Select role",
       "roleUser": "User",
       "roleAdmin": "Admin"
+    },
+    "Brands": {
+      "title": "Brands We Service",
+      "subtitle": "We specialize in repairing all major smartphone brands",
+      "loading": "Loading brands...",
+      "allBrandsButton": "View All Brands"
     }
   },
   "Auth": {

@@ -30,7 +30,18 @@ export function BrandsSection() {
           throw new Error(`Failed to fetch brands: ${response.status}`)
         }
         const data = await response.json()
-        setBrands(data)
+
+        // Sort brands by position first, then by name
+        const sortedBrands = [...data].sort((a, b) => {
+          if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
+            return a.position - b.position
+          }
+          if (a.position !== null && a.position !== undefined) return -1
+          if (b.position !== null && b.position !== undefined) return 1
+          return a.name.localeCompare(b.name)
+        })
+
+        setBrands(sortedBrands)
       } catch (error) {
         console.error("Error fetching brands:", error)
         setError("Failed to load brands. Please try again later.")
@@ -70,17 +81,23 @@ export function BrandsSection() {
             <Carousel className="w-full">
               <CarouselContent>
                 {brands.map((brand) => (
-                  <CarouselItem key={brand.id} className="md:basis-1/3 lg:basis-1/6">
+                  <CarouselItem key={brand.id} className="md:basis-1/3 lg:basis-1/5">
                     <Link href={`/brands/${brand.id}`} className="block">
-                      <div className="flex flex-col items-center justify-center p-4">
-                        <div className="relative h-20 w-20">
-                          <Image
-                            src={brand.logo_url || "/placeholder.svg?height=80&width=80&query=phone+brand+logo"}
-                            alt={brand.name}
-                            fill
-                            className="object-contain"
-                          />
-                        </div>
+                      <div className="flex flex-col items-center justify-center p-4 h-32 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        {brand.logo_url ? (
+                          <div className="relative h-16 w-full">
+                            <Image
+                              src={brand.logo_url || "/placeholder.svg"}
+                              alt={brand.name}
+                              fill
+                              className="object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <div className="h-16 w-full flex items-center justify-center">
+                            <span className="text-lg font-medium">{brand.name}</span>
+                          </div>
+                        )}
                         <span className="mt-2 text-sm font-medium">{brand.name}</span>
                       </div>
                     </Link>

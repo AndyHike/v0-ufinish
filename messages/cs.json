@@ -73,9 +73,10 @@
     "allServicesButton": "Všechny služby"
   },
   "Brands": {
-    "title": "Značky, se kterými pracujeme",
-    "subtitle": "Opravujeme telefony všech populárních značek.",
-    "allBrandsButton": "Všechny značky",
+    "title": "Značky, které servisujeme",
+    "subtitle": "Specializujeme se na opravy všech hlavních značek smartphonů",
+    "loading": "Načítání značek...",
+    "allBrandsButton": "Zobrazit všechny značky",
     "brandModelsDescription": "Prozkoumejte všechny dostupné modely telefonů {brand}, které opravujeme.",
     "availableModels": "Dostupné modely",
     "noModelsAvailable": "Zatím nejsou k dispozici žádné modely pro {brand}.",
