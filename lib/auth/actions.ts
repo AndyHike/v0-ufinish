@@ -163,23 +163,39 @@ export async function logout() {
 // Send password reset email
 export async function sendPasswordResetEmail(email: string, locale: string) {
   try {
+    if (!email) {
+      return { success: false, error: "Email is required" }
+    }
+
     const supabase = createServerSupabaseClient()
 
     // Get user
     const { data: user, error } = await supabase.from("users").select("id").eq("email", email.toLowerCase()).single()
 
-    if (error || !user) {
+    if (error) {
+      console.error("Error finding user for password reset:", error)
       // Don't reveal if user exists or not for security
       return { success: true }
     }
 
-    // Generate reset token
-    const token = await generatePasswordResetToken(user.id)
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      console.log(`Reset email requested for non-existent user: ${email}`)
+      return { success: true }
+    }
 
-    // Send reset email
-    await sendResetEmail(email, token, locale)
+    try {
+      // Generate reset token
+      const token = await generatePasswordResetToken(user.id)
 
-    return { success: true }
+      // Send reset email
+      await sendResetEmail(email, token, locale)
+
+      return { success: true }
+    } catch (tokenError) {
+      console.error("Error generating or sending reset token:", tokenError)
+      return { success: false, error: "Failed to send reset email" }
+    }
   } catch (error) {
     console.error("Error sending password reset email:", error)
     return { success: false, error: "An unexpected error occurred" }

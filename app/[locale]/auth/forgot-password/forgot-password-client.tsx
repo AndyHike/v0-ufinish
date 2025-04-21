@@ -34,6 +34,7 @@ export default function ForgotPasswordClient() {
       if (result.success) {
         setSent(true)
       } else {
+        console.error("Password reset error:", result.error)
         setError(result.error || t("genericError"))
       }
     } catch (error) {

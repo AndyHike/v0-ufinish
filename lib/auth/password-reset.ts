@@ -3,6 +3,10 @@ import { randomBytes } from "crypto"
 
 // Generate a password reset token
 export async function generatePasswordResetToken(userId: string): Promise<string> {
+  if (!userId) {
+    throw new Error("User ID is required to generate a password reset token")
+  }
+
   const supabase = createServerSupabaseClient()
 
   // Generate a random token
@@ -24,7 +28,7 @@ export async function generatePasswordResetToken(userId: string): Promise<string
 
     if (error) {
       console.error("Error generating password reset token:", error)
-      throw new Error("Failed to generate password reset token")
+      throw new Error(`Failed to generate password reset token: ${error.message}`)
     }
 
     return token
