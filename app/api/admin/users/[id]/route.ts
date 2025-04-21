@@ -1,22 +1,19 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase"
 import { logActivity } from "@/lib/admin/activity-logger"
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const userId = params.id
-    const supabase = createRouteHandlerClient({ cookies })
+    const id = params.id
+    const supabase = createClient()
 
-    // Fetch the user
     const { data: user, error } = await supabase
       .from("users")
       .select("id, email, name, phone, role, created_at")
-      .eq("id", userId)
+      .eq("id", id)
       .single()
 
     if (error) {
-      console.error("Error fetching user:", error)
       return NextResponse.json(
         {
           error: "Failed to fetch user",
@@ -26,45 +23,40 @@ export async function GET(request: Request, { params }: { params: { id: string }
       )
     }
 
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
     return NextResponse.json({ user })
   } catch (error) {
-    console.error("Unexpected error fetching user:", error)
-    return NextResponse.json(
-      {
-        error: "An unexpected error occurred",
-      },
-      { status: 500 },
-    )
+    console.error("Error fetching user:", error)
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
   }
 }
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
-    const userId = params.id
-    const supabase = createRouteHandlerClient({ cookies })
+    const id = params.id
     const body = await request.json()
+    const { name, email, phone, role } = body
 
-    // Get the current user for activity logging
-    const {
-      data: { user: currentUser },
-    } = await supabase.auth.getUser()
+    const supabase = createClient()
 
-    // Update the user
-    const { data: updatedUser, error } = await supabase
+    // Update user
+    const { data: user, error } = await supabase
       .from("users")
       .update({
-        name: body.name,
-        email: body.email,
-        phone: body.phone,
-        role: body.role,
+        name,
+        email,
+        phone,
+        role,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", userId)
-      .select("id, email, name")
+      .eq("id", id)
+      .select()
       .single()
 
     if (error) {
-      console.error("Error updating user:", error)
       return NextResponse.json(
         {
           error: "Failed to update user",
@@ -74,48 +66,43 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       )
     }
 
-    // Log the activity
+    // Log activity
     await logActivity({
-      user_id: currentUser?.id,
-      action_type: "update",
-      entity_type: "user",
-      entity_id: userId,
-      details: {
-        name: updatedUser.name,
-        email: updatedUser.email,
-      },
+      action: "update",
+      entity: "user",
+      entityId: id,
+      details: `Updated user: ${email}`,
     })
 
-    return NextResponse.json({ user: updatedUser })
+    return NextResponse.json({ user })
   } catch (error) {
-    console.error("Unexpected error updating user:", error)
-    return NextResponse.json(
-      {
-        error: "An unexpected error occurred",
-      },
-      { status: 500 },
-    )
+    console.error("Error updating user:", error)
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
   }
 }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const userId = params.id
-    const supabase = createRouteHandlerClient({ cookies })
+    const id = params.id
+    const supabase = createClient()
 
-    // Get the current user for activity logging
-    const {
-      data: { user: currentUser },
-    } = await supabase.auth.getUser()
+    // Get user email before deletion for activity log
+    const { data: user, error: fetchError } = await supabase.from("users").select("email").eq("id", id).single()
 
-    // Get user details before deletion for activity logging
-    const { data: userToDelete } = await supabase.from("users").select("id, email, name").eq("id", userId).single()
+    if (fetchError) {
+      return NextResponse.json(
+        {
+          error: "Failed to fetch user",
+          details: fetchError.message,
+        },
+        { status: 500 },
+      )
+    }
 
-    // Delete the user
-    const { error } = await supabase.from("users").delete().eq("id", userId)
+    // Delete user
+    const { error } = await supabase.from("users").delete().eq("id", id)
 
     if (error) {
-      console.error("Error deleting user:", error)
       return NextResponse.json(
         {
           error: "Failed to delete user",
@@ -125,28 +112,17 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       )
     }
 
-    // Log the activity
-    if (userToDelete) {
-      await logActivity({
-        user_id: currentUser?.id,
-        action_type: "delete",
-        entity_type: "user",
-        entity_id: userId,
-        details: {
-          name: userToDelete.name,
-          email: userToDelete.email,
-        },
-      })
-    }
+    // Log activity
+    await logActivity({
+      action: "delete",
+      entity: "user",
+      entityId: id,
+      details: `Deleted user: ${user?.email || id}`,
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Unexpected error deleting user:", error)
-    return NextResponse.json(
-      {
-        error: "An unexpected error occurred",
-      },
-      { status: 500 },
-    )
+    console.error("Error deleting user:", error)
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
   }
 }

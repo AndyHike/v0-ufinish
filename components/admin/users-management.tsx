@@ -40,8 +40,8 @@ import { format } from "date-fns"
 type User = {
   id: string
   email: string
-  name?: string
-  phone?: string
+  name?: string | null
+  phone?: string | null
   role: string
   created_at: string
 }
@@ -67,11 +67,24 @@ export function UsersManagement() {
     try {
       setLoading(true)
       const response = await fetch("/api/admin/users")
+
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`)
       }
+
       const data = await response.json()
-      setUsers(data)
+      console.log("Fetched users data:", data) // Debug log
+
+      if (Array.isArray(data)) {
+        // Handle case where API returns an array directly
+        setUsers(data)
+      } else if (data.users && Array.isArray(data.users)) {
+        // Handle case where API returns {users: [...]}
+        setUsers(data.users)
+      } else {
+        console.error("Unexpected API response format:", data)
+        setUsers([])
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch users")
       console.error("Error fetching users:", err)
@@ -111,11 +124,16 @@ export function UsersManagement() {
 
     try {
       const response = await fetch(`/api/admin/users/${editingUser.id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(editingUser),
+        body: JSON.stringify({
+          name: editingUser.name,
+          email: editingUser.email,
+          phone: editingUser.phone,
+          role: editingUser.role,
+        }),
       })
 
       if (!response.ok) {
