@@ -84,10 +84,14 @@
     "subtitle": "We specialize in repairing all major smartphone brands",
     "loading": "Loading brands...",
     "allBrandsButton": "View All Brands",
-    "brandModelsDescription": "Browse all available phone models for {brand} that we repair.",
+    "brandPageDescription": "Browse all available phone models for {brand} that we repair.",
     "availableModels": "Available Models",
     "noModelsAvailable": "No models available for {brand} yet.",
-    "backToAllBrands": "Back to all brands"
+    "backToAllBrands": "Back to all brands",
+    "startingFrom": "Starting from {price}",
+    "repairServices": "Repair Services",
+    "brandNotFound": "Brand Not Found",
+    "brandNotFoundDesc": "The requested brand could not be found."
   },
   "Testimonials": {
     "title": "Customer Testimonials",

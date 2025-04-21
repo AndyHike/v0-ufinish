@@ -84,10 +84,14 @@
     "subtitle": "Ми спеціалізуємося на ремонті всіх основних брендів смартфонів",
     "loading": "Завантаження брендів...",
     "allBrandsButton": "Переглянути всі бренди",
-    "brandModelsDescription": "Перегляньте всі доступні моделі телефонів {brand}, які ми ремонтуємо.",
+    "brandPageDescription": "Перегляньте всі доступні моделі телефонів {brand}, які ми ремонтуємо.",
     "availableModels": "Доступні моделі",
     "noModelsAvailable": "Поки що немає доступних моделей для {brand}.",
-    "backToAllBrands": "Назад до всіх брендів"
+    "backToAllBrands": "Назад до всіх брендів",
+    "startingFrom": "Від {price}",
+    "repairServices": "Послуги з ремонту",
+    "brandNotFound": "Бренд не знайдено",
+    "brandNotFoundDesc": "Запитаний бренд не знайдено."
   },
   "Testimonials": {
     "title": "Відгуки клієнтів",

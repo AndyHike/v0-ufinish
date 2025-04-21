@@ -80,7 +80,7 @@ export default async function BrandPage({ params }: Props) {
             ))}
           </div>
         ) : (
-          <p>{t("noModelsAvailable")}</p>
+          <p>{t("noModelsAvailable", { brand: brand.name })}</p>
         )}
       </div>
     </div>

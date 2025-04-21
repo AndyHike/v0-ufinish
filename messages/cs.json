@@ -84,10 +84,14 @@
     "subtitle": "Specializujeme se na opravy všech hlavních značek smartphonů",
     "loading": "Načítání značek...",
     "allBrandsButton": "Zobrazit všechny značky",
-    "brandModelsDescription": "Prozkoumejte všechny dostupné modely telefonů {brand}, které opravujeme.",
+    "brandPageDescription": "Prozkoumejte všechny dostupné modely telefonů {brand}, které opravujeme.",
     "availableModels": "Dostupné modely",
     "noModelsAvailable": "Zatím nejsou k dispozici žádné modely pro {brand}.",
-    "backToAllBrands": "Zpět na všechny značky"
+    "backToAllBrands": "Zpět na všechny značky",
+    "startingFrom": "Od {price}",
+    "repairServices": "Opravárenské služby",
+    "brandNotFound": "Značka nenalezena",
+    "brandNotFoundDesc": "Požadovaná značka nebyla nalezena."
   },
   "Testimonials": {
     "title": "Recenze zákazníků",
