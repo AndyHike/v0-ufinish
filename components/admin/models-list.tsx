@@ -12,59 +12,61 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search } from "lucide-react"
+import { MoreHorizontal, Search, DollarSign, Pencil, Trash } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 
 export function ModelsList() {
+  const t = useTranslations("Admin")
   const [searchQuery, setSearchQuery] = useState("")
 
   // In a real app, this would fetch data from an API
   const models = [
     {
       id: "1",
+      name: "iPhone 15",
+      brand: "Apple",
+      brandLogo: "/bitten-fruit-silhouette.png",
+      image: "/sleek-slate-iphone.png",
+      year: "2023",
+      createdAt: "21.04.2025",
+    },
+    {
+      id: "2",
+      name: "iPhone 14",
+      brand: "Apple",
+      brandLogo: "/bitten-fruit-silhouette.png",
+      image: "/sleek-slate-iphone.png",
+      year: "2022",
+      createdAt: "21.04.2025",
+    },
+    {
+      id: "3",
       name: "iPhone 13",
       brand: "Apple",
       brandLogo: "/bitten-fruit-silhouette.png",
       image: "/sleek-slate-iphone.png",
       year: "2021",
-      createdAt: "10.03.2023",
-    },
-    {
-      id: "2",
-      name: "Galaxy S21",
-      brand: "Samsung",
-      brandLogo: "/samsung-wordmark.png",
-      image: "/phantom-violet-s21.png",
-      year: "2021",
-      createdAt: "15.02.2023",
-    },
-    {
-      id: "3",
-      name: "Redmi Note 10",
-      brand: "Xiaomi",
-      brandLogo: "/xiaomi-logo-abstract.png",
-      image: "/redmi-note-10-on-desk.png",
-      year: "2021",
-      createdAt: "22.04.2023",
+      createdAt: "21.04.2025",
     },
     {
       id: "4",
-      name: "P40 Pro",
-      brand: "Huawei",
-      brandLogo: "/abstract-petal-design.png",
-      image: "/huawei-p40-pro-on-table.png",
-      year: "2020",
-      createdAt: "05.01.2023",
+      name: "Galaxy Z Fold 5",
+      brand: "Samsung",
+      brandLogo: "/samsung-wordmark.png",
+      image: "/phantom-violet-s21.png",
+      year: "2023",
+      createdAt: "21.04.2025",
     },
     {
       id: "5",
-      name: "9 Pro",
-      brand: "OnePlus",
-      brandLogo: "/abstract-red-white-lines.png",
-      image: "/placeholder.svg?height=40&width=40&query=oneplus 9 pro",
-      year: "2021",
-      createdAt: "18.05.2023",
+      name: "Galaxy S23",
+      brand: "Samsung",
+      brandLogo: "/samsung-wordmark.png",
+      image: "/phantom-violet-s21.png",
+      year: "2023",
+      createdAt: "21.04.2025",
     },
   ]
 
@@ -81,7 +83,7 @@ export function ModelsList() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Пошук моделей..."
+            placeholder={t("searchModels")}
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -91,10 +93,10 @@ export function ModelsList() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Модель</TableHead>
-            <TableHead>Бренд</TableHead>
-            <TableHead>Рік випуску</TableHead>
-            <TableHead>Дата створення</TableHead>
+            <TableHead>{t("name")}</TableHead>
+            <TableHead>{t("brand")}</TableHead>
+            <TableHead>{t("year")}</TableHead>
+            <TableHead>{t("createdAt")}</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -136,19 +138,29 @@ export function ModelsList() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
                       <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Меню</span>
+                      <span className="sr-only">{t("openMenu")}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Дії</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>Редагувати</DropdownMenuItem>
-                    <DropdownMenuItem>Переглянути опис</DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href={`/admin/models/${model.id}/services`}>Керувати послугами</Link>
+                      <Link href={`/admin/models/${model.id}`}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        {t("edit")}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href={`/admin/models/${model.id}/services`}>
+                        <DollarSign className="mr-2 h-4 w-4" />
+                        {t("manageServices")}
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive">Видалити</DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive">
+                      <Trash className="mr-2 h-4 w-4" />
+                      {t("delete")}
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

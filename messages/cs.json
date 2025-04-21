@@ -310,5 +310,8 @@
     "basicDescription": "Bezplatná diagnostika a konzultace",
     "standardDescription": "Nejběžnější opravy se zárukou",
     "premiumDescription": "Komplexní opravy s prodlouženou zárukou a prioritním servisem"
+  },
+  "Common": {
+    "requestService": "Požádat o službu"
   }
 }

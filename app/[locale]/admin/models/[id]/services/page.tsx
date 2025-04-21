@@ -1,9 +1,8 @@
 import { getTranslations } from "next-intl/server"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { createServerClient } from "@/utils/supabase/server"
-import { Button } from "@/components/ui/button"
 import { ChevronLeft } from "lucide-react"
+import { createServerClient } from "@/utils/supabase/server"
 import { ModelServicesManager } from "@/components/admin/model-services-manager"
 
 type Props = {
@@ -31,20 +30,21 @@ export default async function ModelServicesPage({ params }: Props) {
   }
 
   return (
-    <div className="container space-y-6 p-4 md:p-8">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
+          <Link
+            href={`/${locale}/admin/models`}
+            className="mb-2 flex items-center text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            {t("backToModels")}
+          </Link>
           <h1 className="text-3xl font-bold tracking-tight">{t("modelServices", { model: model.name })}</h1>
           <p className="text-muted-foreground">
             {t("modelServicesDescription", { model: model.name, brand: model.brands?.name })}
           </p>
         </div>
-        <Link href={`/${locale}/admin/models`}>
-          <Button variant="outline" size="sm">
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            {t("backToModels")}
-          </Button>
-        </Link>
       </div>
 
       <ModelServicesManager modelId={id} locale={locale} />

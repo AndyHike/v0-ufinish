@@ -1,73 +1,119 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase"
+import { NextResponse } from "next/server"
+import { createServerClient } from "@/utils/supabase/server"
+import { logActivity } from "@/lib/admin/activity-logger"
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const modelId = searchParams.get("model_id")
+
   try {
-    const searchParams = request.nextUrl.searchParams
-    const modelId = searchParams.get("model_id")
+    const supabase = createServerClient()
 
-    if (!modelId) {
-      return NextResponse.json({ error: "Model ID is required" }, { status: 400 })
+    let query = supabase
+      .from("model_services")
+      .select("*, services(id, name, description, position)")
+      .order("id", { ascending: true })
+
+    if (modelId) {
+      query = query.eq("model_id", modelId)
     }
 
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from("model_services")
-      .select("*, services(id, name, description)")
-      .eq("model_id", modelId)
+    const { data, error } = await query
 
-    if (error) throw error
+    if (error) {
+      console.error("Error fetching model services:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error("Error fetching model services:", error)
-    return NextResponse.json({ error: "Failed to fetch model services" }, { status: 500 })
+    console.error("Unexpected error:", error)
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const supabase = createClient()
+    const { modelId, serviceId, price, userId } = body
+
+    if (!modelId || !serviceId || price === undefined || price === null) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    }
+
+    const supabase = createServerClient()
 
     // Check if the model service already exists
-    const { data: existingData, error: existingError } = await supabase
+    const { data: existingService, error: checkError } = await supabase
       .from("model_services")
       .select("id")
-      .eq("model_id", body.modelId)
-      .eq("service_id", body.serviceId)
+      .eq("model_id", modelId)
+      .eq("service_id", serviceId)
       .maybeSingle()
 
-    if (existingError) throw existingError
-
-    if (existingData) {
-      // Update existing record
-      const { data, error } = await supabase
-        .from("model_services")
-        .update({ price: body.price })
-        .eq("id", existingData.id)
-        .select()
-        .single()
-
-      if (error) throw error
-      return NextResponse.json(data)
-    } else {
-      // Insert new record
-      const { data, error } = await supabase
-        .from("model_services")
-        .insert({
-          model_id: body.modelId,
-          service_id: body.serviceId,
-          price: body.price,
-        })
-        .select()
-        .single()
-
-      if (error) throw error
-      return NextResponse.json(data)
+    if (checkError) {
+      console.error("Error checking existing model service:", checkError)
+      return NextResponse.json({ error: checkError.message }, { status: 500 })
     }
+
+    let result
+
+    if (existingService) {
+      // Update existing model service
+      const { data, error } = await supabase
+        .from("model_services")
+        .update({ price })
+        .eq("id", existingService.id)
+        .select("*, services(id, name, description, position)")
+        .single()
+
+      if (error) {
+        console.error("Error updating model service:", error)
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
+
+      result = data
+
+      // Log activity
+      if (userId) {
+        await logActivity({
+          userId,
+          entityId: existingService.id,
+          entityType: "model_service",
+          actionType: "update",
+          details: { price },
+        })
+      }
+    } else {
+      // Create new model service
+      const { data, error } = await supabase
+        .from("model_services")
+        .insert({ model_id: modelId, service_id: serviceId, price })
+        .select("*, services(id, name, description, position)")
+        .single()
+
+      if (error) {
+        console.error("Error creating model service:", error)
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
+
+      result = data
+
+      // Log activity
+      if (userId) {
+        await logActivity({
+          userId,
+          entityId: data.id,
+          entityType: "model_service",
+          actionType: "create",
+          details: { modelId, serviceId, price },
+        })
+      }
+    }
+
+    return NextResponse.json(result)
   } catch (error) {
-    console.error("Error creating/updating model service:", error)
-    return NextResponse.json({ error: "Failed to create/update model service" }, { status: 500 })
+    console.error("Unexpected error:", error)
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
   }
 }

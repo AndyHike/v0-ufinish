@@ -370,5 +370,8 @@
     "basicDescription": "Free diagnostics and consultation",
     "standardDescription": "Most common repairs with warranty",
     "premiumDescription": "Complex repairs with extended warranty and priority service"
+  },
+  "Common": {
+    "requestService": "Request Service"
   }
 }
