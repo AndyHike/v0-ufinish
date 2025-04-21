@@ -60,12 +60,13 @@
     "zod": "^3.24.1",
     "@auth/core": "latest",
     "nodemailer": "latest",
+    "@supabase/supabase-js": "latest",
     "next-auth": "latest",
     "next-intl": "latest",
     "@formatjs/intl-localematcher": "latest",
     "negotiator": "latest",
     "crypto": "latest",
-    "@supabase/supabase-js": "latest"
+    "@supabase/auth-helpers-nextjs": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
