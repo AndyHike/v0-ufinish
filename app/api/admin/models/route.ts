@@ -1,120 +1,70 @@
-import { NextResponse } from "next/server"
-import { createServerClient } from "@/utils/supabase/server"
+import { type NextRequest, NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase"
 import { logActivity } from "@/lib/admin/activity-logger"
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const brandId = searchParams.get("brand")
-
+export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerClient()
+    const searchParams = request.nextUrl.searchParams
+    const brandId = searchParams.get("brand_id")
 
-    let query = supabase
-      .from("models")
-      .select(`
-        id, 
-        name, 
-        year, 
-        image_url, 
-        created_at, 
-        position,
-        brand_id,
-        brands (
-          id,
-          name,
-          logo_url
-        )
-      `)
-      .order("position", { ascending: true })
+    const supabase = createClient()
+    let query = supabase.from("models").select("*, brands(name)")
 
     if (brandId) {
       query = query.eq("brand_id", brandId)
     }
 
-    const { data, error } = await query
+    const { data, error } = await query.order("position", { ascending: true, nullsLast: true })
 
-    if (error) {
-      console.error("Error fetching models:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    if (error) throw error
 
-    // Transform data to include brand_name and brand_logo_url
-    const transformedData = data.map((model) => ({
-      id: model.id,
-      name: model.name,
-      year: model.year,
-      image_url: model.image_url,
-      created_at: model.created_at,
-      position: model.position,
-      brand_id: model.brand_id,
-      brand_name: model.brands?.name || "Unknown",
-      brand_logo_url: model.brands?.logo_url,
-    }))
-
-    return NextResponse.json(transformedData)
+    return NextResponse.json(data)
   } catch (error) {
-    console.error("Unexpected error:", error)
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
+    console.error("Error fetching models:", error)
+    return NextResponse.json({ error: "Failed to fetch models" }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, brandId, year, imageUrl, userId } = body
+    const supabase = createClient()
 
-    if (!name || !brandId) {
-      return NextResponse.json({ error: "Name and brand are required" }, { status: 400 })
-    }
-
-    const supabase = createServerClient()
-
-    // Get the highest position for the current models
-    const { data: positionData, error: positionError } = await supabase
+    // Get the highest position value
+    const { data: positionData } = await supabase
       .from("models")
       .select("position")
       .order("position", { ascending: false })
       .limit(1)
 
-    if (positionError) {
-      console.error("Error getting max position:", positionError)
-      return NextResponse.json({ error: positionError.message }, { status: 500 })
-    }
+    const nextPosition =
+      positionData && positionData.length > 0 && positionData[0].position !== null ? positionData[0].position + 1 : 0
 
-    const nextPosition = positionData.length > 0 ? positionData[0].position + 1 : 1
-
-    // Insert the new model
     const { data, error } = await supabase
       .from("models")
       .insert({
-        name,
-        brand_id: brandId,
-        year: year || null,
-        image_url: imageUrl || null,
+        name: body.name,
+        brand_id: body.brandId,
+        image_url: body.imageUrl || null,
         position: nextPosition,
       })
       .select()
       .single()
 
-    if (error) {
-      console.error("Error creating model:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    if (error) throw error
 
     // Log activity
-    if (userId) {
-      await logActivity({
-        userId,
-        entityId: data.id,
-        entityType: "model",
-        actionType: "create",
-        details: { name, brandId },
-      })
-    }
+    await logActivity({
+      entityId: data.id,
+      entityType: "model",
+      actionType: "create",
+      userId: body.userId || null,
+      details: { name: data.name },
+    })
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error("Unexpected error:", error)
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
+    console.error("Error creating model:", error)
+    return NextResponse.json({ error: "Failed to create model" }, { status: 500 })
   }
 }

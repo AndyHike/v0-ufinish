@@ -14,9 +14,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "@/components/ui/use-toast"
 import { Pencil, Plus, Trash2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 type Service = {
   id: string
@@ -40,7 +39,6 @@ type ModelServicesManagerProps = {
 
 export function ModelServicesManager({ modelId, locale }: ModelServicesManagerProps) {
   const t = useTranslations("Admin")
-  const { toast } = useToast()
 
   const [modelServices, setModelServices] = useState<ModelService[]>([])
   const [allServices, setAllServices] = useState<Service[]>([])
@@ -81,13 +79,13 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     }
 
     fetchData()
-  }, [modelId, t, toast])
+  }, [modelId, t])
 
   // Get services that are not already assigned to the model
   const availableServices = allServices.filter((service) => !modelServices.some((ms) => ms.service_id === service.id))
 
   const handleAddService = async () => {
-    if (!selectedService || !price || isNaN(Number(price)) || Number(price) <= 0) {
+    if (!selectedService || !price || isNaN(Number.parseFloat(price)) || Number.parseFloat(price) <= 0) {
       toast({
         title: t("validationError"),
         description: t("pleaseEnterValidPrice"),
@@ -105,7 +103,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
         body: JSON.stringify({
           modelId,
           serviceId: selectedService,
-          price: Number(price),
+          price: Number.parseFloat(price),
         }),
       })
 
@@ -113,8 +111,17 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
 
       const newModelService = await res.json()
 
+      // Find the service details
+      const serviceDetails = allServices.find((s) => s.id === selectedService)
+
       // Add the new model service to the list
-      setModelServices([...modelServices, newModelService])
+      setModelServices([
+        ...modelServices,
+        {
+          ...newModelService,
+          services: serviceDetails,
+        },
+      ])
 
       // Reset form
       setSelectedService("")
@@ -136,7 +143,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
   }
 
   const handleEditService = async () => {
-    if (!editingServiceId || !price || isNaN(Number(price)) || Number(price) <= 0) {
+    if (!editingServiceId || !price || isNaN(Number.parseFloat(price)) || Number.parseFloat(price) <= 0) {
       toast({
         title: t("validationError"),
         description: t("pleaseEnterValidPrice"),
@@ -147,7 +154,6 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
 
     try {
       const modelService = modelServices.find((ms) => ms.id === editingServiceId)
-      if (!modelService) return
 
       const res = await fetch("/api/admin/model-services", {
         method: "POST",
@@ -156,8 +162,8 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
         },
         body: JSON.stringify({
           modelId,
-          serviceId: modelService.service_id,
-          price: Number(price),
+          serviceId: modelService?.service_id,
+          price: Number.parseFloat(price),
         }),
       })
 
@@ -166,7 +172,9 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
       const updatedModelService = await res.json()
 
       // Update the model service in the list
-      setModelServices(modelServices.map((ms) => (ms.id === editingServiceId ? updatedModelService : ms)))
+      setModelServices(
+        modelServices.map((ms) => (ms.id === editingServiceId ? { ...ms, price: Number.parseFloat(price) } : ms)),
+      )
 
       // Reset form
       setEditingServiceId(null)
@@ -233,114 +241,108 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>{t("manageModelServices")}</CardTitle>
-          <CardDescription>{t("manageModelServicesDescription")}</CardDescription>
-        </div>
+    <div className="space-y-4">
+      <div className="flex justify-between">
+        <h2 className="text-xl font-semibold">{t("manageModelServices")}</h2>
         <Button onClick={openAddDialog} disabled={availableServices.length === 0}>
           <Plus className="mr-2 h-4 w-4" />
           {t("addService")}
         </Button>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex h-40 items-center justify-center">
-            <p>{t("loading")}</p>
-          </div>
-        ) : modelServices.length === 0 ? (
-          <div className="rounded-md border border-dashed p-8 text-center">
-            <p className="text-muted-foreground">{t("noServicesForModel")}</p>
-            <Button onClick={openAddDialog} className="mt-4" disabled={availableServices.length === 0}>
-              <Plus className="mr-2 h-4 w-4" />
-              {t("addService")}
-            </Button>
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("serviceName")}</TableHead>
-                <TableHead>{t("serviceDescription")}</TableHead>
-                <TableHead className="text-right">{t("price")}</TableHead>
-                <TableHead className="w-[100px]">{t("actions")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {modelServices.map((modelService) => (
-                <TableRow key={modelService.id}>
-                  <TableCell className="font-medium">{modelService.services?.name}</TableCell>
-                  <TableCell className="max-w-md truncate">{modelService.services?.description}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(modelService.price)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => openEditDialog(modelService)}>
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">{t("edit")}</span>
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteService(modelService.id)}>
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">{t("delete")}</span>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+      </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingServiceId ? t("editServicePrice") : t("addServiceToModel")}</DialogTitle>
-              <DialogDescription>
-                {editingServiceId ? t("editServicePriceDescription") : t("addServiceToModelDescription")}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              {!editingServiceId && (
-                <div className="grid gap-2">
-                  <label htmlFor="service">{t("service")}</label>
-                  <Select value={selectedService} onValueChange={setSelectedService}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("selectService")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableServices.map((service) => (
-                        <SelectItem key={service.id} value={service.id}>
-                          {service.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+      {isLoading ? (
+        <div className="text-center">{t("loading")}</div>
+      ) : modelServices.length === 0 ? (
+        <div className="rounded-md border border-dashed p-8 text-center">
+          <p className="text-muted-foreground">{t("noServicesForModel")}</p>
+          <Button onClick={openAddDialog} className="mt-4" disabled={availableServices.length === 0}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t("addService")}
+          </Button>
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("serviceName")}</TableHead>
+              <TableHead>{t("serviceDescription")}</TableHead>
+              <TableHead className="text-right">{t("price")}</TableHead>
+              <TableHead className="w-[100px]">{t("actions")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {modelServices.map((modelService) => (
+              <TableRow key={modelService.id}>
+                <TableCell className="font-medium">{modelService.services?.name}</TableCell>
+                <TableCell className="max-w-md truncate">{modelService.services?.description}</TableCell>
+                <TableCell className="text-right">{formatCurrency(modelService.price)}</TableCell>
+                <TableCell>
+                  <div className="flex items-center justify-end gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => openEditDialog(modelService)}>
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">{t("edit")}</span>
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteService(modelService.id)}>
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">{t("delete")}</span>
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingServiceId ? t("editServicePrice") : t("addServiceToModel")}</DialogTitle>
+            <DialogDescription>
+              {editingServiceId ? t("editServicePriceDescription") : t("addServiceToModelDescription")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {!editingServiceId && (
               <div className="grid gap-2">
-                <label htmlFor="price">{t("price")}</label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="0.00"
-                />
+                <label htmlFor="service">{t("service")}</label>
+                <Select value={selectedService} onValueChange={setSelectedService}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("selectService")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableServices.map((service) => (
+                      <SelectItem key={service.id} value={service.id}>
+                        {service.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+            )}
+            <div className="grid gap-2">
+              <label htmlFor="price">{t("price")}</label>
+              <Input
+                id="price"
+                type="number"
+                step="0.01"
+                min="0"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="0.00"
+              />
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                {t("cancel")}
-              </Button>
-              <Button onClick={editingServiceId ? handleEditService : handleAddService}>
-                {editingServiceId ? t("saveChanges") : t("addService")}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button onClick={editingServiceId ? handleEditService : handleAddService}>
+              {editingServiceId ? t("saveChanges") : t("addService")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }

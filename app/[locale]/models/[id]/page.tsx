@@ -57,7 +57,7 @@ export default async function ModelPage({ params }: Props) {
     .from("model_services")
     .select("*, services(id, name, description, position)")
     .eq("model_id", id)
-    .order("services(position)", { ascending: true })
+    .order("price", { ascending: true })
 
   // If no model services are found, fetch all services and display them without prices
   const { data: allServices } = await supabase.from("services").select("*").order("position", { ascending: true })
@@ -67,7 +67,6 @@ export default async function ModelPage({ params }: Props) {
     modelServices && modelServices.length > 0
       ? modelServices
       : allServices?.map((service) => ({
-          id: `temp-${service.id}`,
           services: service,
           price: null,
           model_id: id,
@@ -86,7 +85,7 @@ export default async function ModelPage({ params }: Props) {
         </Link>
 
         <div className="mb-12 flex flex-col items-center gap-6 md:flex-row">
-          <div className="relative h-40 w-40 overflow-hidden rounded-lg bg-gray-100">
+          <div className="relative h-40 w-40 overflow-hidden rounded-lg">
             <Image
               src={model.image_url || "/placeholder.svg?height=160&width=160&query=phone+model"}
               alt={model.name}
@@ -121,7 +120,7 @@ export default async function ModelPage({ params }: Props) {
         {servicesToDisplay && servicesToDisplay.length > 0 ? (
           <div className="grid gap-4">
             {servicesToDisplay.map((modelService) => (
-              <div key={modelService.id} className="flex flex-col rounded-lg border p-6 shadow-sm">
+              <div key={modelService.services?.id} className="flex flex-col rounded-lg border p-6 shadow-sm">
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-xl font-medium">{modelService.services?.name}</h3>
@@ -136,7 +135,7 @@ export default async function ModelPage({ params }: Props) {
                 <div className="mt-4 flex justify-end">
                   <Button variant="outline" asChild>
                     <Link href={`/${locale}/contact?service=${modelService.services?.name}&model=${model.name}`}>
-                      {t("requestService")}
+                      {commonT("requestService")}
                     </Link>
                   </Button>
                 </div>

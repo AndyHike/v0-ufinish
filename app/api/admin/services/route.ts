@@ -1,20 +1,16 @@
 import { NextResponse } from "next/server"
-import { createServerClient } from "@/utils/supabase/server"
+import { createClient } from "@/lib/supabase"
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const supabase = createServerClient()
-
+    const supabase = createClient()
     const { data, error } = await supabase.from("services").select("*").order("position", { ascending: true })
 
-    if (error) {
-      console.error("Error fetching services:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    if (error) throw error
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error("Unexpected error:", error)
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
+    console.error("Error fetching services:", error)
+    return NextResponse.json({ error: "Failed to fetch services" }, { status: 500 })
   }
 }
