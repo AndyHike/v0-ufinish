@@ -1,3 +1,4 @@
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 
 export const createClient = () => {
@@ -8,7 +9,7 @@ export const createClient = () => {
     throw new Error("Missing Supabase environment variables")
   }
 
-  return createClient(supabaseUrl, supabaseAnonKey, {
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
         return cookies().get(name)?.value
@@ -22,3 +23,7 @@ export const createClient = () => {
     },
   })
 }
+
+// Export the createServerClient function that's being referenced elsewhere
+export const createServerClient = createClient
+export const createServerSupabaseClient = createClient

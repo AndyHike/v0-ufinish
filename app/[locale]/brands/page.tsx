@@ -1,72 +1,84 @@
-"use client"
-
-import { useTranslations } from "next-intl"
-import { useState, useEffect } from "react"
+import type { Metadata } from "next"
+import { getTranslations } from "next-intl/server"
 import Image from "next/image"
 import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
+import { createServerClient } from "@/utils/supabase/server"
 
-type Brand = {
-  id: string
-  name: string
-  logo_url: string | null
+export async function generateMetadata({
+  params: { locale },
+}: {
+  params: { locale: string }
+}): Promise<Metadata> {
+  const t = await getTranslations({ locale, namespace: "Brands" })
+
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  }
 }
 
-export default function BrandsPage() {
-  const t = useTranslations("Brands")
-  const [brands, setBrands] = useState<Brand[]>([])
-  const [loading, setLoading] = useState(true)
+export default async function BrandsPage({
+  params: { locale },
+}: {
+  params: { locale: string }
+}) {
+  const t = await getTranslations({ locale, namespace: "Brands" })
+  const supabase = createServerClient()
 
-  useEffect(() => {
-    async function fetchBrands() {
-      try {
-        const response = await fetch("/api/admin/brands")
-        if (response.ok) {
-          const data = await response.json()
-          setBrands(data)
-        }
-      } catch (error) {
-        console.error("Error fetching brands:", error)
-      } finally {
-        setLoading(false)
-      }
+  // Fetch brands with error handling
+  let { data: brands, error } = await supabase
+    .from("brands")
+    .select("*")
+    .order("position", { ascending: true, nullsLast: true })
+
+  // If there's an error or no brands with position, try fetching without ordering
+  if (error || !brands || brands.length === 0) {
+    const { data: fallbackBrands, error: fallbackError } = await supabase.from("brands").select("*").order("name")
+
+    if (!fallbackError && fallbackBrands) {
+      brands = fallbackBrands
     }
+  }
 
-    fetchBrands()
-  }, [])
+  // Sort brands by position if available, otherwise by name
+  const sortedBrands =
+    brands?.sort((a, b) => {
+      // If both have position, sort by position
+      if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
+        return a.position - b.position
+      }
+      // If only one has position, prioritize the one with position
+      if (a.position !== null && a.position !== undefined) return -1
+      if (b.position !== null && b.position !== undefined) return 1
+      // If neither has position, sort by name
+      return a.name.localeCompare(b.name)
+    }) || []
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="mb-12 text-center">
-        <h1 className="text-4xl font-bold">{t("title")}</h1>
-        <p className="mt-4 text-xl text-muted-foreground">{t("subtitle")}</p>
+    <div className="container px-4 py-12 md:px-6 md:py-24">
+      <div className="flex flex-col items-center justify-center space-y-4 text-center">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("title")}</h1>
+          <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            {t("subtitle")}
+          </p>
+        </div>
       </div>
-
-      {loading ? (
-        <div className="flex justify-center items-center h-40">
-          <p>Loading brands...</p>
-        </div>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {brands.map((brand) => (
-            <Link key={brand.id} href={`/brands/${brand.id}`}>
-              <Card className="h-full transition-all hover:shadow-md">
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <div className="relative h-32 w-32 mb-4">
-                    <Image
-                      src={brand.logo_url || "/placeholder.svg?height=128&width=128&query=phone+brand+logo"}
-                      alt={brand.name}
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <h3 className="text-xl font-semibold text-center">{brand.name}</h3>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      )}
+      <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 py-12 md:grid-cols-3 lg:grid-cols-5">
+        {sortedBrands.map((brand) => (
+          <Link key={brand.id} href={`/brands/${brand.id}`} className="group flex flex-col items-center justify-center">
+            <div className="relative mb-4 h-24 w-24 overflow-hidden rounded-lg">
+              <Image
+                src={brand.logo_url || "/placeholder.svg?height=96&width=96&query=phone+brand+logo"}
+                alt={brand.name}
+                fill
+                className="object-contain transition-transform duration-300 group-hover:scale-110"
+              />
+            </div>
+            <h2 className="text-center text-lg font-medium">{brand.name}</h2>
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }
