@@ -152,6 +152,7 @@
     "submit": "Надіслати",
     "somethingWentWrong": "Щось пішло не так. Спробуйте ще раз.",
     "loginError": "Помилка входу",
+    "registrationError": "Помилка реєстрації",
     "accountBlocked": "Обліковий запис тимчасово заблоковано",
     "verificationSuccess": "Електронну пошту підтверджено",
     "verificationSuccessDescription": "Вашу електронну пошту успішно підтверджено.",

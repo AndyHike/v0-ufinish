@@ -1,16 +1,23 @@
 import { getTranslations } from "next-intl/server"
 import { getLocale } from "next-intl/server"
 import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
 import { Smartphone } from "lucide-react"
 import { register } from "@/lib/auth/actions"
 
-export default async function RegisterPage() {
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: { error?: string }
+}) {
   const t = await getTranslations("Auth")
   const locale = await getLocale()
+
+  const showError = searchParams.error === "true"
 
   return (
     <div className="container flex min-h-screen flex-col items-center justify-center py-12">
@@ -20,16 +27,26 @@ export default async function RegisterPage() {
             <Smartphone className="h-6 w-6 text-primary" />
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">{t("createAccount")}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t("alreadyHaveAccount")}{" "}
-            <Link href={`/${locale}/auth/signin`} className="text-primary hover:underline">
-              {t("signIn")}
-            </Link>
-          </p>
         </div>
 
+        {showError && (
+          <Alert variant="destructive">
+            <AlertTitle>{t("registrationError")}</AlertTitle>
+            <AlertDescription>{t("somethingWentWrong")}</AlertDescription>
+          </Alert>
+        )}
+
         <Card>
-          <CardContent className="pt-6">
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold">{t("createAccount")}</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {t("alreadyHaveAccount")}{" "}
+              <Link href={`/${locale}/auth/signin`} className="text-primary hover:underline">
+                {t("signIn")}
+              </Link>
+            </p>
+          </CardHeader>
+          <CardContent>
             <form
               action={async (formData) => {
                 "use server"
@@ -40,11 +57,9 @@ export default async function RegisterPage() {
                 const result = await register(email, password, name, locale)
 
                 if (!result.success) {
-                  // Handle error
-                  return { error: result.error }
+                  return { redirect: `/${locale}/auth/register?error=true` }
                 }
 
-                // Redirect to verification page
                 return { redirect: `/${locale}/auth/signin?registered=true` }
               }}
               className="space-y-4"
