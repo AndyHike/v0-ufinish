@@ -4,6 +4,7 @@ import Image from "next/image"
 import { notFound } from "next/navigation"
 import { createServerClient } from "@/utils/supabase/server"
 import Link from "next/link"
+import { formatCurrency } from "@/lib/format-currency"
 
 type Props = {
   params: {
@@ -45,8 +46,12 @@ export default async function BrandPage({ params }: Props) {
     notFound()
   }
 
-  // Fetch models for this brand
-  const { data: models } = await supabase.from("models").select("*").eq("brand_id", id).order("name")
+  // Fetch models for this brand ordered by position
+  const { data: models } = await supabase
+    .from("models")
+    .select("*")
+    .eq("brand_id", id)
+    .order("position", { ascending: true })
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
@@ -80,7 +85,9 @@ export default async function BrandPage({ params }: Props) {
                 className="flex flex-col items-center rounded-lg border p-4 shadow-sm transition-all hover:shadow-md"
               >
                 <h3 className="text-lg font-medium">{model.name}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{t("startingFrom", { price: model.base_price })}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {t("startingFrom", { price: formatCurrency(model.base_price) })}
+                </p>
               </Link>
             ))}
           </div>

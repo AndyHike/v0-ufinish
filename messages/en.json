@@ -361,6 +361,10 @@
     "premiumDescription": "Complex repairs with extended warranty and priority service"
   },
   "Common": {
-    "requestService": "Request Service"
+    "requestService": "Request Service",
+    "backToHome": "Back to Home",
+    "learnMore": "Learn More",
+    "contactUs": "Contact Us",
+    "viewAll": "View All"
   }
 }

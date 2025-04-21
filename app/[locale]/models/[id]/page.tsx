@@ -6,6 +6,7 @@ import { notFound } from "next/navigation"
 import { createServerClient } from "@/utils/supabase/server"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft } from "lucide-react"
+import { formatCurrency } from "@/lib/format-currency"
 
 type Props = {
   params: {
@@ -52,21 +53,67 @@ export default async function ModelPage({ params }: Props) {
     notFound()
   }
 
-  // Fetch services for this model
+  // Fetch services for this model with translations
   const { data: modelServices } = await supabase
     .from("model_services")
-    .select("*, services(id, name, description, position)")
+    .select(`
+      *, 
+      services(
+        id, 
+        position,
+        services_translations!inner(
+          name,
+          description,
+          locale
+        )
+      )
+    `)
     .eq("model_id", id)
+    .eq("services.services_translations.locale", locale)
     .order("price", { ascending: true })
 
   // If no model services are found, fetch all services and display them without prices
-  const { data: allServices } = await supabase.from("services").select("*").order("position", { ascending: true })
+  const { data: allServices } = await supabase
+    .from("services")
+    .select(`
+      *,
+      services_translations!inner(
+        name,
+        description,
+        locale
+      )
+    `)
+    .eq("services_translations.locale", locale)
+    .order("position", { ascending: true })
+
+  // Transform services data
+  const transformedServices = allServices?.map((service) => ({
+    id: service.id,
+    position: service.position,
+    name: service.services_translations[0]?.name || "",
+    description: service.services_translations[0]?.description || "",
+  }))
+
+  // Transform model services data
+  const transformedModelServices = modelServices?.map((modelService) => ({
+    id: modelService.id,
+    model_id: modelService.model_id,
+    service_id: modelService.service_id,
+    price: modelService.price,
+    services: {
+      id: modelService.services.id,
+      position: modelService.services.position,
+      name: modelService.services.services_translations[0]?.name || "",
+      description: modelService.services.services_translations[0]?.description || "",
+    },
+  }))
 
   // Determine which services to display
   const servicesToDisplay =
-    modelServices && modelServices.length > 0
-      ? modelServices
-      : allServices?.map((service) => ({
+    transformedModelServices && transformedModelServices.length > 0
+      ? transformedModelServices
+      : transformedServices?.map((service) => ({
+          id: "",
           services: service,
           price: null,
           model_id: id,
@@ -127,9 +174,7 @@ export default async function ModelPage({ params }: Props) {
                     <p className="mt-2 text-muted-foreground">{modelService.services?.description}</p>
                   </div>
                   <div className="text-xl font-bold">
-                    {modelService.price
-                      ? new Intl.NumberFormat(locale, { style: "currency", currency: "USD" }).format(modelService.price)
-                      : t("priceOnRequest")}
+                    {modelService.price ? formatCurrency(modelService.price) : t("priceOnRequest")}
                   </div>
                 </div>
                 <div className="mt-4 flex justify-end">

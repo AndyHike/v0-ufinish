@@ -1,2 +1,7 @@
-export const locales = ["en", "uk", "cs"]
-export const defaultLocale = "en"
+export const locales = ["uk", "cs", "en"]
+export const defaultLocale = "uk"
+module.exports = {
+  locales: ["uk", "cs", "en"],
+  defaultLocale: "uk",
+  localeDetection: true,
+}

@@ -16,6 +16,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/components/ui/use-toast"
 import { Pencil, Plus, Trash2 } from "lucide-react"
+import { formatCurrency } from "@/lib/format-currency"
 
 type Service = {
   id: string
@@ -55,12 +56,12 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
         setIsLoading(true)
 
         // Fetch model services
-        const modelServicesRes = await fetch(`/api/admin/model-services?model_id=${modelId}`)
+        const modelServicesRes = await fetch(`/api/admin/model-services?model_id=${modelId}&locale=${locale}`)
         if (!modelServicesRes.ok) throw new Error("Failed to fetch model services")
         const modelServicesData = await modelServicesRes.json()
 
         // Fetch all services
-        const servicesRes = await fetch("/api/admin/services")
+        const servicesRes = await fetch(`/api/admin/services?locale=${locale}`)
         if (!servicesRes.ok) throw new Error("Failed to fetch services")
         const servicesData = await servicesRes.json()
 
@@ -79,7 +80,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     }
 
     fetchData()
-  }, [modelId, t])
+  }, [modelId, locale, t])
 
   // Get services that are not already assigned to the model
   const availableServices = allServices.filter((service) => !modelServices.some((ms) => ms.service_id === service.id))
@@ -236,10 +237,6 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     setIsDialogOpen(true)
   }
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat(locale, { style: "currency", currency: "USD" }).format(value)
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between">
@@ -329,7 +326,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
                 min="0"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="0.00"
+                placeholder="0"
               />
             </div>
           </div>

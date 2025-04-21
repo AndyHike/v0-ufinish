@@ -361,6 +361,10 @@
     "premiumDescription": "Komplexní opravy s prodlouženou zárukou a prioritním servisem"
   },
   "Common": {
-    "requestService": "Požádat o službu"
+    "requestService": "Objednat službu",
+    "backToHome": "Zpět na hlavní stránku",
+    "learnMore": "Zjistit více",
+    "contactUs": "Kontaktujte nás",
+    "viewAll": "Zobrazit vše"
   }
 }

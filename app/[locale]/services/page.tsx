@@ -1,66 +1,83 @@
-"use client"
-
-import { useTranslations } from "next-intl"
+import type { Metadata } from "next"
+import { getTranslations } from "next-intl/server"
+import Image from "next/image"
 import Link from "next/link"
+import { createServerClient } from "@/utils/supabase/server"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Smartphone, Battery, Wifi, Shield } from "lucide-react"
 
-export default function ServicesPage() {
-  const t = useTranslations("Services")
+export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+  const t = await getTranslations({ locale: params.locale, namespace: "Services" })
 
-  const services = [
-    {
-      icon: Smartphone,
-      title: t("service1.title"),
-      description: t("service1.description"),
-      href: "/services/screen-repair",
-    },
-    {
-      icon: Battery,
-      title: t("service2.title"),
-      description: t("service2.description"),
-      href: "/services/battery-replacement",
-    },
-    {
-      icon: Wifi,
-      title: t("service3.title"),
-      description: t("service3.description"),
-      href: "/services/connectivity-issues",
-    },
-    {
-      icon: Shield,
-      title: t("service4.title"),
-      description: t("service4.description"),
-      href: "/services/water-damage",
-    },
-  ]
+  return {
+    title: t("pageTitle"),
+    description: t("pageDescription"),
+  }
+}
+
+export default async function ServicesPage({ params }: { params: { locale: string } }) {
+  const t = await getTranslations({ locale: params.locale, namespace: "Services" })
+  const supabase = createServerClient()
+
+  // Fetch services with translations
+  const { data: services } = await supabase
+    .from("services")
+    .select(`
+      id, 
+      position,
+      services_translations!inner(
+        name,
+        description,
+        locale
+      )
+    `)
+    .eq("services_translations.locale", params.locale)
+    .order("position", { ascending: true })
+
+  // Transform the data
+  const transformedServices =
+    services?.map((service) => ({
+      id: service.id,
+      position: service.position,
+      name: service.services_translations[0]?.name || "",
+      description: service.services_translations[0]?.description || "",
+    })) || []
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="mb-12 text-center">
-        <h1 className="text-4xl font-bold">{t("title")}</h1>
-        <p className="mt-4 text-xl text-muted-foreground">{t("subtitle")}</p>
-      </div>
+    <div className="container px-4 py-12 md:px-6 md:py-24">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-12 space-y-4 text-center">
+          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("pageTitle")}</h1>
+          <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            {t("pageDescription")}
+          </p>
+        </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
-        {services.map((service, index) => (
-          <Card key={index} className="flex flex-col">
-            <CardHeader>
-              <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <service.icon className="h-6 w-6 text-primary" />
+        <div className="grid gap-8">
+          {transformedServices.map((service, index) => (
+            <div
+              key={service.id}
+              className={`flex flex-col ${
+                index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
+              } gap-8 rounded-lg border p-6 shadow-sm`}
+            >
+              <div className="flex-1">
+                <h2 className="mb-4 text-2xl font-bold">{service.name}</h2>
+                <p className="mb-6 text-muted-foreground">{service.description}</p>
+                <Button asChild>
+                  <Link href={`/${params.locale}/contact?service=${service.name}`}>{t("requestService")}</Link>
+                </Button>
               </div>
-              <CardTitle>{service.title}</CardTitle>
-              <CardDescription>{service.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1" />
-            <CardFooter>
-              <Button variant="outline" asChild className="w-full">
-                <Link href={service.href}>{t("learnMore")}</Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+              <div className="relative h-48 w-full flex-1 overflow-hidden rounded-lg md:h-auto">
+                <Image
+                  src={`/phone-repair-close-up.png?height=300&width=400&query=phone+repair+${service.name}`}
+                  alt={service.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

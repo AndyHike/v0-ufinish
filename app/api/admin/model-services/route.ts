@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const modelId = searchParams.get("model_id")
+    const locale = searchParams.get("locale") || "uk"
 
     if (!modelId) {
       return NextResponse.json({ error: "Model ID is required" }, { status: 400 })
@@ -13,12 +14,41 @@ export async function GET(request: NextRequest) {
     const supabase = createClient()
     const { data, error } = await supabase
       .from("model_services")
-      .select("*, services(id, name, description)")
+      .select(`
+        id, 
+        price, 
+        model_id, 
+        service_id,
+        services(
+          id, 
+          position,
+          services_translations!inner(
+            name,
+            description,
+            locale
+          )
+        )
+      `)
       .eq("model_id", modelId)
+      .eq("services.services_translations.locale", locale)
 
     if (error) throw error
 
-    return NextResponse.json(data)
+    // Transform the data to a more usable format
+    const transformedData = data.map((modelService) => ({
+      id: modelService.id,
+      model_id: modelService.model_id,
+      service_id: modelService.service_id,
+      price: modelService.price,
+      services: {
+        id: modelService.services.id,
+        position: modelService.services.position,
+        name: modelService.services.services_translations[0]?.name || "",
+        description: modelService.services.services_translations[0]?.description || "",
+      },
+    }))
+
+    return NextResponse.json(transformedData)
   } catch (error) {
     console.error("Error fetching model services:", error)
     return NextResponse.json({ error: "Failed to fetch model services" }, { status: 500 })
