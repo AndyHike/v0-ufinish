@@ -11,7 +11,7 @@ function createServerClient() {
   })
 }
 
-export async function getCurrentUser() {
+export async function getSession() {
   const cookieStore = cookies()
   const sessionId = cookieStore.get("session_id")?.value
 
@@ -61,22 +61,32 @@ export async function getCurrentUser() {
 
     if (profileError) {
       return {
-        id: user.id,
-        email: user.email,
-        role: user.role,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        },
       }
     }
 
     return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      name: profile.name,
-      phone: profile.phone,
-      avatar_url: profile.avatar_url,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        name: profile.name,
+        phone: profile.phone,
+        avatar_url: profile.avatar_url,
+      },
     }
   } catch (error) {
     console.error("Error getting current user:", error)
     return null
   }
+}
+
+// For backward compatibility - maintain the original function name
+export const getCurrentUser = async () => {
+  const session = await getSession()
+  return session?.user || null
 }
