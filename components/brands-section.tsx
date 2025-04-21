@@ -11,26 +11,43 @@ type Brand = {
   id: string
   name: string
   logo_url: string | null
-  position: number
+  position?: number | null
 }
 
 export function BrandsSection() {
   const t = useTranslations("Brands")
   const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchBrands() {
       try {
+        setLoading(true)
+        setError(null)
         const response = await fetch("/api/admin/brands")
-        if (response.ok) {
-          const data = await response.json()
-          // Sort brands by position
-          const sortedBrands = data.sort((a: Brand, b: Brand) => a.position - b.position)
-          setBrands(sortedBrands)
+        if (!response.ok) {
+          throw new Error(`Failed to fetch brands: ${response.status}`)
         }
+        const data = await response.json()
+
+        // Sort brands by position if available, otherwise by name
+        const sortedBrands = [...data].sort((a, b) => {
+          // If both have position, sort by position
+          if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
+            return a.position - b.position
+          }
+          // If only one has position, prioritize the one with position
+          if (a.position !== null && a.position !== undefined) return -1
+          if (b.position !== null && b.position !== undefined) return 1
+          // If neither has position, sort by name
+          return a.name.localeCompare(b.name)
+        })
+
+        setBrands(sortedBrands)
       } catch (error) {
         console.error("Error fetching brands:", error)
+        setError("Failed to load brands. Please try again later.")
       } finally {
         setLoading(false)
       }
@@ -54,6 +71,14 @@ export function BrandsSection() {
           {loading ? (
             <div className="flex justify-center items-center h-20">
               <p>Loading brands...</p>
+            </div>
+          ) : error ? (
+            <div className="flex justify-center items-center h-20 text-destructive">
+              <p>{error}</p>
+            </div>
+          ) : brands.length === 0 ? (
+            <div className="flex justify-center items-center h-20">
+              <p>No brands available.</p>
             </div>
           ) : (
             <Carousel className="w-full">

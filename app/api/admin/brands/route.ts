@@ -5,15 +5,24 @@ import { getSession } from "@/lib/auth/session"
 export async function GET() {
   try {
     const supabase = createClient()
-    const { data, error } = await supabase
-      .from("brands")
-      .select("*")
-      .order("position", { ascending: true })
-      .order("name", { ascending: true })
+    const { data, error } = await supabase.from("brands").select("*")
 
     if (error) throw error
 
-    return NextResponse.json(data)
+    // Sort brands by position if available, otherwise by name
+    const sortedData = data.sort((a, b) => {
+      // If both have position, sort by position
+      if (a.position !== null && b.position !== null) {
+        return a.position - b.position
+      }
+      // If only one has position, prioritize the one with position
+      if (a.position !== null) return -1
+      if (b.position !== null) return 1
+      // If neither has position, sort by name
+      return a.name.localeCompare(b.name)
+    })
+
+    return NextResponse.json(sortedData)
   } catch (error) {
     console.error("Error fetching brands:", error)
     return NextResponse.json({ error: "Failed to fetch brands" }, { status: 500 })
@@ -38,7 +47,10 @@ export async function POST(request: Request) {
 
     if (fetchError) throw fetchError
 
-    const nextPosition = existingBrands && existingBrands.length > 0 ? (existingBrands[0].position || 0) + 1 : 1
+    const nextPosition =
+      existingBrands && existingBrands.length > 0 && existingBrands[0].position !== null
+        ? (existingBrands[0].position || 0) + 1
+        : 1
 
     const { data, error } = await supabase
       .from("brands")

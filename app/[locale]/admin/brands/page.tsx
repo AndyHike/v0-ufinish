@@ -37,7 +37,7 @@ type Brand = {
   name: string
   logo_url: string | null
   created_at: string
-  position: number
+  position?: number | null
 }
 
 export default function BrandsPage() {
@@ -58,6 +58,7 @@ export default function BrandsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [reordering, setReordering] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchBrands()
@@ -66,23 +67,80 @@ export default function BrandsPage() {
   async function fetchBrands() {
     try {
       setLoading(true)
+      setError(null)
       const response = await fetch("/api/admin/brands")
       if (!response.ok) {
-        throw new Error("Failed to fetch brands")
+        throw new Error(`Failed to fetch brands: ${response.status}`)
       }
       const data = await response.json()
-      // Sort brands by position
-      const sortedBrands = data.sort((a: Brand, b: Brand) => a.position - b.position)
-      setBrands(sortedBrands)
+
+      // Check if any brands don't have a position and assign positions if needed
+      const needsPositionUpdate = data.some((brand) => brand.position === null || brand.position === undefined)
+
+      if (needsPositionUpdate) {
+        await assignPositionsToAllBrands(data)
+        // Refetch brands after assigning positions
+        const updatedResponse = await fetch("/api/admin/brands")
+        if (!updatedResponse.ok) {
+          throw new Error(`Failed to fetch updated brands: ${updatedResponse.status}`)
+        }
+        const updatedData = await updatedResponse.json()
+        setBrands(updatedData)
+      } else {
+        // Sort brands by position
+        const sortedBrands = [...data].sort((a, b) => {
+          if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
+            return a.position - b.position
+          }
+          if (a.position !== null && a.position !== undefined) return -1
+          if (b.position !== null && b.position !== undefined) return 1
+          return a.name.localeCompare(b.name)
+        })
+        setBrands(sortedBrands)
+      }
     } catch (error) {
       console.error("Error fetching brands:", error)
+      setError("Failed to load brands. Please try again later.")
       toast({
         title: t("error"),
-        description: t("brandAddedError"),
+        description: t("brandFetchError") || "Failed to fetch brands",
         variant: "destructive",
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function assignPositionsToAllBrands(brands: Brand[]) {
+    try {
+      // Sort brands by name for initial positioning
+      const sortedBrands = [...brands].sort((a, b) => a.name.localeCompare(b.name))
+
+      // Assign positions
+      const brandsWithPositions = sortedBrands.map((brand, index) => ({
+        id: brand.id,
+        position: index + 1,
+      }))
+
+      // Update all brand positions
+      const response = await fetch("/api/admin/brands/reorder", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          brands: brandsWithPositions,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to assign positions to brands")
+      }
+
+      return true
+    } catch (error) {
+      console.error("Error assigning positions to brands:", error)
+      throw error
     }
   }
 
@@ -98,7 +156,7 @@ export default function BrandsPage() {
       }
 
       // Get the highest position value
-      const maxPosition = brands.length > 0 ? Math.max(...brands.map((brand) => brand.position)) : 0
+      const maxPosition = brands.length > 0 ? Math.max(...brands.map((brand) => brand.position || 0)) : 0
 
       const response = await fetch("/api/admin/brands", {
         method: "POST",
@@ -159,7 +217,7 @@ export default function BrandsPage() {
         body: JSON.stringify({
           name: editBrand.name,
           logo_url: logoUrl,
-          position: editBrand.position,
+          position: editBrand.position || 999, // Fallback position if none exists
         }),
       })
 
@@ -317,8 +375,8 @@ export default function BrandsPage() {
       const updatedBrands = [...brands]
 
       // Swap the positions
-      const temp = updatedBrands[index].position
-      updatedBrands[index].position = updatedBrands[index - 1].position
+      const temp = updatedBrands[index].position || 0
+      updatedBrands[index].position = updatedBrands[index - 1].position || 0
       updatedBrands[index - 1].position = temp
 
       // Swap the elements in the array
@@ -332,13 +390,13 @@ export default function BrandsPage() {
 
       toast({
         title: t("success"),
-        description: t("brandReorderedSuccess"),
+        description: t("brandReorderedSuccess") || "Brand reordered successfully",
       })
     } catch (error) {
       console.error("Error reordering brands:", error)
       toast({
         title: t("error"),
-        description: t("brandReorderedError"),
+        description: t("brandReorderedError") || "Failed to reorder brand",
         variant: "destructive",
       })
       // Revert to original order by refetching
@@ -357,8 +415,8 @@ export default function BrandsPage() {
       const updatedBrands = [...brands]
 
       // Swap the positions
-      const temp = updatedBrands[index].position
-      updatedBrands[index].position = updatedBrands[index + 1].position
+      const temp = updatedBrands[index].position || 0
+      updatedBrands[index].position = updatedBrands[index + 1].position || 0
       updatedBrands[index + 1].position = temp
 
       // Swap the elements in the array
@@ -372,13 +430,13 @@ export default function BrandsPage() {
 
       toast({
         title: t("success"),
-        description: t("brandReorderedSuccess"),
+        description: t("brandReorderedSuccess") || "Brand reordered successfully",
       })
     } catch (error) {
       console.error("Error reordering brands:", error)
       toast({
         title: t("error"),
-        description: t("brandReorderedError"),
+        description: t("brandReorderedError") || "Failed to reorder brand",
         variant: "destructive",
       })
       // Revert to original order by refetching
@@ -573,11 +631,15 @@ export default function BrandsPage() {
             <div className="flex items-center justify-center h-40">
               <p>Loading brands...</p>
             </div>
+          ) : error ? (
+            <div className="flex items-center justify-center h-40 text-destructive">
+              <p>{error}</p>
+            </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[80px]">{t("order")}</TableHead>
+                  <TableHead className="w-[80px]">{t("order") || "Order"}</TableHead>
                   <TableHead>{t("name")}</TableHead>
                   <TableHead>{t("logo")}</TableHead>
                   <TableHead>{t("createdAt")}</TableHead>
