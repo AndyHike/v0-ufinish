@@ -4,15 +4,16 @@ import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import Image from "next/image"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 interface Brand {
   id: string
   name: string
-  logo_url: string
-  position: number
+  logo_url: string | null
+  position?: number | null
 }
 
 export function BrandsSection() {
@@ -85,36 +86,65 @@ export function BrandsSection() {
             ))}
           </div>
         ) : brands.length > 0 ? (
-          <Carousel className="w-full max-w-4xl mx-auto">
-            <CarouselContent>
+          <div className="relative max-w-4xl mx-auto">
+            {/* Custom navigation arrows positioned outside the content */}
+            <button
+              onClick={() => document.getElementById("brands-scroll")?.scrollBy(-200, 0)}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex"
+              aria-label="Previous brands"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+
+            <div
+              id="brands-scroll"
+              className="flex overflow-x-auto gap-6 pb-4 snap-x scrollbar-hide"
+              style={{ scrollBehavior: "smooth" }}
+            >
               {brands.map((brand) => (
-                <CarouselItem key={brand.id} className="md:basis-1/3 lg:basis-1/4">
+                <div key={brand.id} className="flex-none w-[200px] snap-start">
                   <Link href={`/brands/${brand.id}`}>
-                    <Card className="border-none shadow-sm hover:shadow-md transition-shadow duration-300">
-                      <CardContent className="p-6 flex items-center justify-center h-32">
+                    <Card className="border-none shadow-sm hover:shadow-md transition-shadow duration-300 h-32">
+                      <CardContent className="p-6 flex flex-col items-center justify-center h-full">
                         {brand.logo_url ? (
-                          <Image
-                            src={brand.logo_url || "/placeholder.svg"}
-                            alt={brand.name}
-                            width={120}
-                            height={80}
-                            className="max-h-16 w-auto object-contain"
-                          />
+                          <div className="relative h-16 w-full">
+                            <Image
+                              src={brand.logo_url || "/placeholder.svg"}
+                              alt={brand.name}
+                              width={120}
+                              height={80}
+                              className="object-contain mx-auto"
+                              style={{ maxHeight: "100%", width: "auto" }}
+                            />
+                          </div>
                         ) : (
                           <div className="text-lg font-medium">{brand.name}</div>
                         )}
+                        <span className="mt-2 text-sm text-center">{brand.name}</span>
                       </CardContent>
                     </Card>
                   </Link>
-                </CarouselItem>
+                </div>
               ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-0" />
-            <CarouselNext className="right-0" />
-          </Carousel>
+            </div>
+
+            <button
+              onClick={() => document.getElementById("brands-scroll")?.scrollBy(200, 0)}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex"
+              aria-label="Next brands"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
         ) : (
           <p className="text-center text-gray-500">{t("noBrands")}</p>
         )}
+
+        <div className="text-center mt-8">
+          <Button asChild variant="outline">
+            <Link href="/brands">{t("allBrandsButton")}</Link>
+          </Button>
+        </div>
       </div>
     </section>
   )

@@ -1,4 +1,185 @@
 {
+  "Header": {
+    "siteTitle": "Phone Repair",
+    "home": "Home",
+    "services": "Services",
+    "pricing": "Pricing",
+    "about": "About",
+    "contact": "Contact",
+    "openMenu": "Open menu",
+    "search": "Search"
+  },
+  "Footer": {
+    "siteTitle": "Phone Repair",
+    "description": "Professional mobile phone repair with quality guarantee.",
+    "quickLinks": "Quick Links",
+    "home": "Home",
+    "services": "Services",
+    "pricing": "Pricing",
+    "about": "About",
+    "contact": "Contact",
+    "contactUs": "Contact Us",
+    "address": "123 Main St, New York, USA",
+    "followUs": "Follow Us",
+    "allRightsReserved": "All rights reserved."
+  },
+  "UserNav": {
+    "login": "Login",
+    "profile": "Profile",
+    "orders": "Orders",
+    "adminDashboard": "Admin Dashboard",
+    "logout": "Logout"
+  },
+  "Search": {
+    "title": "Search",
+    "placeholder": "Search phones, brands...",
+    "search": "Search",
+    "clear": "Clear",
+    "results": "Results",
+    "brand": "Brand",
+    "model": "Model",
+    "service": "Service"
+  },
+  "Hero": {
+    "title": "Professional Mobile Phone Repair",
+    "subtitle": "Fast and quality repair of your phone with warranty. Trust your device to professionals.",
+    "servicesButton": "Our Services",
+    "contactButton": "Contact Us",
+    "feature1": "Free Diagnostics",
+    "feature2": "Warranty on All Repairs",
+    "feature3": "Same Day Repair",
+    "imageAlt": "Phone Repair"
+  },
+  "Services": {
+    "title": "Our Services",
+    "subtitle": "We offer a wide range of mobile phone repair services.",
+    "service1": {
+      "title": "Screen Replacement",
+      "description": "Professional replacement of broken or damaged screens."
+    },
+    "service2": {
+      "title": "Battery Replacement",
+      "description": "Restore your phone's battery life with a new battery."
+    },
+    "service3": {
+      "title": "Connectivity Issues",
+      "description": "Fix Wi-Fi, Bluetooth, and other connectivity problems."
+    },
+    "service4": {
+      "title": "Water Damage",
+      "description": "Recovery of phones after water damage."
+    },
+    "learnMore": "Learn More",
+    "allServicesButton": "All Services"
+  },
+  "BrandsSection": {
+    "title": "Brands We Service",
+    "description": "We specialize in repairing all major smartphone brands",
+    "loading": "Loading brands...",
+    "allBrandsButton": "View All Brands",
+    "noBrands": "No brands available"
+  },
+  "Brands": {
+    "title": "Brands We Service",
+    "subtitle": "We specialize in repairing all major smartphone brands",
+    "loading": "Loading brands...",
+    "allBrandsButton": "View All Brands",
+    "brandModelsDescription": "Browse all available phone models for {brand} that we repair.",
+    "availableModels": "Available Models",
+    "noModelsAvailable": "No models available for {brand} yet.",
+    "backToAllBrands": "Back to all brands"
+  },
+  "Testimonials": {
+    "title": "Customer Testimonials",
+    "subtitle": "See what our customers say about our services.",
+    "testimonial1": {
+      "name": "John Smith",
+      "content": "Very satisfied with the quality of repair. My iPhone works like new after screen replacement."
+    },
+    "testimonial2": {
+      "name": "Mary Johnson",
+      "content": "Fast and professional service. They replaced my battery in 30 minutes, and now my phone lasts all day."
+    },
+    "testimonial3": {
+      "name": "David Brown",
+      "content": "Excellent service at a reasonable price. Recommend to anyone having phone issues."
+    },
+    "testimonial4": {
+      "name": "Sarah Wilson",
+      "content": "Saved my phone after I dropped it in water. Very grateful for the quick help!"
+    }
+  },
+  "Contact": {
+    "title": "Contact Us",
+    "subtitle": "Have questions? Write to us, and we will contact you as soon as possible.",
+    "contactUs": "Contact Us",
+    "contactUsDescription": "Fill out the form, and we will contact you as soon as possible.",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "addressDetails": "123 Main St, New York, USA",
+    "workingHours": "Working Hours",
+    "workingHoursWeekdays": "Monday - Friday: 9:00 - 18:00",
+    "workingHoursSaturday": "Saturday: 10:00 - 16:00",
+    "workingHoursSunday": "Sunday: Closed",
+    "ourLocation": "Our Location",
+    "mapTitle": "Location Map",
+    "nameLabel": "Name",
+    "namePlaceholder": "Enter your name",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Enter your email",
+    "phoneLabel": "Phone",
+    "phonePlaceholder": "Enter your phone number",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Enter your message",
+    "send": "Send",
+    "sending": "Sending...",
+    "successTitle": "Message Sent",
+    "successMessage": "Thank you for your message. We will contact you as soon as possible."
+  },
+  "Auth": {
+    "createAccount": "Create Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign In",
+    "signInToAccount": "Sign in to your account",
+    "noAccount": "Don't have an account?",
+    "register": "Register",
+    "name": "Name",
+    "namePlaceholder": "Enter your name",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "phone": "Phone",
+    "phonePlaceholder": "Enter your phone number",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "passwordRequirements": "Password must be at least 8 characters long",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset Password",
+    "enterEmail": "Enter your email to reset your password",
+    "sendResetLink": "Send Reset Link",
+    "backToSignIn": "Back to sign in",
+    "unexpectedError": "An unexpected error occurred",
+    "processing": "Processing...",
+    "submit": "Submit",
+    "somethingWentWrong": "Something went wrong. Please try again.",
+    "loginError": "Login Error",
+    "loginFailed": "Failed to login. Please try again.",
+    "invalidCredentials": "Invalid email or password",
+    "accountBlocked": "Account temporarily blocked",
+    "verificationSuccess": "Email Verified",
+    "verificationSuccessDescription": "Your email has been successfully verified.",
+    "verificationSuccessHelp": "You can now sign in to your account.",
+    "verificationFailed": "Verification Failed",
+    "verificationErrorGeneric": "We couldn't verify your email. The verification link may have expired or is invalid.",
+    "verificationErrorMissingToken": "Verification token is missing.",
+    "verificationErrorInvalidToken": "Verification token is invalid or has expired.",
+    "verificationErrorHelp": "Try signing in to request a new verification email.",
+    "registrationSuccess": "Registration Successful",
+    "accountCreatedSuccessfully": "Your account has been successfully created.",
+    "youCanNowLogin": "You can now log in to your account.",
+    "registrationFailed": "Failed to register. Please try again."
+  },
   "Admin": {
     "adminPanel": "Admin Panel",
     "dashboard": "Dashboard",
@@ -116,48 +297,5 @@
       "loading": "Loading brands...",
       "allBrandsButton": "All Brands"
     }
-  },
-  "Auth": {
-    "createAccount": "Create Account",
-    "alreadyHaveAccount": "Already have an account?",
-    "signIn": "Sign In",
-    "signInToAccount": "Sign in to your account",
-    "noAccount": "Don't have an account?",
-    "register": "Register",
-    "name": "Name",
-    "namePlaceholder": "Enter your name",
-    "email": "Email",
-    "emailPlaceholder": "your@email.com",
-    "phone": "Phone",
-    "phonePlaceholder": "Enter your phone number",
-    "password": "Password",
-    "passwordPlaceholder": "Enter your password",
-    "passwordRequirements": "Password must be at least 8 characters long",
-    "rememberMe": "Remember me",
-    "forgotPassword": "Forgot password?",
-    "resetPassword": "Reset Password",
-    "enterEmail": "Enter your email to reset your password",
-    "sendResetLink": "Send Reset Link",
-    "backToSignIn": "Back to sign in",
-    "unexpectedError": "An unexpected error occurred",
-    "processing": "Processing...",
-    "submit": "Submit",
-    "somethingWentWrong": "Something went wrong. Please try again.",
-    "loginError": "Login Error",
-    "loginFailed": "Failed to login. Please try again.",
-    "invalidCredentials": "Invalid email or password",
-    "accountBlocked": "Account temporarily blocked",
-    "verificationSuccess": "Email Verified",
-    "verificationSuccessDescription": "Your email has been successfully verified.",
-    "verificationSuccessHelp": "You can now sign in to your account.",
-    "verificationFailed": "Verification Failed",
-    "verificationErrorGeneric": "We couldn't verify your email. The verification link may have expired or is invalid.",
-    "verificationErrorMissingToken": "Verification token is missing.",
-    "verificationErrorInvalidToken": "Verification token is invalid or has expired.",
-    "verificationErrorHelp": "Try signing in to request a new verification email.",
-    "registrationSuccess": "Registration Successful",
-    "accountCreatedSuccessfully": "Your account has been successfully created.",
-    "youCanNowLogin": "You can now log in to your account.",
-    "registrationFailed": "Failed to register. Please try again."
   }
 }
