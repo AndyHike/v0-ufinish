@@ -1,83 +1,89 @@
 "use client"
 
-import type React from "react"
-
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { BarChart3, Package, Users, Tag, Percent, Settings } from "lucide-react"
+import { LayoutDashboard, Tag, Smartphone, Percent, Users, Settings, LogOut } from "lucide-react"
 
-interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
-  items: {
-    href: string
-    title: string
-    icon: React.ReactNode
-  }[]
-}
-
-export function AdminSidebar({ className, items, ...props }: SidebarNavProps) {
+export function AdminSidebar() {
+  const t = useTranslations("Admin")
   const pathname = usePathname()
 
-  return (
-    <nav className={cn("flex space-x-2 lg:flex-col lg:space-x-0 lg:space-y-1", className)} {...props}>
-      {items.map((item) => (
-        <Button
-          key={item.href}
-          variant={pathname === item.href ? "secondary" : "ghost"}
-          className={cn(
-            "justify-start",
-            pathname === item.href ? "bg-muted hover:bg-muted" : "hover:bg-transparent hover:underline",
-          )}
-          asChild
-        >
-          <Link href={item.href}>
-            {item.icon}
-            <span className="ml-2">{item.title}</span>
-          </Link>
-        </Button>
-      ))}
-    </nav>
-  )
-}
-
-export function getAdminSidebarItems(locale = "") {
-  const prefix = locale ? `/${locale}` : ""
-
-  return [
+  const routes = [
     {
-      href: `${prefix}/admin`,
-      title: "Огляд",
-      icon: <BarChart3 className="h-4 w-4" />,
+      label: t("dashboard"),
+      icon: LayoutDashboard,
+      href: "/admin",
+      active: pathname === "/admin",
     },
     {
-      href: `${prefix}/admin/brands`,
-      title: "Бренди",
-      icon: <Package className="h-4 w-4" />,
+      label: t("brands"),
+      icon: Tag,
+      href: "/admin/brands",
+      active: pathname === "/admin/brands",
     },
     {
-      href: `${prefix}/admin/models`,
-      title: "Моделі",
-      icon: <Tag className="h-4 w-4" />,
+      label: t("models"),
+      icon: Smartphone,
+      href: "/admin/models",
+      active: pathname === "/admin/models",
     },
     {
-      href: `${prefix}/admin/users`,
-      title: "Користувачі",
-      icon: <Users className="h-4 w-4" />,
+      label: t("discounts"),
+      icon: Percent,
+      href: "/admin/discounts",
+      active: pathname === "/admin/discounts",
     },
     {
-      href: `${prefix}/admin/discounts`,
-      title: "Знижки",
-      icon: <Percent className="h-4 w-4" />,
+      label: t("users"),
+      icon: Users,
+      href: "/admin/users",
+      active: pathname === "/admin/users",
     },
     {
-      href: `${prefix}/admin/settings`,
-      title: "Налаштування",
-      icon: <Settings className="h-4 w-4" />,
+      label: t("settings"),
+      icon: Settings,
+      href: "/admin/settings",
+      active: pathname === "/admin/settings",
     },
   ]
-}
 
-export default function AdminSidebarWithItems() {
-  return <AdminSidebar items={getAdminSidebarItems()} />
+  return (
+    <div className="space-y-4 py-4 flex flex-col h-full bg-slate-900 text-white">
+      <div className="px-3 py-2 flex-1">
+        <Link href="/admin" className="flex items-center pl-3 mb-14">
+          <h1 className="text-xl font-bold">{t("adminPanel")}</h1>
+        </Link>
+        <div className="space-y-1">
+          {routes.map((route) => (
+            <Link
+              key={route.href}
+              href={route.href}
+              className={cn(
+                "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
+                route.active ? "text-white bg-white/10" : "text-zinc-400",
+              )}
+            >
+              <div className="flex items-center flex-1">
+                <route.icon className={cn("h-5 w-5 mr-3")} />
+                {route.label}
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+      <div className="px-3 py-2">
+        <Link
+          href="/api/auth/signout"
+          className="text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition text-zinc-400"
+        >
+          <div className="flex items-center flex-1">
+            <LogOut className="h-5 w-5 mr-3" />
+            {t("logout")}
+          </div>
+        </Link>
+      </div>
+    </div>
+  )
 }

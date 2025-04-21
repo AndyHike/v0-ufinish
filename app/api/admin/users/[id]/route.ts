@@ -1,13 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
-import { logAdminActivity } from "@/lib/admin/activity-logger"
+import { logActivity } from "@/lib/admin/activity-logger"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const userId = params.id
     const supabase = createClient()
 
-    const { data: user, error } = await supabase.from("users").select("*").eq("id", userId).single()
+    const { data: user, error } = await supabase.from("users").select("*").eq("id", params.id).single()
 
     if (error) {
       console.error("Error fetching user:", error)
@@ -21,30 +20,30 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json(user)
   } catch (error) {
     console.error("Error in user API:", error)
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const userId = params.id
-    const body = await request.json()
-    const { name, email, phone, role } = body
-
     const supabase = createClient()
+    const body = await request.json()
 
-    // Update user in the database
-    const { data, error } = await supabase
+    // Get the current user data for logging
+    const { data: currentUser } = await supabase.from("users").select("*").eq("id", params.id).single()
+
+    const { data: user, error } = await supabase
       .from("users")
       .update({
-        name,
-        email,
-        phone,
-        role,
+        name: body.name,
+        email: body.email,
+        phone: body.phone,
+        role: body.role,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", userId)
+      .eq("id", params.id)
       .select()
+      .single()
 
     if (error) {
       console.error("Error updating user:", error)
@@ -52,30 +51,32 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
 
     // Log the activity
-    await logAdminActivity({
-      entityId: userId,
-      entityType: "user",
-      actionType: "update",
-      details: { updatedFields: Object.keys(body) },
+    await logActivity({
+      action_type: "update",
+      entity_type: "user",
+      entity_id: params.id,
+      user_id: params.id, // Using the same ID as the entity for simplicity
+      details: {
+        before: currentUser,
+        after: user,
+      },
     })
 
-    return NextResponse.json(data)
+    return NextResponse.json(user)
   } catch (error) {
-    console.error("Error in user update API:", error)
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
+    console.error("Error in user API:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const userId = params.id
     const supabase = createClient()
 
-    // Get user data before deletion for logging
-    const { data: userData } = await supabase.from("users").select("email").eq("id", userId).single()
+    // Get the current user data for logging
+    const { data: currentUser } = await supabase.from("users").select("*").eq("id", params.id).single()
 
-    // Delete user from the database
-    const { error } = await supabase.from("users").delete().eq("id", userId)
+    const { error } = await supabase.from("users").delete().eq("id", params.id)
 
     if (error) {
       console.error("Error deleting user:", error)
@@ -83,16 +84,19 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     // Log the activity
-    await logAdminActivity({
-      entityId: userId,
-      entityType: "user",
-      actionType: "delete",
-      details: { email: userData?.email },
+    await logActivity({
+      action_type: "delete",
+      entity_type: "user",
+      entity_id: params.id,
+      user_id: params.id, // Using the same ID as the entity for simplicity
+      details: {
+        user: currentUser,
+      },
     })
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error in user delete API:", error)
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
+    console.error("Error in user API:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
