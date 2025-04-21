@@ -7,9 +7,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const id = params.id
     const supabase = createClient()
 
+    // Remove phone from the select
     const { data: user, error } = await supabase
       .from("users")
-      .select("id, email, name, phone, role, created_at")
+      .select("id, email, name, role, created_at")
       .eq("id", id)
       .single()
 
@@ -27,7 +28,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    return NextResponse.json({ user })
+    return NextResponse.json(user)
   } catch (error) {
     console.error("Error fetching user:", error)
     return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
@@ -38,17 +39,16 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   try {
     const id = params.id
     const body = await request.json()
-    const { name, email, phone, role } = body
+    const { name, email, role } = body // Remove phone from destructuring
 
     const supabase = createClient()
 
-    // Update user
+    // Update user - remove phone from the update
     const { data: user, error } = await supabase
       .from("users")
       .update({
         name,
         email,
-        phone,
         role,
         updated_at: new Date().toISOString(),
       })
@@ -74,7 +74,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       details: `Updated user: ${email}`,
     })
 
-    return NextResponse.json({ user })
+    return NextResponse.json(user)
   } catch (error) {
     console.error("Error updating user:", error)
     return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
