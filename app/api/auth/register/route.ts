@@ -1,95 +1,132 @@
-import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase"
-import { v4 as uuidv4 } from "uuid"
-import bcrypt from "bcryptjs"
+import { type NextRequest, NextResponse } from "next/server"
+import { cookies } from "next/headers"
+import { createClient } from "@supabase/supabase-js"
+import { hash } from "@/utils/auth"
 
-export async function POST(request: Request) {
+// Create a Supabase client for server-side operations
+function createServerClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
+
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false },
+  })
+}
+
+// Validate password strength
+function validatePassword(password: string): { valid: boolean; message?: string } {
+  if (password.length < 8) {
+    return { valid: false, message: "Password must be at least 8 characters long" }
+  }
+  return { valid: true }
+}
+
+export async function POST(request: NextRequest) {
   try {
-    const { name, email, password, phone } = await request.json()
+    // Get form data instead of JSON
+    const formData = await request.formData()
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+    const name = formData.get("name") as string
+    const phone = formData.get("phone") as string
 
-    // Validate input
-    if (!name || !email || !password || !phone) {
-      return NextResponse.json({ error: "Name, email, password, and phone are required" }, { status: 400 })
+    // Debug log
+    console.log("Registration data:", { email, name, phone: phone || "not provided" })
+
+    // Validate inputs
+    if (!email || !password || !name || !phone) {
+      return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 })
     }
 
-    const supabase = createClient()
+    // Validate password
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.valid) {
+      return NextResponse.json({ success: false, message: passwordValidation.message }, { status: 400 })
+    }
 
-    // Check if user already exists
-    const { data: existingUser } = await supabase.from("users").select("id").eq("email", email).single()
+    const supabase = createServerClient()
+
+    // Check if email already exists
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email.toLowerCase())
+      .maybeSingle()
 
     if (existingUser) {
-      return NextResponse.json({ error: "User with this email already exists" }, { status: 400 })
+      return NextResponse.json({ success: false, message: "Email is already registered" }, { status: 400 })
     }
 
     // Hash password
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password, salt)
+    const passwordHash = await hash(password)
 
-    // Generate user ID
-    const userId = uuidv4()
-
-    // Create user
-    const { error: userError } = await supabase.from("users").insert({
-      id: userId,
-      email,
-      password: hashedPassword,
-      name,
-      role: "user",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
+    // Insert user - DO NOT include phone in users table
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .insert([
+        {
+          email: email.toLowerCase(),
+          password_hash: passwordHash,
+          role: "user",
+          name: name, // Store name in users table
+        },
+      ])
+      .select("id")
+      .single()
 
     if (userError) {
       console.error("Error creating user:", userError)
-      return NextResponse.json({ error: "Error creating user: " + userError.message }, { status: 500 })
+      return NextResponse.json({ success: false, message: "Failed to create user account" }, { status: 500 })
     }
 
-    // Create profile with phone number
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: userId,
-      name,
-      email,
-      phone,
-      updated_at: new Date().toISOString(),
-    })
+    // Insert profile with phone
+    const { error: profileError } = await supabase.from("profiles").insert([
+      {
+        id: userData.id,
+        name,
+        phone, // Store phone in profiles table
+        avatar_url: `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(name)}`,
+      },
+    ])
 
     if (profileError) {
       console.error("Error creating profile:", profileError)
-      // Don't return error here, as the user was created successfully
+      // Delete user if profile creation fails
+      await supabase.from("users").delete().eq("id", userData.id)
+      return NextResponse.json({ success: false, message: "Failed to create user profile" }, { status: 500 })
     }
 
-    // Create session
-    const sessionId = uuidv4()
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + 7) // 7 days from now
-
-    const { error: sessionError } = await supabase.from("sessions").insert({
-      id: sessionId,
-      user_id: userId,
-      created_at: new Date().toISOString(),
-      expires_at: expiresAt.toISOString(),
-    })
+    // Create a session
+    const { data: session, error: sessionError } = await supabase
+      .from("sessions")
+      .insert([
+        {
+          user_id: userData.id,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        },
+      ])
+      .select("id")
+      .single()
 
     if (sessionError) {
       console.error("Error creating session:", sessionError)
-      // Don't return error here, as the user was created successfully
+      return NextResponse.json({ success: false, message: "Failed to create session" }, { status: 500 })
     }
 
-    // Debug log to check what data we're storing
-    console.log("User registered with phone:", phone)
-
-    return NextResponse.json({
-      success: true,
-      message: "User registered successfully",
-      user: {
-        id: userId,
-        name,
-        email,
-        phone,
-      },
+    // Set a cookie with the session ID
+    cookies().set("session_id", session.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: "/",
     })
+
+    // Debug log
+    console.log("User registered successfully with ID:", userData.id, "and phone:", phone)
+
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error in registration:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Registration error:", error)
+    return NextResponse.json({ success: false, message: "An unexpected error occurred" }, { status: 500 })
   }
 }
