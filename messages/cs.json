@@ -267,6 +267,9 @@
     "brandsDescription": "Seznam všech značek telefonů ve vašem systému.",
     "name": "Název",
     "logo": "Logo",
+    "uploadLogo": "Nahrát logo",
+    "selectFile": "Vybrat soubor",
+    "deleteLogo": "Smazat logo",
     "createdAt": "Vytvořeno",
     "actions": "Akce",
     "edit": "Upravit",
@@ -294,7 +297,14 @@
     "brandUpdatedSuccess": "Značka byla úspěšně aktualizována",
     "brandUpdatedError": "Nepodařilo se aktualizovat značku",
     "brandDeletedSuccess": "Značka byla úspěšně smazána",
-    "brandDeletedError": "Nepodařilo se smazat značku"
+    "brandDeletedError": "Nepodařilo se smazat značku",
+    "deleteImage": "Smazat obrázek",
+    "deleteImageDescription": "Opravdu chcete smazat tento obrázek? Tuto akci nelze vrátit zpět.",
+    "imageDeletedSuccess": "Obrázek byl úspěšně smazán",
+    "imageDeletedError": "Nepodařilo se smazat obrázek",
+    "imageUploadError": "Nepodařilo se nahrát obrázek",
+    "invalidFileType": "Neplatný typ souboru. Nahrajte prosím obrázek.",
+    "fileTooLarge": "Soubor je příliš velký. Maximální velikost je 2 MB."
   },
   "AdminDashboard": {
     "title": "Nástěnka",

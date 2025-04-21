@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import type React from "react"
+
+import { useState, useEffect, useRef } from "react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,9 +27,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Plus, Pencil, Trash } from "lucide-react"
+import { Plus, Pencil, Trash, Upload, X } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
+import { createClient } from "@/lib/supabase"
 
 type Brand = {
   id: string
@@ -46,8 +49,13 @@ export default function BrandsPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDeleteImageDialogOpen, setIsDeleteImageDialogOpen] = useState(false)
   const [brandToDelete, setBrandToDelete] = useState<Brand | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   useEffect(() => {
     fetchBrands()
@@ -77,21 +85,33 @@ export default function BrandsPage() {
   async function handleAddBrand() {
     try {
       setIsSubmitting(true)
+
+      let logoUrl = newBrand.logo_url
+
+      // If there's a file selected, upload it first
+      if (selectedFile) {
+        logoUrl = await uploadBrandLogo(selectedFile)
+      }
+
       const response = await fetch("/api/admin/brands", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newBrand),
+        body: JSON.stringify({
+          name: newBrand.name,
+          logo_url: logoUrl,
+        }),
       })
 
       if (!response.ok) {
         throw new Error("Failed to add brand")
       }
 
-      const data = await response.json()
       await fetchBrands() // Refresh the brands list
       setNewBrand({ name: "", logo_url: "" })
+      setSelectedFile(null)
+      setImagePreview(null)
       setIsAddDialogOpen(false)
 
       toast({
@@ -115,6 +135,14 @@ export default function BrandsPage() {
 
     try {
       setIsSubmitting(true)
+
+      let logoUrl = editBrand.logo_url
+
+      // If there's a file selected, upload it first
+      if (selectedFile) {
+        logoUrl = await uploadBrandLogo(selectedFile)
+      }
+
       const response = await fetch(`/api/admin/brands/${editBrand.id}`, {
         method: "PUT",
         headers: {
@@ -122,7 +150,7 @@ export default function BrandsPage() {
         },
         body: JSON.stringify({
           name: editBrand.name,
-          logo_url: editBrand.logo_url,
+          logo_url: logoUrl,
         }),
       })
 
@@ -132,6 +160,8 @@ export default function BrandsPage() {
 
       await fetchBrands() // Refresh the brands list
       setIsEditDialogOpen(false)
+      setSelectedFile(null)
+      setImagePreview(null)
 
       toast({
         title: t("success"),
@@ -182,14 +212,135 @@ export default function BrandsPage() {
     }
   }
 
+  async function handleDeleteBrandImage() {
+    if (!editBrand) return
+
+    try {
+      setIsSubmitting(true)
+
+      // If the logo URL contains a storage path, delete the file from storage
+      if (editBrand.logo_url && editBrand.logo_url.includes("storage/")) {
+        const supabase = createClient()
+        const path = editBrand.logo_url.split("/").slice(-2).join("/")
+        await supabase.storage.from("brand-logos").remove([path])
+      }
+
+      const response = await fetch(`/api/admin/brands/${editBrand.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: editBrand.name,
+          logo_url: null,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update brand")
+      }
+
+      await fetchBrands() // Refresh the brands list
+      setEditBrand({ ...editBrand, logo_url: null })
+      setIsDeleteImageDialogOpen(false)
+      setImagePreview(null)
+
+      toast({
+        title: t("success"),
+        description: t("imageDeletedSuccess"),
+      })
+    } catch (error) {
+      console.error("Error deleting image:", error)
+      toast({
+        title: t("error"),
+        description: t("imageDeletedError"),
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  async function uploadBrandLogo(file: File): Promise<string> {
+    try {
+      setUploadingImage(true)
+
+      // Create a form data object
+      const formData = new FormData()
+      formData.append("file", file)
+
+      // Upload the file
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to upload image")
+      }
+
+      const data = await response.json()
+      return data.url
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      toast({
+        title: t("error"),
+        description: t("imageUploadError"),
+        variant: "destructive",
+      })
+      throw error
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Check file type
+      if (!file.type.startsWith("image/")) {
+        toast({
+          title: t("error"),
+          description: t("invalidFileType"),
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast({
+          title: t("error"),
+          description: t("fileTooLarge"),
+          variant: "destructive",
+        })
+        return
+      }
+
+      setSelectedFile(file)
+
+      // Create a preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   function openEditDialog(brand: Brand) {
     setEditBrand(brand)
+    setImagePreview(brand.logo_url)
     setIsEditDialogOpen(true)
   }
 
   function openDeleteDialog(brand: Brand) {
     setBrandToDelete(brand)
     setIsDeleteDialogOpen(true)
+  }
+
+  function openDeleteImageDialog() {
+    setIsDeleteImageDialogOpen(true)
   }
 
   return (
@@ -223,6 +374,7 @@ export default function BrandsPage() {
                   placeholder={t("brandNamePlaceholder")}
                 />
               </div>
+
               <div className="grid gap-2">
                 <label htmlFor="logo" className="text-sm font-medium">
                   {t("logoUrl")}
@@ -234,12 +386,59 @@ export default function BrandsPage() {
                   placeholder={t("logoUrlPlaceholder")}
                 />
               </div>
+
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">{t("uploadLogo")}</label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {t("selectFile")}
+                  </Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  {imagePreview && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setImagePreview(null)
+                        setSelectedFile(null)
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                {imagePreview && (
+                  <div className="mt-2 relative w-20 h-20 border rounded overflow-hidden">
+                    <Image src={imagePreview || "/placeholder.svg"} alt="Preview" fill className="object-contain" />
+                  </div>
+                )}
+              </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsAddDialogOpen(false)
+                  setImagePreview(null)
+                  setSelectedFile(null)
+                }}
+              >
                 {t("cancel")}
               </Button>
-              <Button onClick={handleAddBrand} disabled={!newBrand.name || isSubmitting}>
+              <Button onClick={handleAddBrand} disabled={!newBrand.name || isSubmitting || uploadingImage}>
                 {isSubmitting ? "..." : t("add")}
               </Button>
             </DialogFooter>
@@ -279,12 +478,12 @@ export default function BrandsPage() {
                       <TableCell className="font-medium">{brand.name}</TableCell>
                       <TableCell>
                         {brand.logo_url ? (
-                          <div className="h-8 w-8 overflow-hidden">
+                          <div className="h-10 w-10 overflow-hidden rounded-md border bg-white">
                             <Image
                               src={brand.logo_url || "/placeholder.svg"}
                               alt={brand.name}
-                              width={32}
-                              height={32}
+                              width={40}
+                              height={40}
                               className="h-full w-full object-contain"
                             />
                           </div>
@@ -330,6 +529,7 @@ export default function BrandsPage() {
                   placeholder={t("brandNamePlaceholder")}
                 />
               </div>
+
               <div className="grid gap-2">
                 <label htmlFor="edit-logo" className="text-sm font-medium">
                   {t("logoUrl")}
@@ -341,13 +541,73 @@ export default function BrandsPage() {
                   placeholder={t("logoUrlPlaceholder")}
                 />
               </div>
+
+              <div className="grid gap-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">{t("uploadLogo")}</label>
+                  {editBrand.logo_url && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={openDeleteImageDialog}
+                    >
+                      <Trash className="mr-1 h-3 w-3" />
+                      {t("deleteLogo")}
+                    </Button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {t("selectFile")}
+                  </Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  {selectedFile && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setImagePreview(editBrand.logo_url)
+                        setSelectedFile(null)
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                {imagePreview && (
+                  <div className="mt-2 relative w-20 h-20 border rounded overflow-hidden">
+                    <Image src={imagePreview || "/placeholder.svg"} alt="Preview" fill className="object-contain" />
+                  </div>
+                )}
+              </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditDialogOpen(false)
+                setSelectedFile(null)
+              }}
+            >
               {t("cancel")}
             </Button>
-            <Button onClick={handleEditBrand} disabled={!editBrand?.name || isSubmitting}>
+            <Button onClick={handleEditBrand} disabled={!editBrand?.name || isSubmitting || uploadingImage}>
               {isSubmitting ? "..." : t("save")}
             </Button>
           </DialogFooter>
@@ -364,6 +624,22 @@ export default function BrandsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteBrand} disabled={isSubmitting}>
+              {isSubmitting ? "..." : t("confirmDelete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Image Dialog */}
+      <AlertDialog open={isDeleteImageDialogOpen} onOpenChange={setIsDeleteImageDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("deleteImage")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("deleteImageDescription")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteBrandImage} disabled={isSubmitting}>
               {isSubmitting ? "..." : t("confirmDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
