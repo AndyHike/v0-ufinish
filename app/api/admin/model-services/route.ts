@@ -7,33 +7,39 @@ export async function GET(request: NextRequest) {
     const modelId = searchParams.get("model_id")
     const locale = searchParams.get("locale") || "uk"
 
+    console.log(`[GET] /api/admin/model-services - Request params: modelId=${modelId}, locale=${locale}`)
+
     if (!modelId) {
+      console.error("[GET] /api/admin/model-services - Missing model_id parameter")
       return NextResponse.json({ error: "Model ID is required" }, { status: 400 })
     }
 
     const supabase = createClient()
 
-    // First, fetch all services to get their positions and translations
+    // First, fetch all services with their translations
+    console.log(`[GET] /api/admin/model-services - Fetching services for locale ${locale}`)
     const { data: servicesData, error: servicesError } = await supabase
       .from("services")
       .select(`
         id, 
         position,
-        services_translations!inner(
+        services_translations(
           name,
           description,
           locale
         )
       `)
-      .eq("services_translations.locale", locale)
       .order("position", { ascending: true })
 
     if (servicesError) {
-      console.error("Error fetching services:", servicesError)
-      throw servicesError
+      console.error("[GET] /api/admin/model-services - Error fetching services:", servicesError)
+      return NextResponse.json({ error: "Failed to fetch services", details: servicesError }, { status: 500 })
     }
 
+    console.log(`[GET] /api/admin/model-services - Found ${servicesData.length} services`)
+
     // Then fetch model services
+    console.log(`[GET] /api/admin/model-services - Fetching model services for model ${modelId}`)
     const { data: modelServicesData, error: modelServicesError } = await supabase
       .from("model_services")
       .select(`
@@ -45,18 +51,25 @@ export async function GET(request: NextRequest) {
       .eq("model_id", modelId)
 
     if (modelServicesError) {
-      console.error("Error fetching model services:", modelServicesError)
-      throw modelServicesError
+      console.error("[GET] /api/admin/model-services - Error fetching model services:", modelServicesError)
+      return NextResponse.json(
+        { error: "Failed to fetch model services", details: modelServicesError },
+        { status: 500 },
+      )
     }
 
-    // Create a map of service data
+    console.log(`[GET] /api/admin/model-services - Found ${modelServicesData.length} model services`)
+
+    // Create a map of service data with filtered translations for the requested locale
     const servicesMap = new Map()
     servicesData.forEach((service) => {
+      const translations = service.services_translations.filter((translation: any) => translation.locale === locale)
+
       servicesMap.set(service.id, {
         id: service.id,
         position: service.position,
-        name: service.services_translations[0]?.name || "",
-        description: service.services_translations[0]?.description || "",
+        name: translations[0]?.name || "",
+        description: translations[0]?.description || "",
       })
     })
 
@@ -64,7 +77,12 @@ export async function GET(request: NextRequest) {
     const transformedData = modelServicesData
       .map((modelService) => {
         const serviceInfo = servicesMap.get(modelService.service_id)
-        if (!serviceInfo) return null // Skip if service not found
+        if (!serviceInfo) {
+          console.warn(
+            `[GET] /api/admin/model-services - Service not found for model service: ${JSON.stringify(modelService)}`,
+          )
+          return null // Skip if service not found
+        }
 
         return {
           id: modelService.id,
@@ -81,26 +99,30 @@ export async function GET(request: NextRequest) {
       return (a.services.position || 0) - (b.services.position || 0)
     })
 
+    console.log(`[GET] /api/admin/model-services - Returning ${transformedData.length} transformed model services`)
     return NextResponse.json(transformedData)
   } catch (error) {
-    console.error("Error fetching model services:", error)
-    return NextResponse.json({ error: "Failed to fetch model services" }, { status: 500 })
+    console.error("[GET] /api/admin/model-services - Unexpected error:", error)
+    return NextResponse.json({ error: "Failed to fetch model services", details: error }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    console.log("[POST] /api/admin/model-services - Request body:", body)
+
     const supabase = createClient()
 
-    console.log("Received request to add/update model service:", body)
-
     if (!body.modelId || !body.serviceId) {
-      console.error("Missing required fields:", body)
+      console.error("[POST] /api/admin/model-services - Missing required fields:", body)
       return NextResponse.json({ error: "modelId and serviceId are required" }, { status: 400 })
     }
 
     // Check if the model service already exists
+    console.log(
+      `[POST] /api/admin/model-services - Checking if model service exists: modelId=${body.modelId}, serviceId=${body.serviceId}`,
+    )
     const { data: existingData, error: existingError } = await supabase
       .from("model_services")
       .select("id")
@@ -109,15 +131,18 @@ export async function POST(request: Request) {
       .maybeSingle()
 
     if (existingError) {
-      console.error("Error checking existing model service:", existingError)
-      throw existingError
+      console.error("[POST] /api/admin/model-services - Error checking existing model service:", existingError)
+      return NextResponse.json(
+        { error: "Failed to check existing model service", details: existingError },
+        { status: 500 },
+      )
     }
 
     let result
 
     if (existingData) {
       // Update existing record
-      console.log(`Updating existing model service with ID ${existingData.id}`)
+      console.log(`[POST] /api/admin/model-services - Updating existing model service with ID ${existingData.id}`)
       const { data, error } = await supabase
         .from("model_services")
         .update({ price: body.price })
@@ -126,15 +151,15 @@ export async function POST(request: Request) {
         .single()
 
       if (error) {
-        console.error("Error updating model service:", error)
-        throw error
+        console.error("[POST] /api/admin/model-services - Error updating model service:", error)
+        return NextResponse.json({ error: "Failed to update model service", details: error }, { status: 500 })
       }
 
-      console.log("Successfully updated model service:", data)
+      console.log("[POST] /api/admin/model-services - Successfully updated model service:", data)
       result = data
     } else {
       // Insert new record
-      console.log("Creating new model service")
+      console.log("[POST] /api/admin/model-services - Creating new model service")
       const { data, error } = await supabase
         .from("model_services")
         .insert({
@@ -146,17 +171,17 @@ export async function POST(request: Request) {
         .single()
 
       if (error) {
-        console.error("Error creating model service:", error)
-        throw error
+        console.error("[POST] /api/admin/model-services - Error creating model service:", error)
+        return NextResponse.json({ error: "Failed to create model service", details: error }, { status: 500 })
       }
 
-      console.log("Successfully created model service:", data)
+      console.log("[POST] /api/admin/model-services - Successfully created model service:", data)
       result = data
     }
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error("Error creating/updating model service:", error)
+    console.error("[POST] /api/admin/model-services - Unexpected error:", error)
     return NextResponse.json({ error: "Failed to create/update model service", details: error }, { status: 500 })
   }
 }

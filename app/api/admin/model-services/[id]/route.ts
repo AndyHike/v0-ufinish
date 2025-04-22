@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase"
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id
-    console.log(`Attempting to delete model service with ID: ${id}`)
+    console.log(`[DELETE] /api/admin/model-services/${id} - Attempting to delete model service`)
 
     const supabase = createClient()
 
@@ -16,24 +16,29 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       .single()
 
     if (fetchError) {
-      console.error("Error fetching model service before deletion:", fetchError)
-      throw fetchError
+      console.error(`[DELETE] /api/admin/model-services/${id} - Error fetching model service:`, fetchError)
+      return NextResponse.json({ error: "Failed to fetch model service", details: fetchError }, { status: 500 })
     }
 
-    console.log("Found model service to delete:", modelService)
+    if (!modelService) {
+      console.error(`[DELETE] /api/admin/model-services/${id} - Model service not found`)
+      return NextResponse.json({ error: "Model service not found" }, { status: 404 })
+    }
+
+    console.log(`[DELETE] /api/admin/model-services/${id} - Found model service:`, modelService)
 
     // Delete the model service
     const { error: deleteError } = await supabase.from("model_services").delete().eq("id", id)
 
     if (deleteError) {
-      console.error("Error deleting model service:", deleteError)
-      throw deleteError
+      console.error(`[DELETE] /api/admin/model-services/${id} - Error deleting model service:`, deleteError)
+      return NextResponse.json({ error: "Failed to delete model service", details: deleteError }, { status: 500 })
     }
 
-    console.log(`Successfully deleted model service with ID: ${id}`)
-    return NextResponse.json({ success: true })
+    console.log(`[DELETE] /api/admin/model-services/${id} - Successfully deleted model service`)
+    return NextResponse.json({ success: true, deletedService: modelService })
   } catch (error) {
-    console.error("Error deleting model service:", error)
-    return NextResponse.json({ error: "Failed to delete model service" }, { status: 500 })
+    console.error(`[DELETE] /api/admin/model-services/${id} - Unexpected error:`, error)
+    return NextResponse.json({ error: "Failed to delete model service", details: error }, { status: 500 })
   }
 }

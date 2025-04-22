@@ -42,6 +42,8 @@ export default async function ModelPage({ params }: Props) {
 
   const supabase = createServerClient()
 
+  console.log(`[ModelPage] Fetching model with ID: ${id}, locale: ${locale}`)
+
   // Fetch the model with its brand
   const { data: model, error: modelError } = await supabase
     .from("models")
@@ -50,21 +52,25 @@ export default async function ModelPage({ params }: Props) {
     .single()
 
   if (modelError || !model) {
-    console.error("Error fetching model:", modelError)
+    console.error("[ModelPage] Error fetching model:", modelError)
     notFound()
   }
 
-  console.log("Fetched model:", model)
+  console.log("[ModelPage] Fetched model:", model)
 
   // Fetch services for this model with translations
+  console.log(`[ModelPage] Fetching model services for model ID: ${id}, locale: ${locale}`)
   const { data: modelServices, error: modelServicesError } = await supabase
     .from("model_services")
     .select(`
-      *, 
+      id, 
+      price, 
+      model_id, 
+      service_id, 
       services(
         id, 
         position,
-        services_translations!inner(
+        services_translations(
           name,
           description,
           locale
@@ -72,53 +78,24 @@ export default async function ModelPage({ params }: Props) {
       )
     `)
     .eq("model_id", id)
-    .eq("services.services_translations.locale", locale)
-    .order("services.position", { ascending: true })
+    .order("services(position)", { ascending: true })
 
   if (modelServicesError) {
-    console.error("Error fetching model services:", modelServicesError)
+    console.error("[ModelPage] Error fetching model services:", modelServicesError)
   }
 
-  console.log("Fetched model services:", modelServices)
-
-  // If no model services are found, fetch all services and display them without prices
-  const { data: allServices, error: allServicesError } = await supabase
-    .from("services")
-    .select(`
-      *,
-      services_translations!inner(
-        name,
-        description,
-        locale
-      )
-    `)
-    .eq("services_translations.locale", locale)
-    .order("position", { ascending: true })
-
-  if (allServicesError) {
-    console.error("Error fetching all services:", allServicesError)
-  }
-
-  console.log("Fetched all services:", allServices)
-
-  // Transform services data
-  const transformedServices = allServices?.map((service) => ({
-    id: service.id,
-    position: service.position,
-    name: service.services_translations[0]?.name || "",
-    description: service.services_translations[0]?.description || "",
-  }))
+  console.log(`[ModelPage] Fetched ${modelServices?.length || 0} model services`)
 
   // Transform model services data
   const transformedModelServices = modelServices
     ?.map((modelService) => {
-      // Check if services and services_translations exist
-      if (
-        !modelService.services ||
-        !modelService.services.services_translations ||
-        modelService.services.services_translations.length === 0
-      ) {
-        console.error("Missing service translations for model service:", modelService)
+      // Filter translations for the requested locale
+      const translations = modelService.services.services_translations.filter(
+        (translation: any) => translation.locale === locale,
+      )
+
+      if (translations.length === 0) {
+        console.warn(`[ModelPage] No translations found for service ${modelService.service_id} in locale ${locale}`)
         return null
       }
 
@@ -127,31 +104,17 @@ export default async function ModelPage({ params }: Props) {
         model_id: modelService.model_id,
         service_id: modelService.service_id,
         price: modelService.price,
-        services: {
+        service: {
           id: modelService.services.id,
           position: modelService.services.position,
-          name: modelService.services.services_translations[0]?.name || "",
-          description: modelService.services.services_translations[0]?.description || "",
+          name: translations[0]?.name || "",
+          description: translations[0]?.description || "",
         },
       }
     })
     .filter(Boolean) // Remove null items
 
-  console.log("Transformed model services:", transformedModelServices)
-
-  // Determine which services to display
-  const servicesToDisplay =
-    transformedModelServices && transformedModelServices.length > 0
-      ? transformedModelServices
-      : transformedServices?.map((service) => ({
-          id: "",
-          services: service,
-          price: null,
-          model_id: id,
-          service_id: service.id,
-        }))
-
-  console.log("Services to display:", servicesToDisplay)
+  console.log(`[ModelPage] Transformed ${transformedModelServices?.length || 0} model services`)
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
@@ -197,17 +160,14 @@ export default async function ModelPage({ params }: Props) {
 
         <h2 className="mb-6 text-2xl font-bold">{t("availableServices")}</h2>
 
-        {servicesToDisplay && servicesToDisplay.length > 0 ? (
+        {transformedModelServices && transformedModelServices.length > 0 ? (
           <div className="grid gap-4">
-            {servicesToDisplay.map((modelService) => (
-              <div
-                key={modelService.service_id || modelService.services?.id}
-                className="flex flex-col rounded-lg border p-6 shadow-sm"
-              >
+            {transformedModelServices.map((modelService) => (
+              <div key={modelService.id} className="flex flex-col rounded-lg border p-6 shadow-sm">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-xl font-medium">{modelService.services?.name}</h3>
-                    <p className="mt-2 text-muted-foreground">{modelService.services?.description}</p>
+                    <h3 className="text-xl font-medium">{modelService.service.name}</h3>
+                    <p className="mt-2 text-muted-foreground">{modelService.service.description}</p>
                   </div>
                   <div className="text-xl font-bold">
                     {modelService.price !== null ? formatCurrency(modelService.price) : t("priceOnRequest")}
@@ -216,7 +176,7 @@ export default async function ModelPage({ params }: Props) {
                 <div className="mt-4 flex justify-end">
                   <Button variant="outline" asChild>
                     <Link
-                      href={`/${locale}/contact?service=${encodeURIComponent(modelService.services?.name || "")}&model=${encodeURIComponent(model.name)}`}
+                      href={`/${locale}/contact?service=${encodeURIComponent(modelService.service.name)}&model=${encodeURIComponent(model.name)}`}
                     >
                       {commonT("requestService")}
                     </Link>

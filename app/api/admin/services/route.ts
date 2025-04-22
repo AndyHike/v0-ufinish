@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url)
     const locale = url.searchParams.get("locale") || "uk"
 
-    console.log(`Fetching services for locale: ${locale}`)
+    console.log(`[GET] /api/admin/services - Fetching services for locale: ${locale}`)
 
     const supabase = createClient()
 
@@ -25,11 +25,11 @@ export async function GET(request: Request) {
       .order("position", { ascending: true })
 
     if (error) {
-      console.error("Error fetching services:", error)
-      throw error
+      console.error("[GET] /api/admin/services - Error fetching services:", error)
+      return NextResponse.json({ error: "Failed to fetch services", details: error }, { status: 500 })
     }
 
-    console.log(`Found ${data.length} services`)
+    console.log(`[GET] /api/admin/services - Found ${data.length} services`)
 
     // Filter translations for the requested locale
     const transformedData = data.map((service) => {
@@ -43,10 +43,10 @@ export async function GET(request: Request) {
       }
     })
 
-    console.log(`Transformed ${transformedData.length} services for locale ${locale}`)
+    console.log(`[GET] /api/admin/services - Transformed ${transformedData.length} services for locale ${locale}`)
     return NextResponse.json(transformedData)
   } catch (error) {
-    console.error("Error fetching services:", error)
+    console.error("[GET] /api/admin/services - Unexpected error:", error)
     return NextResponse.json({ error: "Failed to fetch services", details: error }, { status: 500 })
   }
 }

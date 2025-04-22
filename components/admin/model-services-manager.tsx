@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { Pencil, Plus, Trash2, AlertCircle } from "lucide-react"
+import { Pencil, Plus, Trash2, AlertCircle, RefreshCw } from "lucide-react"
 import { formatCurrency } from "@/lib/format-currency"
 
 type Service = {
@@ -51,6 +51,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Fetch model services and all services
   useEffect(() => {
@@ -61,6 +62,20 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     try {
       setIsLoading(true)
       setError(null)
+
+      // Fetch all services first
+      console.log(`Fetching all services for locale ${locale}`)
+      const servicesRes = await fetch(`/api/admin/services?locale=${locale}`)
+
+      if (!servicesRes.ok) {
+        const errorData = await servicesRes.json()
+        console.error("Services error response:", errorData)
+        throw new Error(`Failed to fetch services: ${servicesRes.status} - ${JSON.stringify(errorData)}`)
+      }
+
+      const servicesData = await servicesRes.json()
+      console.log("All services data:", servicesData)
+      setAllServices(servicesData)
 
       // Fetch model services
       console.log(`Fetching model services for model ${modelId} and locale ${locale}`)
@@ -74,22 +89,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
 
       const modelServicesData = await modelServicesRes.json()
       console.log("Model services data:", modelServicesData)
-
-      // Fetch all services
-      console.log(`Fetching all services for locale ${locale}`)
-      const servicesRes = await fetch(`/api/admin/services?locale=${locale}`)
-
-      if (!servicesRes.ok) {
-        const errorData = await servicesRes.json()
-        console.error("Services error response:", errorData)
-        throw new Error(`Failed to fetch services: ${servicesRes.status} - ${JSON.stringify(errorData)}`)
-      }
-
-      const servicesData = await servicesRes.json()
-      console.log("All services data:", servicesData)
-
       setModelServices(modelServicesData)
-      setAllServices(servicesData)
     } catch (error) {
       console.error("Error fetching data:", error)
       setError(error instanceof Error ? error.message : "Failed to fetch data")
@@ -101,6 +101,16 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const refreshData = async () => {
+    setIsRefreshing(true)
+    await fetchData()
+    setIsRefreshing(false)
+    toast({
+      title: t("success"),
+      description: "Data refreshed successfully",
+    })
   }
 
   // Get services that are not already assigned to the model
@@ -145,14 +155,14 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
         }),
       })
 
+      const responseData = await res.json()
+
       if (!res.ok) {
-        const errorData = await res.json()
-        console.error("Error response:", errorData)
-        throw new Error(`Failed to add service: ${errorData.error || res.statusText}`)
+        console.error("Error response:", responseData)
+        throw new Error(`Failed to add service: ${responseData.error || res.statusText}`)
       }
 
-      const newModelService = await res.json()
-      console.log("Service added successfully:", newModelService)
+      console.log("Service added successfully:", responseData)
 
       // Find the service details
       const serviceDetails = allServices.find((s) => s.id === selectedService)
@@ -162,7 +172,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
         const updatedServices = [
           ...modelServices,
           {
-            ...newModelService,
+            ...responseData,
             services: serviceDetails,
           },
         ]
@@ -225,7 +235,9 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     try {
       setIsSubmitting(true)
       const modelService = modelServices.find((ms) => ms.id === editingServiceId)
-      if (!modelService) return
+      if (!modelService) {
+        throw new Error("Model service not found")
+      }
 
       console.log("Updating service:", { modelId, serviceId: modelService.service_id, price: priceValue })
 
@@ -241,14 +253,14 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
         }),
       })
 
+      const responseData = await res.json()
+
       if (!res.ok) {
-        const errorData = await res.json()
-        console.error("Error response:", errorData)
-        throw new Error(`Failed to update service: ${errorData.error || res.statusText}`)
+        console.error("Error response:", responseData)
+        throw new Error(`Failed to update service: ${responseData.error || res.statusText}`)
       }
 
-      const updatedModelService = await res.json()
-      console.log("Service updated successfully:", updatedModelService)
+      console.log("Service updated successfully:", responseData)
 
       // Update the model service in the list
       setModelServices(modelServices.map((ms) => (ms.id === editingServiceId ? { ...ms, price: priceValue } : ms)))
@@ -288,13 +300,14 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
         method: "DELETE",
       })
 
+      const responseData = await res.json()
+
       if (!res.ok) {
-        const errorData = await res.json()
-        console.error("Error response:", errorData)
-        throw new Error(`Failed to delete service: ${errorData.error || res.statusText}`)
+        console.error("Error response:", responseData)
+        throw new Error(`Failed to delete service: ${responseData.error || res.statusText}`)
       }
 
-      console.log("Service deleted successfully")
+      console.log("Service deleted successfully:", responseData)
 
       // Remove the model service from the list
       setModelServices(modelServices.filter((ms) => ms.id !== id))
@@ -340,10 +353,16 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     <div className="space-y-4">
       <div className="flex justify-between">
         <h2 className="text-xl font-semibold">{t("manageModelServices")}</h2>
-        <Button onClick={openAddDialog} disabled={isSubmitting}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t("addService")}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={refreshData} variant="outline" disabled={isRefreshing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            {isRefreshing ? "Refreshing..." : "Refresh"}
+          </Button>
+          <Button onClick={openAddDialog} disabled={isSubmitting}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t("addService")}
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -355,6 +374,10 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
             <p className="font-medium">Error loading data:</p>
           </div>
           <p className="mt-2">{error}</p>
+          <Button onClick={refreshData} variant="outline" className="mt-4" disabled={isRefreshing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            {isRefreshing ? "Retrying..." : "Retry"}
+          </Button>
         </div>
       ) : modelServices.length === 0 ? (
         <div className="rounded-md border border-dashed p-8 text-center">
@@ -425,11 +448,17 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
                     <SelectValue placeholder={t("selectService")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableServices.map((service) => (
-                      <SelectItem key={service.id} value={service.id}>
-                        {service.name}
-                      </SelectItem>
-                    ))}
+                    {availableServices.length === 0 ? (
+                      <div className="p-2 text-center text-sm text-muted-foreground">
+                        No available services. All services have been added to this model.
+                      </div>
+                    ) : (
+                      availableServices.map((service) => (
+                        <SelectItem key={service.id} value={service.id}>
+                          {service.name}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -452,7 +481,10 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
               {t("cancel")}
             </Button>
-            <Button onClick={editingServiceId ? handleEditService : handleAddService} disabled={isSubmitting}>
+            <Button
+              onClick={editingServiceId ? handleEditService : handleAddService}
+              disabled={isSubmitting || (!editingServiceId && !selectedService)}
+            >
               {isSubmitting ? t("processing") : editingServiceId ? t("saveChanges") : t("addService")}
             </Button>
           </DialogFooter>
