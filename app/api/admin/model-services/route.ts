@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     const supabase = createClient()
 
-    // First, fetch all services to get their positions
+    // First, fetch all services to get their positions and translations
     const { data: servicesData, error: servicesError } = await supabase
       .from("services")
       .select(`
@@ -28,10 +28,13 @@ export async function GET(request: NextRequest) {
       .eq("services_translations.locale", locale)
       .order("position", { ascending: true })
 
-    if (servicesError) throw servicesError
+    if (servicesError) {
+      console.error("Error fetching services:", servicesError)
+      throw servicesError
+    }
 
-    // Then fetch model services without ordering
-    const { data, error } = await supabase
+    // Then fetch model services
+    const { data: modelServicesData, error: modelServicesError } = await supabase
       .from("model_services")
       .select(`
         id, 
@@ -41,7 +44,10 @@ export async function GET(request: NextRequest) {
       `)
       .eq("model_id", modelId)
 
-    if (error) throw error
+    if (modelServicesError) {
+      console.error("Error fetching model services:", modelServicesError)
+      throw modelServicesError
+    }
 
     // Create a map of service data
     const servicesMap = new Map()
@@ -55,7 +61,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Transform and combine the data
-    const transformedData = data
+    const transformedData = modelServicesData
       .map((modelService) => {
         const serviceInfo = servicesMap.get(modelService.service_id)
         if (!serviceInfo) return null // Skip if service not found

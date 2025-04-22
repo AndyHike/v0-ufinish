@@ -50,11 +50,14 @@ export default async function ModelPage({ params }: Props) {
     .single()
 
   if (modelError || !model) {
+    console.error("Error fetching model:", modelError)
     notFound()
   }
 
+  console.log("Fetched model:", model)
+
   // Fetch services for this model with translations
-  const { data: modelServices } = await supabase
+  const { data: modelServices, error: modelServicesError } = await supabase
     .from("model_services")
     .select(`
       *, 
@@ -72,8 +75,14 @@ export default async function ModelPage({ params }: Props) {
     .eq("services.services_translations.locale", locale)
     .order("services.position", { ascending: true })
 
+  if (modelServicesError) {
+    console.error("Error fetching model services:", modelServicesError)
+  }
+
+  console.log("Fetched model services:", modelServices)
+
   // If no model services are found, fetch all services and display them without prices
-  const { data: allServices } = await supabase
+  const { data: allServices, error: allServicesError } = await supabase
     .from("services")
     .select(`
       *,
@@ -86,6 +95,12 @@ export default async function ModelPage({ params }: Props) {
     .eq("services_translations.locale", locale)
     .order("position", { ascending: true })
 
+  if (allServicesError) {
+    console.error("Error fetching all services:", allServicesError)
+  }
+
+  console.log("Fetched all services:", allServices)
+
   // Transform services data
   const transformedServices = allServices?.map((service) => ({
     id: service.id,
@@ -95,18 +110,34 @@ export default async function ModelPage({ params }: Props) {
   }))
 
   // Transform model services data
-  const transformedModelServices = modelServices?.map((modelService) => ({
-    id: modelService.id,
-    model_id: modelService.model_id,
-    service_id: modelService.service_id,
-    price: modelService.price,
-    services: {
-      id: modelService.services.id,
-      position: modelService.services.position,
-      name: modelService.services.services_translations[0]?.name || "",
-      description: modelService.services.services_translations[0]?.description || "",
-    },
-  }))
+  const transformedModelServices = modelServices
+    ?.map((modelService) => {
+      // Check if services and services_translations exist
+      if (
+        !modelService.services ||
+        !modelService.services.services_translations ||
+        modelService.services.services_translations.length === 0
+      ) {
+        console.error("Missing service translations for model service:", modelService)
+        return null
+      }
+
+      return {
+        id: modelService.id,
+        model_id: modelService.model_id,
+        service_id: modelService.service_id,
+        price: modelService.price,
+        services: {
+          id: modelService.services.id,
+          position: modelService.services.position,
+          name: modelService.services.services_translations[0]?.name || "",
+          description: modelService.services.services_translations[0]?.description || "",
+        },
+      }
+    })
+    .filter(Boolean) // Remove null items
+
+  console.log("Transformed model services:", transformedModelServices)
 
   // Determine which services to display
   const servicesToDisplay =
@@ -119,6 +150,8 @@ export default async function ModelPage({ params }: Props) {
           model_id: id,
           service_id: service.id,
         }))
+
+  console.log("Services to display:", servicesToDisplay)
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
@@ -167,7 +200,10 @@ export default async function ModelPage({ params }: Props) {
         {servicesToDisplay && servicesToDisplay.length > 0 ? (
           <div className="grid gap-4">
             {servicesToDisplay.map((modelService) => (
-              <div key={modelService.services?.id} className="flex flex-col rounded-lg border p-6 shadow-sm">
+              <div
+                key={modelService.service_id || modelService.services?.id}
+                className="flex flex-col rounded-lg border p-6 shadow-sm"
+              >
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-xl font-medium">{modelService.services?.name}</h3>
@@ -179,7 +215,9 @@ export default async function ModelPage({ params }: Props) {
                 </div>
                 <div className="mt-4 flex justify-end">
                   <Button variant="outline" asChild>
-                    <Link href={`/${locale}/contact?service=${modelService.services?.name}&model=${model.name}`}>
+                    <Link
+                      href={`/${locale}/contact?service=${encodeURIComponent(modelService.services?.name || "")}&model=${encodeURIComponent(model.name)}`}
+                    >
                       {commonT("requestService")}
                     </Link>
                   </Button>

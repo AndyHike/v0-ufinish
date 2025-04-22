@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { Pencil, Plus, Trash2 } from "lucide-react"
+import { Pencil, Plus, Trash2, AlertCircle } from "lucide-react"
 import { formatCurrency } from "@/lib/format-currency"
 
 type Service = {
@@ -50,212 +50,12 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
   const [price, setPrice] = useState<string>("")
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch model services and all services
   useEffect(() => {
     fetchData()
   }, [modelId, locale])
-
-  // Get services that are not already assigned to the model
-  const availableServices = allServices.filter((service) => !modelServices.some((ms) => ms.service_id === service.id))
-
-  const handleAddService = async () => {
-    if (!selectedService) {
-      toast({
-        title: t("validationError"),
-        description: t("pleaseSelectService"),
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Allow empty price (will be stored as null)
-    const priceValue = price.trim() === "" ? null : Number.parseFloat(price)
-
-    // If price is provided, validate it's a positive number
-    if (priceValue !== null && (isNaN(priceValue) || priceValue <= 0)) {
-      toast({
-        title: t("validationError"),
-        description: t("pleaseEnterValidPrice"),
-        variant: "destructive",
-      })
-      return
-    }
-
-    try {
-      console.log("Adding service:", { modelId, serviceId: selectedService, price: priceValue })
-
-      const res = await fetch("/api/admin/model-services", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          modelId,
-          serviceId: selectedService,
-          price: priceValue,
-        }),
-      })
-
-      if (!res.ok) {
-        const errorData = await res.json()
-        console.error("Error response:", errorData)
-        throw new Error(`Failed to add service: ${errorData.error || res.statusText}`)
-      }
-
-      const newModelService = await res.json()
-      console.log("Service added successfully:", newModelService)
-
-      // Find the service details
-      const serviceDetails = allServices.find((s) => s.id === selectedService)
-
-      if (serviceDetails) {
-        // Add the new model service to the list
-        const updatedServices = [
-          ...modelServices,
-          {
-            ...newModelService,
-            services: serviceDetails,
-          },
-        ]
-
-        console.log("Updated services list:", updatedServices)
-        setModelServices(updatedServices)
-      } else {
-        console.error("Service details not found for ID:", selectedService)
-        // Refresh the data to ensure we have the latest
-        fetchData()
-      }
-
-      // Reset form
-      setSelectedService("")
-      setPrice("")
-      setIsDialogOpen(false)
-
-      toast({
-        title: t("success"),
-        description: t("serviceAddedSuccessfully"),
-      })
-    } catch (error) {
-      console.error("Error adding service:", error)
-      toast({
-        title: t("error"),
-        description:
-          typeof error === "object" && error !== null && "message" in error
-            ? String(error.message)
-            : t("errorAddingService"),
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleEditService = async () => {
-    if (!editingServiceId) {
-      toast({
-        title: t("validationError"),
-        description: t("serviceNotSelected"),
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Allow empty price (will be stored as null)
-    const priceValue = price.trim() === "" ? null : Number.parseFloat(price)
-
-    // If price is provided, validate it's a positive number
-    if (priceValue !== null && (isNaN(priceValue) || priceValue <= 0)) {
-      toast({
-        title: t("validationError"),
-        description: t("pleaseEnterValidPrice"),
-        variant: "destructive",
-      })
-      return
-    }
-
-    try {
-      const modelService = modelServices.find((ms) => ms.id === editingServiceId)
-      if (!modelService) return
-
-      const res = await fetch("/api/admin/model-services", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          modelId,
-          serviceId: modelService.service_id,
-          price: priceValue,
-        }),
-      })
-
-      if (!res.ok) throw new Error("Failed to update service")
-
-      // Update the model service in the list
-      setModelServices(modelServices.map((ms) => (ms.id === editingServiceId ? { ...ms, price: priceValue } : ms)))
-
-      // Reset form
-      setEditingServiceId(null)
-      setPrice("")
-      setIsDialogOpen(false)
-
-      toast({
-        title: t("success"),
-        description: t("serviceUpdatedSuccessfully"),
-      })
-    } catch (error) {
-      console.error("Error updating service:", error)
-      toast({
-        title: t("error"),
-        description: t("errorUpdatingService"),
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleDeleteService = async (id: string) => {
-    if (!confirm(t("confirmDeleteService"))) return
-
-    try {
-      const res = await fetch(`/api/admin/model-services/${id}`, {
-        method: "DELETE",
-      })
-
-      if (!res.ok) throw new Error("Failed to delete service")
-
-      // Remove the model service from the list
-      setModelServices(modelServices.filter((ms) => ms.id !== id))
-
-      toast({
-        title: t("success"),
-        description: t("serviceDeletedSuccessfully"),
-      })
-    } catch (error) {
-      console.error("Error deleting service:", error)
-      toast({
-        title: t("error"),
-        description: t("errorDeletingService"),
-        variant: "destructive",
-      })
-    }
-  }
-
-  const openAddDialog = () => {
-    setEditingServiceId(null)
-    setSelectedService("")
-    setPrice("")
-    setIsDialogOpen(true)
-  }
-
-  const openEditDialog = (modelService: ModelService) => {
-    setEditingServiceId(modelService.id)
-    setSelectedService(modelService.service_id)
-    setPrice(modelService.price !== null ? modelService.price.toString() : "")
-    setIsDialogOpen(true)
-  }
-
-  const renderPrice = (price: number | null) => {
-    return price !== null ? formatCurrency(price) : t("priceOnRequest")
-  }
 
   const fetchData = async () => {
     try {
@@ -303,11 +103,244 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     }
   }
 
+  // Get services that are not already assigned to the model
+  const availableServices = allServices.filter((service) => !modelServices.some((ms) => ms.service_id === service.id))
+
+  const handleAddService = async () => {
+    if (!selectedService) {
+      toast({
+        title: t("validationError"),
+        description: t("pleaseSelectService"),
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Allow empty price (will be stored as null)
+    const priceValue = price.trim() === "" ? null : Number.parseFloat(price)
+
+    // If price is provided, validate it's a positive number
+    if (priceValue !== null && (isNaN(priceValue) || priceValue <= 0)) {
+      toast({
+        title: t("validationError"),
+        description: t("pleaseEnterValidPrice"),
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      console.log("Adding service:", { modelId, serviceId: selectedService, price: priceValue })
+
+      const res = await fetch("/api/admin/model-services", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          modelId,
+          serviceId: selectedService,
+          price: priceValue,
+        }),
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        console.error("Error response:", errorData)
+        throw new Error(`Failed to add service: ${errorData.error || res.statusText}`)
+      }
+
+      const newModelService = await res.json()
+      console.log("Service added successfully:", newModelService)
+
+      // Find the service details
+      const serviceDetails = allServices.find((s) => s.id === selectedService)
+
+      if (serviceDetails) {
+        // Add the new model service to the list
+        const updatedServices = [
+          ...modelServices,
+          {
+            ...newModelService,
+            services: serviceDetails,
+          },
+        ]
+
+        console.log("Updated services list:", updatedServices)
+        setModelServices(updatedServices)
+      } else {
+        console.error("Service details not found for ID:", selectedService)
+        // Refresh the data to ensure we have the latest
+        await fetchData()
+      }
+
+      // Reset form
+      setSelectedService("")
+      setPrice("")
+      setIsDialogOpen(false)
+
+      toast({
+        title: t("success"),
+        description: t("serviceAddedSuccessfully"),
+      })
+    } catch (error) {
+      console.error("Error adding service:", error)
+      toast({
+        title: t("error"),
+        description:
+          typeof error === "object" && error !== null && "message" in error
+            ? String(error.message)
+            : t("errorAddingService"),
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleEditService = async () => {
+    if (!editingServiceId) {
+      toast({
+        title: t("validationError"),
+        description: t("serviceNotSelected"),
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Allow empty price (will be stored as null)
+    const priceValue = price.trim() === "" ? null : Number.parseFloat(price)
+
+    // If price is provided, validate it's a positive number
+    if (priceValue !== null && (isNaN(priceValue) || priceValue <= 0)) {
+      toast({
+        title: t("validationError"),
+        description: t("pleaseEnterValidPrice"),
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      const modelService = modelServices.find((ms) => ms.id === editingServiceId)
+      if (!modelService) return
+
+      console.log("Updating service:", { modelId, serviceId: modelService.service_id, price: priceValue })
+
+      const res = await fetch("/api/admin/model-services", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          modelId,
+          serviceId: modelService.service_id,
+          price: priceValue,
+        }),
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        console.error("Error response:", errorData)
+        throw new Error(`Failed to update service: ${errorData.error || res.statusText}`)
+      }
+
+      const updatedModelService = await res.json()
+      console.log("Service updated successfully:", updatedModelService)
+
+      // Update the model service in the list
+      setModelServices(modelServices.map((ms) => (ms.id === editingServiceId ? { ...ms, price: priceValue } : ms)))
+
+      // Reset form
+      setEditingServiceId(null)
+      setPrice("")
+      setIsDialogOpen(false)
+
+      toast({
+        title: t("success"),
+        description: t("serviceUpdatedSuccessfully"),
+      })
+    } catch (error) {
+      console.error("Error updating service:", error)
+      toast({
+        title: t("error"),
+        description:
+          typeof error === "object" && error !== null && "message" in error
+            ? String(error.message)
+            : t("errorUpdatingService"),
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDeleteService = async (id: string) => {
+    if (!confirm(t("confirmDeleteService"))) return
+
+    try {
+      setIsSubmitting(true)
+      console.log(`Deleting model service with ID: ${id}`)
+
+      const res = await fetch(`/api/admin/model-services/${id}`, {
+        method: "DELETE",
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        console.error("Error response:", errorData)
+        throw new Error(`Failed to delete service: ${errorData.error || res.statusText}`)
+      }
+
+      console.log("Service deleted successfully")
+
+      // Remove the model service from the list
+      setModelServices(modelServices.filter((ms) => ms.id !== id))
+
+      toast({
+        title: t("success"),
+        description: t("serviceDeletedSuccessfully"),
+      })
+    } catch (error) {
+      console.error("Error deleting service:", error)
+      toast({
+        title: t("error"),
+        description:
+          typeof error === "object" && error !== null && "message" in error
+            ? String(error.message)
+            : t("errorDeletingService"),
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const openAddDialog = () => {
+    setEditingServiceId(null)
+    setSelectedService("")
+    setPrice("")
+    setIsDialogOpen(true)
+  }
+
+  const openEditDialog = (modelService: ModelService) => {
+    setEditingServiceId(modelService.id)
+    setSelectedService(modelService.service_id)
+    setPrice(modelService.price !== null ? modelService.price.toString() : "")
+    setIsDialogOpen(true)
+  }
+
+  const renderPrice = (price: number | null) => {
+    return price !== null ? formatCurrency(price) : t("priceOnRequest")
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between">
         <h2 className="text-xl font-semibold">{t("manageModelServices")}</h2>
-        <Button onClick={openAddDialog}>
+        <Button onClick={openAddDialog} disabled={isSubmitting}>
           <Plus className="mr-2 h-4 w-4" />
           {t("addService")}
         </Button>
@@ -317,13 +350,16 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
         <div className="text-center">{t("loading")}</div>
       ) : error ? (
         <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-          <p className="font-medium">Error loading data:</p>
-          <p>{error}</p>
+          <div className="flex items-center">
+            <AlertCircle className="mr-2 h-5 w-5" />
+            <p className="font-medium">Error loading data:</p>
+          </div>
+          <p className="mt-2">{error}</p>
         </div>
       ) : modelServices.length === 0 ? (
         <div className="rounded-md border border-dashed p-8 text-center">
           <p className="text-muted-foreground">{t("noServicesForModel")}</p>
-          <Button onClick={openAddDialog} className="mt-4">
+          <Button onClick={openAddDialog} className="mt-4" disabled={isSubmitting}>
             <Plus className="mr-2 h-4 w-4" />
             {t("addService")}
           </Button>
@@ -346,11 +382,21 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
                 <TableCell className="text-right">{renderPrice(modelService.price)}</TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => openEditDialog(modelService)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openEditDialog(modelService)}
+                      disabled={isSubmitting}
+                    >
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">{t("edit")}</span>
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteService(modelService.id)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteService(modelService.id)}
+                      disabled={isSubmitting}
+                    >
                       <Trash2 className="h-4 w-4" />
                       <span className="sr-only">{t("delete")}</span>
                     </Button>
@@ -403,11 +449,11 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
               {t("cancel")}
             </Button>
-            <Button onClick={editingServiceId ? handleEditService : handleAddService}>
-              {editingServiceId ? t("saveChanges") : t("addService")}
+            <Button onClick={editingServiceId ? handleEditService : handleAddService} disabled={isSubmitting}>
+              {isSubmitting ? t("processing") : editingServiceId ? t("saveChanges") : t("addService")}
             </Button>
           </DialogFooter>
         </DialogContent>

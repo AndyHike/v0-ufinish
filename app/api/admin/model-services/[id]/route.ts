@@ -17,23 +17,23 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
     if (fetchError) {
       console.error("Error fetching model service before deletion:", fetchError)
-      return NextResponse.json({ error: "Failed to fetch model service", details: fetchError }, { status: 500 })
+      throw fetchError
     }
 
     console.log("Found model service to delete:", modelService)
 
     // Delete the model service
-    const { error } = await supabase.from("model_services").delete().eq("id", id)
+    const { error: deleteError } = await supabase.from("model_services").delete().eq("id", id)
 
-    if (error) {
-      console.error("Error deleting model service:", error)
-      return NextResponse.json({ error: "Failed to delete model service", details: error }, { status: 500 })
+    if (deleteError) {
+      console.error("Error deleting model service:", deleteError)
+      throw deleteError
     }
 
-    console.log("Successfully deleted model service")
-    return NextResponse.json({ success: true, deletedService: modelService })
+    console.log(`Successfully deleted model service with ID: ${id}`)
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Error deleting model service:", error)
-    return NextResponse.json({ error: "Failed to delete model service", details: error }, { status: 500 })
+    return NextResponse.json({ error: "Failed to delete model service" }, { status: 500 })
   }
 }
