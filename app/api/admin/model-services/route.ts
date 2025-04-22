@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
       `)
       .eq("model_id", modelId)
       .eq("services.services_translations.locale", locale)
+      .order("services.position", { ascending: true })
 
     if (error) throw error
 
@@ -47,6 +48,11 @@ export async function GET(request: NextRequest) {
         description: modelService.services.services_translations[0]?.description || "",
       },
     }))
+
+    // Sort by service position
+    transformedData.sort((a, b) => {
+      return (a.services.position || 0) - (b.services.position || 0)
+    })
 
     return NextResponse.json(transformedData)
   } catch (error) {
