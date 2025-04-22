@@ -70,7 +70,7 @@ export default async function ModelPage({ params }: Props) {
     `)
     .eq("model_id", id)
     .eq("services.services_translations.locale", locale)
-    .order("services.position", { ascending: true })
+    .order("price", { ascending: true })
 
   // If no model services are found, fetch all services and display them without prices
   const { data: allServices } = await supabase

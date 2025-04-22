@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
 import { logActivity } from "@/lib/admin/activity-logger"
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const url = new URL(request.url)
-    const brandId = url.searchParams.get("brand_id")
+    const searchParams = request.nextUrl.searchParams
+    const brandId = searchParams.get("brand_id")
 
     const supabase = createClient()
     let query = supabase.from("models").select("*, brands(name)")
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
       query = query.eq("brand_id", brandId)
     }
 
-    const { data, error } = await query.order("position", { ascending: true })
+    const { data, error } = await query.order("position", { ascending: true, nullsLast: true })
 
     if (error) throw error
 

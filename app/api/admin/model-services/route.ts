@@ -48,11 +48,6 @@ export async function GET(request: NextRequest) {
       },
     }))
 
-    // Sort by service position
-    transformedData.sort((a, b) => {
-      return (a.services.position || 0) - (b.services.position || 0)
-    })
-
     return NextResponse.json(transformedData)
   } catch (error) {
     console.error("Error fetching model services:", error)
