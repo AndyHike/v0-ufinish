@@ -53,6 +53,9 @@
   "Services": {
     "title": "Naše služby",
     "subtitle": "Nabízíme širokou škálu služeb oprav mobilních telefonů.",
+    "pageTitle": "Naše služby",
+    "pageDescription": "Nabízíme širokou škálu služeb oprav mobilních telefonů",
+    "requestService": "Objednat službu",
     "service1": {
       "title": "Výměna displeje",
       "description": "Profesionální výměna rozbitého nebo poškozeného displeje."

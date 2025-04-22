@@ -53,6 +53,9 @@
   "Services": {
     "title": "Our Services",
     "subtitle": "We offer a wide range of mobile phone repair services.",
+    "pageTitle": "Our Services",
+    "pageDescription": "We offer a wide range of mobile phone repair services",
+    "requestService": "Request Service",
     "service1": {
       "title": "Screen Replacement",
       "description": "Professional replacement of broken or damaged screens."

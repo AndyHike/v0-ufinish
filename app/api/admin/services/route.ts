@@ -14,28 +14,31 @@ export async function GET(request: Request) {
       .select(`
         id, 
         position,
-        services_translations!inner(
+        services_translations(
           name,
           description,
           locale
         )
       `)
-      .eq("services_translations.locale", locale)
       .order("position", { ascending: true })
 
     if (error) throw error
 
-    // Transform the data to a more usable format
-    const transformedData = data.map((service) => ({
-      id: service.id,
-      position: service.position,
-      name: service.services_translations[0]?.name || "",
-      description: service.services_translations[0]?.description || "",
-    }))
+    // Filter translations for the requested locale
+    const transformedData = data.map((service) => {
+      const translations = service.services_translations.filter((translation: any) => translation.locale === locale)
+
+      return {
+        id: service.id,
+        position: service.position,
+        name: translations[0]?.name || "",
+        description: translations[0]?.description || "",
+      }
+    })
 
     return NextResponse.json(transformedData)
   } catch (error) {
     console.error("Error fetching services:", error)
-    return NextResponse.json({ error: "Failed to fetch services" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to fetch services", details: error }, { status: 500 })
   }
 }

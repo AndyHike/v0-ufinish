@@ -59,18 +59,28 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
         setError(null)
 
         // Fetch model services
+        console.log(`Fetching model services for model ${modelId} and locale ${locale}`)
         const modelServicesRes = await fetch(`/api/admin/model-services?model_id=${modelId}&locale=${locale}`)
+
         if (!modelServicesRes.ok) {
-          throw new Error(`Failed to fetch model services: ${modelServicesRes.status}`)
+          const errorData = await modelServicesRes.json()
+          console.error("Model services error response:", errorData)
+          throw new Error(`Failed to fetch model services: ${modelServicesRes.status} - ${JSON.stringify(errorData)}`)
         }
+
         const modelServicesData = await modelServicesRes.json()
         console.log("Model services data:", modelServicesData)
 
         // Fetch all services
+        console.log(`Fetching all services for locale ${locale}`)
         const servicesRes = await fetch(`/api/admin/services?locale=${locale}`)
+
         if (!servicesRes.ok) {
-          throw new Error(`Failed to fetch services: ${servicesRes.status}`)
+          const errorData = await servicesRes.json()
+          console.error("Services error response:", errorData)
+          throw new Error(`Failed to fetch services: ${servicesRes.status} - ${JSON.stringify(errorData)}`)
         }
+
         const servicesData = await servicesRes.json()
         console.log("All services data:", servicesData)
 
