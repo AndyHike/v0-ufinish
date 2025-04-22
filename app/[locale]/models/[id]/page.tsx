@@ -174,7 +174,7 @@ export default async function ModelPage({ params }: Props) {
                     <p className="mt-2 text-muted-foreground">{modelService.services?.description}</p>
                   </div>
                   <div className="text-xl font-bold">
-                    {modelService.price ? formatCurrency(modelService.price) : t("priceOnRequest")}
+                    {modelService.price !== null ? formatCurrency(modelService.price) : t("priceOnRequest")}
                   </div>
                 </div>
                 <div className="mt-4 flex justify-end">

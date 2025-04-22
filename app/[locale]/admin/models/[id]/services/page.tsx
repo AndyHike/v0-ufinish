@@ -15,7 +15,7 @@ type Props = {
 
 export default async function ModelServicesPage({ params }: Props) {
   const { id, locale } = params
-  const t = await getTranslations({ locale, namespace: "Admin" })
+  const t = await getTranslations("Admin")
 
   const supabase = createServerClient()
 
