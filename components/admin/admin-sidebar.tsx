@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Tag, Smartphone, Percent, Users, LogOut, Menu, FileText } from "lucide-react"
+import { LayoutDashboard, Tag, Smartphone, Percent, Users, LogOut, Menu, FileText, Database } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState } from "react"
@@ -53,6 +53,12 @@ export function AdminSidebar() {
       icon: Percent,
       href: `/${locale}/admin/discounts`,
       active: pathname.includes("/admin/discounts"),
+    },
+    {
+      label: t("bulkManagement"),
+      icon: Database,
+      href: `/${locale}/admin/bulk-services`,
+      active: pathname.includes("/admin/bulk-services"),
     },
   ]
 
