@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 import Link from "next/link"
-import { createServerClient } from "@/utils/supabase/server"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Smartphone, Battery, Wifi, Shield } from "lucide-react"
@@ -18,38 +17,33 @@ export async function generateMetadata({ params }: { params: { locale: string } 
 export default async function ServicesPage({ params }: { params: { locale: string } }) {
   const t = await getTranslations({ locale: params.locale, namespace: "Services" })
   const commonT = await getTranslations({ locale: params.locale, namespace: "Common" })
-  const supabase = createServerClient()
 
-  // Fetch services with translations
-  const { data: services } = await supabase
-    .from("services")
-    .select(`
-      id, 
-      position,
-      services_translations!inner(
-        name,
-        description,
-        locale
-      )
-    `)
-    .eq("services_translations.locale", params.locale)
-    .order("position", { ascending: true })
-
-  // Transform the data
-  const transformedServices =
-    services?.map((service) => ({
-      id: service.id,
-      position: service.position,
-      name: service.services_translations[0]?.name || "",
-      description: service.services_translations[0]?.description || "",
-    })) || []
-
-  // Service icons mapping
-  const serviceIcons = [
-    { icon: Smartphone }, // Screen replacement
-    { icon: Battery }, // Battery replacement
-    { icon: Wifi }, // Connectivity issues
-    { icon: Shield }, // Water damage
+  // Define the 4 specific services
+  const services = [
+    {
+      id: "1",
+      name: t("service1.title"),
+      description: t("service1.description"),
+      icon: Smartphone,
+    },
+    {
+      id: "2",
+      name: t("service2.title"),
+      description: t("service2.description"),
+      icon: Battery,
+    },
+    {
+      id: "3",
+      name: t("service3.title"),
+      description: t("service3.description"),
+      icon: Wifi,
+    },
+    {
+      id: "4",
+      name: t("service4.title"),
+      description: t("service4.description"),
+      icon: Shield,
+    },
   ]
 
   return (
@@ -63,13 +57,13 @@ export default async function ServicesPage({ params }: { params: { locale: strin
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8">
-          {transformedServices.map((service, index) => {
-            const IconComponent = serviceIcons[index % serviceIcons.length].icon
+          {services.map((service) => {
+            const IconComponent = service.icon
             return (
               <Card key={service.id} className="flex flex-col">
                 <CardHeader>
                   <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    {IconComponent && <IconComponent className="h-5 w-5 text-primary" />}
+                    <IconComponent className="h-5 w-5 text-primary" />
                   </div>
                   <CardTitle>{service.name}</CardTitle>
                   <CardDescription>{service.description}</CardDescription>
@@ -77,7 +71,9 @@ export default async function ServicesPage({ params }: { params: { locale: strin
                 <CardContent className="flex-1" />
                 <CardFooter>
                   <Button variant="outline" asChild className="w-full">
-                    <Link href={`/${params.locale}/contact?service=${service.name}`}>{t("requestService")}</Link>
+                    <Link href={`/${params.locale}/contact?service=${encodeURIComponent(service.name)}`}>
+                      {t("requestService")}
+                    </Link>
                   </Button>
                 </CardFooter>
               </Card>

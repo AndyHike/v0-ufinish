@@ -7,36 +7,45 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Smartphone, Battery, Wifi, Shield } from "lucide-react"
 import { useEffect, useState } from "react"
 
-type Service = {
-  id: string
-  name: string
-  description: string
-  position: number
-}
-
 export function ServicesSection() {
   const t = useTranslations("Services")
-  const [services, setServices] = useState<Service[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  // Define the 4 specific services shown in the image
+  const services = [
+    {
+      id: "1",
+      name: t("service1.title"),
+      description: t("service1.description"),
+      icon: Smartphone,
+    },
+    {
+      id: "2",
+      name: t("service2.title"),
+      description: t("service2.description"),
+      icon: Battery,
+    },
+    {
+      id: "3",
+      name: t("service3.title"),
+      description: t("service3.description"),
+      icon: Wifi,
+    },
+    {
+      id: "4",
+      name: t("service4.title"),
+      description: t("service4.description"),
+      icon: Shield,
+    },
+  ]
+
   useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const response = await fetch("/api/admin/services")
-        if (!response.ok) throw new Error("Failed to fetch services")
-        const data = await response.json()
-        setServices(data.slice(0, 4)) // Get first 4 services for the homepage
-      } catch (error) {
-        console.error("Error fetching services:", error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchServices()
+    // Simulate loading for a brief moment
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 500)
+    return () => clearTimeout(timer)
   }, [])
-
-  const serviceIcons = [{ icon: Smartphone }, { icon: Battery }, { icon: Wifi }, { icon: Shield }]
 
   return (
     <section className="py-12 md:py-24" id="services">
@@ -66,13 +75,13 @@ export function ServicesSection() {
                     </CardFooter>
                   </Card>
                 ))
-            : services.map((service, index) => {
-                const IconComponent = serviceIcons[index % serviceIcons.length].icon
+            : services.map((service) => {
+                const IconComponent = service.icon
                 return (
                   <Card key={service.id} className="flex flex-col">
                     <CardHeader>
                       <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                        {IconComponent && <IconComponent className="h-5 w-5 text-primary" />}
+                        <IconComponent className="h-5 w-5 text-primary" />
                       </div>
                       <CardTitle>{service.name}</CardTitle>
                       <CardDescription>{service.description}</CardDescription>
@@ -80,7 +89,7 @@ export function ServicesSection() {
                     <CardContent className="flex-1" />
                     <CardFooter>
                       <Button variant="outline" asChild className="w-full">
-                        <Link href={`/services/${service.id}`}>{t("learnMore")}</Link>
+                        <Link href={`/services/${service.id}`}>{t("requestService")}</Link>
                       </Button>
                     </CardFooter>
                   </Card>

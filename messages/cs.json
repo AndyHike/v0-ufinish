@@ -52,25 +52,25 @@
   },
   "Services": {
     "title": "Naše služby",
-    "subtitle": "Nabízíme širokou škálu služeb oprav mobilních telefonů.",
+    "subtitle": "Nabízíme širokou škálu služeb oprav mobilních telefonů",
     "pageTitle": "Naše služby",
     "pageDescription": "Nabízíme širokou škálu služeb oprav mobilních telefonů",
     "requestService": "Objednat službu",
     "service1": {
       "title": "Výměna displeje",
-      "description": "Profesionální výměna rozbitého nebo poškozeného displeje."
+      "description": "Profesionální výměna rozbitého nebo poškozeného displeje"
     },
     "service2": {
       "title": "Výměna baterie",
-      "description": "Obnovení výdrže vašeho telefonu s novou baterií."
+      "description": "Obnovení výdrže vašeho telefonu s novou baterií"
     },
     "service3": {
-      "title": "Problémy s připojením",
-      "description": "Oprava Wi-Fi, Bluetooth a dalších problémů s připojením."
+      "title": "Oprava nabíjecího portu",
+      "description": "Oprava problémů s nabíjením vašeho zařízení"
     },
     "service4": {
-      "title": "Ochrana proti vodě",
-      "description": "Obnova telefonů po poškození vodou."
+      "title": "Oprava po poškození vodou",
+      "description": "Obnova telefonů po poškození vodou"
     },
     "learnMore": "Zjistit více",
     "allServicesButton": "Všechny služby"

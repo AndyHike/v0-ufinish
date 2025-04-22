@@ -52,25 +52,25 @@
   },
   "Services": {
     "title": "Our Services",
-    "subtitle": "We offer a wide range of mobile phone repair services.",
+    "subtitle": "We offer a wide range of mobile phone repair services",
     "pageTitle": "Our Services",
     "pageDescription": "We offer a wide range of mobile phone repair services",
     "requestService": "Request Service",
     "service1": {
       "title": "Screen Replacement",
-      "description": "Professional replacement of broken or damaged screens."
+      "description": "Professional replacement of broken or damaged screens"
     },
     "service2": {
       "title": "Battery Replacement",
-      "description": "Restore your phone's battery life with a new battery."
+      "description": "Restore your phone's battery life with a new battery"
     },
     "service3": {
-      "title": "Connectivity Issues",
-      "description": "Fix Wi-Fi, Bluetooth, and other connectivity problems."
+      "title": "Charging Port Repair",
+      "description": "Fix charging issues with your device"
     },
     "service4": {
-      "title": "Water Damage",
-      "description": "Recovery of phones after water damage."
+      "title": "Water Damage Repair",
+      "description": "Recovery of phones after water damage"
     },
     "learnMore": "Learn More",
     "allServicesButton": "All Services"
