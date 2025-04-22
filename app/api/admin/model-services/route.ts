@@ -61,7 +61,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Update the POST method to handle null prices
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -81,7 +80,7 @@ export async function POST(request: Request) {
       // Update existing record
       const { data, error } = await supabase
         .from("model_services")
-        .update({ price: body.price }) // price can be null
+        .update({ price: body.price })
         .eq("id", existingData.id)
         .select()
         .single()
@@ -95,7 +94,7 @@ export async function POST(request: Request) {
         .insert({
           model_id: body.modelId,
           service_id: body.serviceId,
-          price: body.price, // price can be null
+          price: body.price,
         })
         .select()
         .single()

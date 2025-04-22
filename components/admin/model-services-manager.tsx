@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/use-toast"
 import { Pencil, Plus, Trash2 } from "lucide-react"
 import { formatCurrency } from "@/lib/format-currency"
 
@@ -29,7 +29,7 @@ type ModelService = {
   id: string
   model_id: string
   service_id: string
-  price: number
+  price: number | null
   services: Service
 }
 
@@ -40,6 +40,7 @@ type ModelServicesManagerProps = {
 
 export function ModelServicesManager({ modelId, locale }: ModelServicesManagerProps) {
   const t = useTranslations("Admin")
+  const { toast } = useToast()
 
   const [modelServices, setModelServices] = useState<ModelService[]>([])
   const [allServices, setAllServices] = useState<Service[]>([])
@@ -80,14 +81,12 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     }
 
     fetchData()
-  }, [modelId, locale, t])
+  }, [modelId, locale, t, toast])
 
   // Get services that are not already assigned to the model
   const availableServices = allServices.filter((service) => !modelServices.some((ms) => ms.service_id === service.id))
 
-  // First, let's modify the handleAddService function to allow for empty prices
   const handleAddService = async () => {
-    // Changed validation to allow empty price
     if (!selectedService) {
       toast({
         title: t("validationError"),
@@ -130,14 +129,16 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
       // Find the service details
       const serviceDetails = allServices.find((s) => s.id === selectedService)
 
-      // Add the new model service to the list
-      setModelServices([
-        ...modelServices,
-        {
-          ...newModelService,
-          services: serviceDetails,
-        },
-      ])
+      if (serviceDetails) {
+        // Add the new model service to the list
+        setModelServices([
+          ...modelServices,
+          {
+            ...newModelService,
+            services: serviceDetails,
+          },
+        ])
+      }
 
       // Reset form
       setSelectedService("")
@@ -158,7 +159,6 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     }
   }
 
-  // Similarly, update the handleEditService function
   const handleEditService = async () => {
     if (!editingServiceId) {
       toast({
@@ -184,6 +184,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
 
     try {
       const modelService = modelServices.find((ms) => ms.id === editingServiceId)
+      if (!modelService) return
 
       const res = await fetch("/api/admin/model-services", {
         method: "POST",
@@ -192,14 +193,12 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
         },
         body: JSON.stringify({
           modelId,
-          serviceId: modelService?.service_id,
+          serviceId: modelService.service_id,
           price: priceValue,
         }),
       })
 
       if (!res.ok) throw new Error("Failed to update service")
-
-      const updatedModelService = await res.json()
 
       // Update the model service in the list
       setModelServices(modelServices.map((ms) => (ms.id === editingServiceId ? { ...ms, price: priceValue } : ms)))
@@ -260,8 +259,12 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
   const openEditDialog = (modelService: ModelService) => {
     setEditingServiceId(modelService.id)
     setSelectedService(modelService.service_id)
-    setPrice(modelService.price.toString())
+    setPrice(modelService.price !== null ? modelService.price.toString() : "")
     setIsDialogOpen(true)
+  }
+
+  const renderPrice = (price: number | null) => {
+    return price !== null ? formatCurrency(price) : t("priceOnRequest")
   }
 
   return (
@@ -299,7 +302,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
               <TableRow key={modelService.id}>
                 <TableCell className="font-medium">{modelService.services?.name}</TableCell>
                 <TableCell className="max-w-md truncate">{modelService.services?.description}</TableCell>
-                <TableCell className="text-right">{formatCurrency(modelService.price)}</TableCell>
+                <TableCell className="text-right">{renderPrice(modelService.price)}</TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
                     <Button variant="ghost" size="icon" onClick={() => openEditDialog(modelService)}>

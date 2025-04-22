@@ -1,5 +1,5 @@
 /**
- * Formats a number as Czech koruna (CZK)
+ * Formats a number as currency (CZK)
  * @param value The value to format
  * @returns Formatted currency string
  */
