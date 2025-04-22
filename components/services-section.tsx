@@ -83,7 +83,7 @@ export function ServicesSection() {
                     <CardContent className="flex-1" />
                     <CardFooter>
                       <Button variant="outline" asChild className="w-full">
-                        <Link href={`/${locale}/services/${service.id}`}>{t("learnMore")}</Link>
+                        <Link href={`/${locale}/services`}>{t("learnMore")}</Link>
                       </Button>
                     </CardFooter>
                   </Card>
