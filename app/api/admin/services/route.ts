@@ -6,6 +6,8 @@ export async function GET(request: Request) {
     const url = new URL(request.url)
     const locale = url.searchParams.get("locale") || "uk"
 
+    console.log(`Fetching services for locale: ${locale}`)
+
     const supabase = createClient()
 
     // Fetch services with translations
@@ -22,7 +24,12 @@ export async function GET(request: Request) {
       `)
       .order("position", { ascending: true })
 
-    if (error) throw error
+    if (error) {
+      console.error("Error fetching services:", error)
+      throw error
+    }
+
+    console.log(`Found ${data.length} services`)
 
     // Filter translations for the requested locale
     const transformedData = data.map((service) => {
@@ -36,6 +43,7 @@ export async function GET(request: Request) {
       }
     })
 
+    console.log(`Transformed ${transformedData.length} services for locale ${locale}`)
     return NextResponse.json(transformedData)
   } catch (error) {
     console.error("Error fetching services:", error)

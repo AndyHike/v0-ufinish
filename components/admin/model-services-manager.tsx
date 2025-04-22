@@ -53,54 +53,8 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
 
   // Fetch model services and all services
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-
-        // Fetch model services
-        console.log(`Fetching model services for model ${modelId} and locale ${locale}`)
-        const modelServicesRes = await fetch(`/api/admin/model-services?model_id=${modelId}&locale=${locale}`)
-
-        if (!modelServicesRes.ok) {
-          const errorData = await modelServicesRes.json()
-          console.error("Model services error response:", errorData)
-          throw new Error(`Failed to fetch model services: ${modelServicesRes.status} - ${JSON.stringify(errorData)}`)
-        }
-
-        const modelServicesData = await modelServicesRes.json()
-        console.log("Model services data:", modelServicesData)
-
-        // Fetch all services
-        console.log(`Fetching all services for locale ${locale}`)
-        const servicesRes = await fetch(`/api/admin/services?locale=${locale}`)
-
-        if (!servicesRes.ok) {
-          const errorData = await servicesRes.json()
-          console.error("Services error response:", errorData)
-          throw new Error(`Failed to fetch services: ${servicesRes.status} - ${JSON.stringify(errorData)}`)
-        }
-
-        const servicesData = await servicesRes.json()
-        console.log("All services data:", servicesData)
-
-        setModelServices(modelServicesData)
-        setAllServices(servicesData)
-      } catch (error) {
-        console.error("Error fetching data:", error)
-        setError(error instanceof Error ? error.message : "Failed to fetch data")
-        toast({
-          title: t("error"),
-          description: t("errorFetchingData"),
-          variant: "destructive",
-        })
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
     fetchData()
-  }, [modelId, locale, toast, t])
+  }, [modelId, locale])
 
   // Get services that are not already assigned to the model
   const availableServices = allServices.filter((service) => !modelServices.some((ms) => ms.service_id === service.id))
@@ -129,6 +83,8 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     }
 
     try {
+      console.log("Adding service:", { modelId, serviceId: selectedService, price: priceValue })
+
       const res = await fetch("/api/admin/model-services", {
         method: "POST",
         headers: {
@@ -141,22 +97,34 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
         }),
       })
 
-      if (!res.ok) throw new Error("Failed to add service")
+      if (!res.ok) {
+        const errorData = await res.json()
+        console.error("Error response:", errorData)
+        throw new Error(`Failed to add service: ${errorData.error || res.statusText}`)
+      }
 
       const newModelService = await res.json()
+      console.log("Service added successfully:", newModelService)
 
       // Find the service details
       const serviceDetails = allServices.find((s) => s.id === selectedService)
 
       if (serviceDetails) {
         // Add the new model service to the list
-        setModelServices([
+        const updatedServices = [
           ...modelServices,
           {
             ...newModelService,
             services: serviceDetails,
           },
-        ])
+        ]
+
+        console.log("Updated services list:", updatedServices)
+        setModelServices(updatedServices)
+      } else {
+        console.error("Service details not found for ID:", selectedService)
+        // Refresh the data to ensure we have the latest
+        fetchData()
       }
 
       // Reset form
@@ -172,7 +140,10 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
       console.error("Error adding service:", error)
       toast({
         title: t("error"),
-        description: t("errorAddingService"),
+        description:
+          typeof error === "object" && error !== null && "message" in error
+            ? String(error.message)
+            : t("errorAddingService"),
         variant: "destructive",
       })
     }
@@ -284,6 +255,52 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
 
   const renderPrice = (price: number | null) => {
     return price !== null ? formatCurrency(price) : t("priceOnRequest")
+  }
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      // Fetch model services
+      console.log(`Fetching model services for model ${modelId} and locale ${locale}`)
+      const modelServicesRes = await fetch(`/api/admin/model-services?model_id=${modelId}&locale=${locale}`)
+
+      if (!modelServicesRes.ok) {
+        const errorData = await modelServicesRes.json()
+        console.error("Model services error response:", errorData)
+        throw new Error(`Failed to fetch model services: ${modelServicesRes.status} - ${JSON.stringify(errorData)}`)
+      }
+
+      const modelServicesData = await modelServicesRes.json()
+      console.log("Model services data:", modelServicesData)
+
+      // Fetch all services
+      console.log(`Fetching all services for locale ${locale}`)
+      const servicesRes = await fetch(`/api/admin/services?locale=${locale}`)
+
+      if (!servicesRes.ok) {
+        const errorData = await servicesRes.json()
+        console.error("Services error response:", errorData)
+        throw new Error(`Failed to fetch services: ${servicesRes.status} - ${JSON.stringify(errorData)}`)
+      }
+
+      const servicesData = await servicesRes.json()
+      console.log("All services data:", servicesData)
+
+      setModelServices(modelServicesData)
+      setAllServices(servicesData)
+    } catch (error) {
+      console.error("Error fetching data:", error)
+      setError(error instanceof Error ? error.message : "Failed to fetch data")
+      toast({
+        title: t("error"),
+        description: t("errorFetchingData"),
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

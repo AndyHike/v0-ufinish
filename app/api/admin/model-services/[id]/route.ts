@@ -4,15 +4,36 @@ import { createClient } from "@/lib/supabase"
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id
+    console.log(`Attempting to delete model service with ID: ${id}`)
+
     const supabase = createClient()
 
+    // Get the model service before deletion for logging
+    const { data: modelService, error: fetchError } = await supabase
+      .from("model_services")
+      .select("*")
+      .eq("id", id)
+      .single()
+
+    if (fetchError) {
+      console.error("Error fetching model service before deletion:", fetchError)
+      return NextResponse.json({ error: "Failed to fetch model service", details: fetchError }, { status: 500 })
+    }
+
+    console.log("Found model service to delete:", modelService)
+
+    // Delete the model service
     const { error } = await supabase.from("model_services").delete().eq("id", id)
 
-    if (error) throw error
+    if (error) {
+      console.error("Error deleting model service:", error)
+      return NextResponse.json({ error: "Failed to delete model service", details: error }, { status: 500 })
+    }
 
-    return NextResponse.json({ success: true })
+    console.log("Successfully deleted model service")
+    return NextResponse.json({ success: true, deletedService: modelService })
   } catch (error) {
     console.error("Error deleting model service:", error)
-    return NextResponse.json({ error: "Failed to delete model service" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to delete model service", details: error }, { status: 500 })
   }
 }

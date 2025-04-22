@@ -87,6 +87,13 @@ export async function POST(request: Request) {
     const body = await request.json()
     const supabase = createClient()
 
+    console.log("Received request to add/update model service:", body)
+
+    if (!body.modelId || !body.serviceId) {
+      console.error("Missing required fields:", body)
+      return NextResponse.json({ error: "modelId and serviceId are required" }, { status: 400 })
+    }
+
     // Check if the model service already exists
     const { data: existingData, error: existingError } = await supabase
       .from("model_services")
@@ -95,10 +102,16 @@ export async function POST(request: Request) {
       .eq("service_id", body.serviceId)
       .maybeSingle()
 
-    if (existingError) throw existingError
+    if (existingError) {
+      console.error("Error checking existing model service:", existingError)
+      throw existingError
+    }
+
+    let result
 
     if (existingData) {
       // Update existing record
+      console.log(`Updating existing model service with ID ${existingData.id}`)
       const { data, error } = await supabase
         .from("model_services")
         .update({ price: body.price })
@@ -106,10 +119,16 @@ export async function POST(request: Request) {
         .select()
         .single()
 
-      if (error) throw error
-      return NextResponse.json(data)
+      if (error) {
+        console.error("Error updating model service:", error)
+        throw error
+      }
+
+      console.log("Successfully updated model service:", data)
+      result = data
     } else {
       // Insert new record
+      console.log("Creating new model service")
       const { data, error } = await supabase
         .from("model_services")
         .insert({
@@ -120,11 +139,18 @@ export async function POST(request: Request) {
         .select()
         .single()
 
-      if (error) throw error
-      return NextResponse.json(data)
+      if (error) {
+        console.error("Error creating model service:", error)
+        throw error
+      }
+
+      console.log("Successfully created model service:", data)
+      result = data
     }
+
+    return NextResponse.json(result)
   } catch (error) {
     console.error("Error creating/updating model service:", error)
-    return NextResponse.json({ error: "Failed to create/update model service" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to create/update model service", details: error }, { status: 500 })
   }
 }
