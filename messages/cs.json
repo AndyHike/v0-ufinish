@@ -3,7 +3,7 @@
     "siteTitle": "Oprava Telefonů",
     "home": "Domů",
     "services": "Služby",
-    "pricing": "Ceník",
+    "chooseModel": "Vybrat model",
     "about": "O nás",
     "contact": "Kontakt",
     "openMenu": "Otevřít menu",
@@ -15,7 +15,7 @@
     "quickLinks": "Rychlé odkazy",
     "home": "Domů",
     "services": "Služby",
-    "pricing": "Ceník",
+    "chooseModel": "Vybrat model",
     "about": "O nás",
     "contact": "Kontakt",
     "contactUs": "Kontaktujte nás",
@@ -44,6 +44,7 @@
     "title": "Profesionální oprava mobilních telefonů",
     "subtitle": "Rychlá a kvalitní oprava vašeho telefonu s garancí. Svěřte svůj přístroj profesionálům.",
     "servicesButton": "Naše služby",
+    "chooseModelButton": "Vybrat model",
     "contactButton": "Kontaktovat",
     "feature1": "Bezplatná diagnostika",
     "feature2": "Záruka na všechny opravy",
@@ -94,7 +95,11 @@
     "startingFrom": "Od {price}",
     "repairServices": "Opravárenské služby",
     "brandNotFound": "Značka nenalezena",
-    "brandNotFoundDesc": "Požadovaná značka nebyla nalezena."
+    "brandNotFoundDesc": "Požadovaná značka nebyla nalezena.",
+    "chooseModelTitle": "Vyberte model telefonu",
+    "chooseModelDescription": "Vyberte značku vašeho telefonu pro zobrazení dostupných modelů a cen oprav",
+    "pageTitle": "Vyberte model telefonu",
+    "pageDescription": "Vyberte značku vašeho telefonu pro zobrazení dostupných modelů a cen oprav"
   },
   "Models": {
     "repairServices": "Opravárenské služby",

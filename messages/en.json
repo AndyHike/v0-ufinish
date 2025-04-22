@@ -3,7 +3,7 @@
     "siteTitle": "Phone Repair",
     "home": "Home",
     "services": "Services",
-    "pricing": "Pricing",
+    "chooseModel": "Choose Model",
     "about": "About",
     "contact": "Contact",
     "openMenu": "Open menu",
@@ -15,7 +15,7 @@
     "quickLinks": "Quick Links",
     "home": "Home",
     "services": "Services",
-    "pricing": "Pricing",
+    "chooseModel": "Choose Model",
     "about": "About",
     "contact": "Contact",
     "contactUs": "Contact Us",
@@ -44,6 +44,7 @@
     "title": "Professional Mobile Phone Repair",
     "subtitle": "Fast and quality repair of your phone with warranty. Trust your device to professionals.",
     "servicesButton": "Our Services",
+    "chooseModelButton": "Choose Model",
     "contactButton": "Contact Us",
     "feature1": "Free Diagnostics",
     "feature2": "Warranty on All Repairs",
@@ -94,7 +95,11 @@
     "startingFrom": "Starting from {price}",
     "repairServices": "Repair Services",
     "brandNotFound": "Brand Not Found",
-    "brandNotFoundDesc": "The requested brand could not be found."
+    "brandNotFoundDesc": "The requested brand could not be found.",
+    "chooseModelTitle": "Choose Your Phone Model",
+    "chooseModelDescription": "Select your phone brand to see available models and repair prices",
+    "pageTitle": "Choose Your Phone Model",
+    "pageDescription": "Select your phone brand to see available models and repair prices"
   },
   "Models": {
     "repairServices": "Repair Services",

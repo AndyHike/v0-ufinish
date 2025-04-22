@@ -32,8 +32,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground">
-                  {t("pricing")}
+                <Link href="/brands" className="text-sm text-muted-foreground hover:text-foreground">
+                  {t("chooseModel")}
                 </Link>
               </li>
               <li>

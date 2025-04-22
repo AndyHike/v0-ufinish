@@ -21,7 +21,7 @@ export function Header({ user }) {
   const navigation = [
     { name: t("home"), href: `/${locale}` },
     { name: t("services"), href: `/${locale}/services` },
-    { name: t("pricing"), href: `/${locale}/pricing` },
+    { name: t("chooseModel"), href: `/${locale}/brands` },
     { name: t("about"), href: `/${locale}/about` },
     { name: t("contact"), href: `/${locale}/contact` },
   ]

@@ -23,10 +23,11 @@ export default async function BrandsPage({ params }: { params: { locale: string 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
       <div className="mx-auto max-w-5xl">
+        {/* Update the page title and description to be more clear about choosing a model */}
         <div className="mb-12 space-y-4 text-center">
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("pageTitle")}</h1>
+          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("chooseModelTitle")}</h1>
           <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            {t("pageDescription")}
+            {t("chooseModelDescription")}
           </p>
         </div>
 
