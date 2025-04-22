@@ -333,7 +333,11 @@
     "errorUpdatingService": "Помилка при оновленні послуги.",
     "errorDeletingService": "Помилка при видаленні послуги.",
     "errorFetchingData": "Помилка при отриманні даних.",
-    "confirmDeleteService": "Ви впевнені, що хочете видалити цю послугу?"
+    "confirmDeleteService": "Ви впевнені, що хочете видалити цю послугу?",
+    "pleaseSelectService": "Будь ласка, виберіть послугу",
+    "serviceNotSelected": "Послуга не вибрана",
+    "priceOnRequest": "Ціна за запитом",
+    "leaveEmptyForPriceOnRequest": "Залиште порожнім для відображення \"Ціна за запитом\""
   },
   "About": {
     "about": "Про нас",

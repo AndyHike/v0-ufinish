@@ -17,6 +17,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
 
 export default async function ServicesPage({ params }: { params: { locale: string } }) {
   const t = await getTranslations({ locale: params.locale, namespace: "Services" })
+  const commonT = await getTranslations({ locale: params.locale, namespace: "Common" })
   const supabase = createServerClient()
 
   // Fetch services with translations
@@ -44,7 +45,12 @@ export default async function ServicesPage({ params }: { params: { locale: strin
     })) || []
 
   // Service icons mapping
-  const serviceIcons = [{ icon: Smartphone }, { icon: Battery }, { icon: Wifi }, { icon: Shield }]
+  const serviceIcons = [
+    { icon: Smartphone }, // Screen replacement
+    { icon: Battery }, // Battery replacement
+    { icon: Wifi }, // Connectivity issues
+    { icon: Shield }, // Water damage
+  ]
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
@@ -56,7 +62,7 @@ export default async function ServicesPage({ params }: { params: { locale: strin
           </p>
         </div>
 
-        <div className="mx-auto grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8">
           {transformedServices.map((service, index) => {
             const IconComponent = serviceIcons[index % serviceIcons.length].icon
             return (

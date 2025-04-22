@@ -333,7 +333,11 @@
     "errorUpdatingService": "Chyba při aktualizaci služby.",
     "errorDeletingService": "Chyba při mazání služby.",
     "errorFetchingData": "Chyba při načítání dat.",
-    "confirmDeleteService": "Opravdu chcete tuto službu smazat?"
+    "confirmDeleteService": "Opravdu chcete tuto službu smazat?",
+    "pleaseSelectService": "Prosím vyberte službu",
+    "serviceNotSelected": "Služba není vybrána",
+    "priceOnRequest": "Cena na vyžádání",
+    "leaveEmptyForPriceOnRequest": "Ponechte prázdné pro zobrazení \"Cena na vyžádání\""
   },
   "About": {
     "about": "O nás",

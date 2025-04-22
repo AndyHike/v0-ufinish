@@ -85,8 +85,23 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
   // Get services that are not already assigned to the model
   const availableServices = allServices.filter((service) => !modelServices.some((ms) => ms.service_id === service.id))
 
+  // First, let's modify the handleAddService function to allow for empty prices
   const handleAddService = async () => {
-    if (!selectedService || !price || isNaN(Number.parseFloat(price)) || Number.parseFloat(price) <= 0) {
+    // Changed validation to allow empty price
+    if (!selectedService) {
+      toast({
+        title: t("validationError"),
+        description: t("pleaseSelectService"),
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Allow empty price (will be stored as null)
+    const priceValue = price.trim() === "" ? null : Number.parseFloat(price)
+
+    // If price is provided, validate it's a positive number
+    if (priceValue !== null && (isNaN(priceValue) || priceValue <= 0)) {
       toast({
         title: t("validationError"),
         description: t("pleaseEnterValidPrice"),
@@ -104,7 +119,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
         body: JSON.stringify({
           modelId,
           serviceId: selectedService,
-          price: Number.parseFloat(price),
+          price: priceValue,
         }),
       })
 
@@ -143,8 +158,22 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     }
   }
 
+  // Similarly, update the handleEditService function
   const handleEditService = async () => {
-    if (!editingServiceId || !price || isNaN(Number.parseFloat(price)) || Number.parseFloat(price) <= 0) {
+    if (!editingServiceId) {
+      toast({
+        title: t("validationError"),
+        description: t("serviceNotSelected"),
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Allow empty price (will be stored as null)
+    const priceValue = price.trim() === "" ? null : Number.parseFloat(price)
+
+    // If price is provided, validate it's a positive number
+    if (priceValue !== null && (isNaN(priceValue) || priceValue <= 0)) {
       toast({
         title: t("validationError"),
         description: t("pleaseEnterValidPrice"),
@@ -164,7 +193,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
         body: JSON.stringify({
           modelId,
           serviceId: modelService?.service_id,
-          price: Number.parseFloat(price),
+          price: priceValue,
         }),
       })
 
@@ -173,9 +202,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
       const updatedModelService = await res.json()
 
       // Update the model service in the list
-      setModelServices(
-        modelServices.map((ms) => (ms.id === editingServiceId ? { ...ms, price: Number.parseFloat(price) } : ms)),
-      )
+      setModelServices(modelServices.map((ms) => (ms.id === editingServiceId ? { ...ms, price: priceValue } : ms)))
 
       // Reset form
       setEditingServiceId(null)
@@ -326,8 +353,9 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
                 min="0"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="0"
+                placeholder={t("priceOnRequest")}
               />
+              <p className="text-xs text-muted-foreground">{t("leaveEmptyForPriceOnRequest")}</p>
             </div>
           </div>
           <DialogFooter>

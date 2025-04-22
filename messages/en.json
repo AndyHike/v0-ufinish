@@ -333,7 +333,11 @@
     "errorUpdatingService": "Error updating service.",
     "errorDeletingService": "Error deleting service.",
     "errorFetchingData": "Error fetching data.",
-    "confirmDeleteService": "Are you sure you want to delete this service?"
+    "confirmDeleteService": "Are you sure you want to delete this service?",
+    "pleaseSelectService": "Please select a service",
+    "serviceNotSelected": "Service not selected",
+    "priceOnRequest": "Price on request",
+    "leaveEmptyForPriceOnRequest": "Leave empty to display \"Price on request\""
   },
   "About": {
     "about": "About Us",
