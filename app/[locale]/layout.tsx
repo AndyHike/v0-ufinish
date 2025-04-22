@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { getCurrentUser } from "@/lib/auth/session"
+import { getMessages } from "@/lib/get-messages"
 
 export default async function LocaleLayout({
   children,
@@ -14,7 +15,7 @@ export default async function LocaleLayout({
 }) {
   let messages
   try {
-    messages = (await import(`../../messages/${locale}.json`)).default
+    messages = await getMessages(locale)
   } catch (error) {
     console.error(`Failed to load messages for locale ${locale}:`, error)
     notFound()
