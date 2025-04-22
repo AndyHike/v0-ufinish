@@ -49,27 +49,36 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
   const [selectedService, setSelectedService] = useState<string>("")
   const [price, setPrice] = useState<string>("")
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Fetch model services and all services
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true)
+        setError(null)
 
         // Fetch model services
         const modelServicesRes = await fetch(`/api/admin/model-services?model_id=${modelId}&locale=${locale}`)
-        if (!modelServicesRes.ok) throw new Error("Failed to fetch model services")
+        if (!modelServicesRes.ok) {
+          throw new Error(`Failed to fetch model services: ${modelServicesRes.status}`)
+        }
         const modelServicesData = await modelServicesRes.json()
+        console.log("Model services data:", modelServicesData)
 
         // Fetch all services
         const servicesRes = await fetch(`/api/admin/services?locale=${locale}`)
-        if (!servicesRes.ok) throw new Error("Failed to fetch services")
+        if (!servicesRes.ok) {
+          throw new Error(`Failed to fetch services: ${servicesRes.status}`)
+        }
         const servicesData = await servicesRes.json()
+        console.log("All services data:", servicesData)
 
         setModelServices(modelServicesData)
         setAllServices(servicesData)
       } catch (error) {
         console.error("Error fetching data:", error)
+        setError(error instanceof Error ? error.message : "Failed to fetch data")
         toast({
           title: t("error"),
           description: t("errorFetchingData"),
@@ -81,7 +90,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     }
 
     fetchData()
-  }, [modelId, locale, t, toast])
+  }, [modelId, locale, toast, t])
 
   // Get services that are not already assigned to the model
   const availableServices = allServices.filter((service) => !modelServices.some((ms) => ms.service_id === service.id))
@@ -271,7 +280,7 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
     <div className="space-y-4">
       <div className="flex justify-between">
         <h2 className="text-xl font-semibold">{t("manageModelServices")}</h2>
-        <Button onClick={openAddDialog} disabled={availableServices.length === 0}>
+        <Button onClick={openAddDialog}>
           <Plus className="mr-2 h-4 w-4" />
           {t("addService")}
         </Button>
@@ -279,10 +288,15 @@ export function ModelServicesManager({ modelId, locale }: ModelServicesManagerPr
 
       {isLoading ? (
         <div className="text-center">{t("loading")}</div>
+      ) : error ? (
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <p className="font-medium">Error loading data:</p>
+          <p>{error}</p>
+        </div>
       ) : modelServices.length === 0 ? (
         <div className="rounded-md border border-dashed p-8 text-center">
           <p className="text-muted-foreground">{t("noServicesForModel")}</p>
-          <Button onClick={openAddDialog} className="mt-4" disabled={availableServices.length === 0}>
+          <Button onClick={openAddDialog} className="mt-4">
             <Plus className="mr-2 h-4 w-4" />
             {t("addService")}
           </Button>
