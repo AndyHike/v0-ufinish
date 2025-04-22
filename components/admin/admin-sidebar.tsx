@@ -40,7 +40,13 @@ export function AdminSidebar() {
       label: t("models"),
       icon: Smartphone,
       href: `/${locale}/admin/models`,
-      active: pathname.includes("/admin/models"),
+      active: pathname.includes("/admin/models") && !pathname.includes("/services"),
+    },
+    {
+      label: t("bulkServices"),
+      icon: Database,
+      href: `/${locale}/admin/bulk-services`,
+      active: pathname.includes("/admin/bulk-services"),
     },
     {
       label: t("descriptions"),
@@ -53,12 +59,6 @@ export function AdminSidebar() {
       icon: Percent,
       href: `/${locale}/admin/discounts`,
       active: pathname.includes("/admin/discounts"),
-    },
-    {
-      label: t("bulkManagement"),
-      icon: Database,
-      href: `/${locale}/admin/bulk-services`,
-      active: pathname.includes("/admin/bulk-services"),
     },
   ]
 

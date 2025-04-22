@@ -68,7 +68,8 @@
     "@hello-pangea/dnd": "latest",
     "@formatjs/intl-localematcher": "latest",
     "negotiator": "latest",
-    "papaparse": "latest"
+    "papaparse": "latest",
+    "react-csv": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
