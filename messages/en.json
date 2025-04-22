@@ -413,7 +413,17 @@
     "dataExportDescription": "Export data from the system for backup or analysis",
     "bulkImportDescription": "Import data from CSV files for bulk updates",
     "refresh": "Refresh",
-    "refreshing": "Refreshing..."
+    "refreshing": "Refreshing...",
+    "serviceUk": "Service (Ukrainian)",
+    "serviceEn": "Service (English)",
+    "serviceCs": "Service (Czech)",
+    "descriptionUk": "Description (Ukrainian)",
+    "descriptionEn": "Description (English)",
+    "descriptionCs": "Description (Czech)",
+    "multilingualImport": "Multilingual Import",
+    "multilingualImportDescription": "Import services with translations in different languages",
+    "requiredTranslation": "Required translation",
+    "optionalTranslation": "Optional translation"
   },
   "About": {
     "about": "About Us",

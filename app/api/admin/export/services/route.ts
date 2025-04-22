@@ -7,9 +7,7 @@ export async function GET() {
     const supabase = createClient()
 
     // Get all model services with related data
-    const { data: modelServices, error } = await supabase
-      .from("model_services")
-      .select(`
+    const { data: modelServices, error } = await supabase.from("model_services").select(`
         id,
         price,
         models!inner(
@@ -21,26 +19,51 @@ export async function GET() {
           )
         ),
         services!inner(
-          id,
-          services_translations!inner(
-            name,
-            locale
-          )
+          id
         )
       `)
-      .eq("services_translations.locale", "uk") // Default locale
 
     if (error) {
       throw error
     }
 
+    // Get all service translations
+    const { data: allTranslations, error: translationsError } = await supabase
+      .from("services_translations")
+      .select("service_id, name, description, locale")
+
+    if (translationsError) {
+      throw translationsError
+    }
+
+    // Group translations by service_id and locale
+    const translationsByService = allTranslations.reduce((acc, translation) => {
+      if (!acc[translation.service_id]) {
+        acc[translation.service_id] = {}
+      }
+      acc[translation.service_id][translation.locale] = {
+        name: translation.name,
+        description: translation.description,
+      }
+      return acc
+    }, {})
+
     // Transform data for CSV export
-    const csvData = modelServices.map((ms) => ({
-      brand: ms.models.brands.name,
-      model: ms.models.name,
-      service: ms.services.services_translations[0]?.name || "",
-      price: ms.price === null ? "" : ms.price,
-    }))
+    const csvData = modelServices.map((ms) => {
+      const translations = translationsByService[ms.services.id] || {}
+
+      return {
+        brand: ms.models.brands.name,
+        model: ms.models.name,
+        service_uk: translations.uk?.name || "",
+        description_uk: translations.uk?.description || "",
+        service_en: translations.en?.name || "",
+        description_en: translations.en?.description || "",
+        service_cs: translations.cs?.name || "",
+        description_cs: translations.cs?.description || "",
+        price: ms.price === null ? "" : ms.price,
+      }
+    })
 
     // Convert to CSV
     const csv = Papa.unparse(csvData)

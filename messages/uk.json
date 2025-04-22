@@ -406,7 +406,17 @@
     "dataExportDescription": "Експортуйте дані з системи для резервного копіювання або аналізу",
     "bulkImportDescription": "Імпортуйте дані з CSV файлів для масового оновлення",
     "refresh": "Оновити",
-    "refreshing": "Оновлення..."
+    "refreshing": "Оновлення...",
+    "serviceUk": "Послуга (Укр)",
+    "serviceEn": "Послуга (Англ)",
+    "serviceCs": "Послуга (Чеська)",
+    "descriptionUk": "Опис (Укр)",
+    "descriptionEn": "Опис (Англ)",
+    "descriptionCs": "Опис (Чеська)",
+    "multilingualImport": "Мультимовний імпорт",
+    "multilingualImportDescription": "Імпортуйте послуги з перекладами на різні мови",
+    "requiredTranslation": "Обов'язковий переклад",
+    "optionalTranslation": "Необов'язковий переклад"
   },
   "About": {
     "about": "Про нас",

@@ -4,7 +4,12 @@ import { createClient } from "@/lib/supabase"
 type ServiceImportRow = {
   brand: string
   model: string
-  service: string
+  service_uk: string
+  service_en?: string
+  service_cs?: string
+  description_uk?: string
+  description_en?: string
+  description_cs?: string
   price: string | number
 }
 
@@ -28,7 +33,7 @@ export async function POST(request: Request) {
     for (const row of data) {
       try {
         // Validate row data
-        if (!row.brand || !row.model || !row.service) {
+        if (!row.brand || !row.model || !row.service_uk) {
           result.failed++
           result.errors.push(`Missing required fields for row: ${JSON.stringify(row)}`)
           continue
@@ -85,22 +90,101 @@ export async function POST(request: Request) {
           modelId = newModel.id
         }
 
-        // 3. Find or create service
+        // 3. Find or create service with translations
         let serviceId: string
+
+        // Try to find existing service by Ukrainian name (primary language)
         const { data: existingService } = await supabase
-          .from("services")
-          .select(`
-            id, 
-            services_translations(
-              name,
-              locale
-            )
-          `)
-          .eq("services_translations.name", row.service)
+          .from("services_translations")
+          .select("service_id")
+          .eq("name", row.service_uk)
+          .eq("locale", "uk")
           .maybeSingle()
 
         if (existingService) {
-          serviceId = existingService.id
+          serviceId = existingService.service_id
+
+          // Update existing translations
+          const translationPromises = []
+
+          // Update Ukrainian translation (always required)
+          translationPromises.push(
+            supabase
+              .from("services_translations")
+              .update({
+                name: row.service_uk,
+                description: row.description_uk || "",
+              })
+              .eq("service_id", serviceId)
+              .eq("locale", "uk"),
+          )
+
+          // Update English translation if provided
+          if (row.service_en) {
+            const { data: existingEnTranslation } = await supabase
+              .from("services_translations")
+              .select("id")
+              .eq("service_id", serviceId)
+              .eq("locale", "en")
+              .maybeSingle()
+
+            if (existingEnTranslation) {
+              translationPromises.push(
+                supabase
+                  .from("services_translations")
+                  .update({
+                    name: row.service_en,
+                    description: row.description_en || "",
+                  })
+                  .eq("service_id", serviceId)
+                  .eq("locale", "en"),
+              )
+            } else {
+              translationPromises.push(
+                supabase.from("services_translations").insert({
+                  service_id: serviceId,
+                  name: row.service_en,
+                  description: row.description_en || "",
+                  locale: "en",
+                }),
+              )
+            }
+          }
+
+          // Update Czech translation if provided
+          if (row.service_cs) {
+            const { data: existingCsTranslation } = await supabase
+              .from("services_translations")
+              .select("id")
+              .eq("service_id", serviceId)
+              .eq("locale", "cs")
+              .maybeSingle()
+
+            if (existingCsTranslation) {
+              translationPromises.push(
+                supabase
+                  .from("services_translations")
+                  .update({
+                    name: row.service_cs,
+                    description: row.description_cs || "",
+                  })
+                  .eq("service_id", serviceId)
+                  .eq("locale", "cs"),
+              )
+            } else {
+              translationPromises.push(
+                supabase.from("services_translations").insert({
+                  service_id: serviceId,
+                  name: row.service_cs,
+                  description: row.description_cs || "",
+                  locale: "cs",
+                }),
+              )
+            }
+          }
+
+          // Execute all translation updates
+          await Promise.all(translationPromises)
         } else {
           // Create new service
           const { data: newService, error: serviceError } = await supabase
@@ -111,23 +195,50 @@ export async function POST(request: Request) {
 
           if (serviceError) {
             result.failed++
-            result.errors.push(`Failed to create service "${row.service}": ${serviceError.message}`)
+            result.errors.push(`Failed to create service "${row.service_uk}": ${serviceError.message}`)
             continue
           }
 
           serviceId = newService.id
 
-          // Add service translation
-          const { error: translationError } = await supabase.from("services_translations").insert({
-            service_id: serviceId,
-            name: row.service,
-            description: "",
-            locale: "uk", // Default locale
-          })
+          // Add service translations for all provided languages
+          const translationInserts = [
+            // Ukrainian translation (required)
+            {
+              service_id: serviceId,
+              name: row.service_uk,
+              description: row.description_uk || "",
+              locale: "uk",
+            },
+          ]
+
+          // Add English translation if provided
+          if (row.service_en) {
+            translationInserts.push({
+              service_id: serviceId,
+              name: row.service_en,
+              description: row.description_en || "",
+              locale: "en",
+            })
+          }
+
+          // Add Czech translation if provided
+          if (row.service_cs) {
+            translationInserts.push({
+              service_id: serviceId,
+              name: row.service_cs,
+              description: row.description_cs || "",
+              locale: "cs",
+            })
+          }
+
+          const { error: translationError } = await supabase.from("services_translations").insert(translationInserts)
 
           if (translationError) {
             result.failed++
-            result.errors.push(`Failed to create service translation "${row.service}": ${translationError.message}`)
+            result.errors.push(
+              `Failed to create service translations for "${row.service_uk}": ${translationError.message}`,
+            )
             continue
           }
         }
@@ -152,7 +263,7 @@ export async function POST(request: Request) {
 
           if (updateError) {
             result.failed++
-            result.errors.push(`Failed to update price for ${row.model} - ${row.service}: ${updateError.message}`)
+            result.errors.push(`Failed to update price for ${row.model} - ${row.service_uk}: ${updateError.message}`)
             continue
           }
         } else {
@@ -165,7 +276,7 @@ export async function POST(request: Request) {
 
           if (createError) {
             result.failed++
-            result.errors.push(`Failed to create price for ${row.model} - ${row.service}: ${createError.message}`)
+            result.errors.push(`Failed to create price for ${row.model} - ${row.service_uk}: ${createError.message}`)
             continue
           }
         }

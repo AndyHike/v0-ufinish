@@ -15,7 +15,12 @@ import Papa from "papaparse"
 type ServiceImportRow = {
   brand: string
   model: string
-  service: string
+  service_uk: string
+  service_en?: string
+  service_cs?: string
+  description_uk?: string
+  description_en?: string
+  description_cs?: string
   price: string | number
 }
 
@@ -69,7 +74,7 @@ export function BulkServiceImport({ onSuccess }: BulkServiceImportProps) {
 
         // Validate the data structure
         const data = results.data as ServiceImportRow[]
-        const requiredColumns = ["brand", "model", "service", "price"]
+        const requiredColumns = ["brand", "model", "service_uk", "price"]
         const hasRequiredColumns = requiredColumns.every((col) =>
           Object.keys(data[0] || {})
             .map((k) => k.toLowerCase())
@@ -175,13 +180,23 @@ export function BulkServiceImport({ onSuccess }: BulkServiceImportProps) {
       {
         brand: "Apple",
         model: "iPhone 13",
-        service: "Screen Replacement",
+        service_uk: "Заміна екрану",
+        description_uk: "Професійна заміна розбитого або пошкодженого екрану",
+        service_en: "Screen Replacement",
+        description_en: "Professional replacement of broken or damaged screens",
+        service_cs: "Výměna displeje",
+        description_cs: "Profesionální výměna rozbitého nebo poškozeného displeje",
         price: 2500,
       },
       {
         brand: "Samsung",
         model: "Galaxy S21",
-        service: "Battery Replacement",
+        service_uk: "Заміна батареї",
+        description_uk: "Відновлення тривалості роботи вашого телефону з новою батареєю",
+        service_en: "Battery Replacement",
+        description_en: "Restore your phone's battery life with a new battery",
+        service_cs: "Výměna baterie",
+        description_cs: "Obnovení výdrže vašeho telefonu s novou baterií",
         price: 1200,
       },
     ]
@@ -320,7 +335,13 @@ export function BulkServiceImport({ onSuccess }: BulkServiceImportProps) {
                     {t("model")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("service")}
+                    {t("serviceUk")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("serviceEn")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("serviceCs")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("price")}
@@ -332,13 +353,15 @@ export function BulkServiceImport({ onSuccess }: BulkServiceImportProps) {
                   <tr key={index}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{row.brand}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{row.model}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.service}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.service_uk}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.service_en || "-"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.service_cs || "-"}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{row.price}</td>
                   </tr>
                 ))}
                 {parsedData.length > 5 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-4 text-sm text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-4 text-sm text-center text-gray-500">
                       {t("andMoreRows", { count: parsedData.length - 5 })}
                     </td>
                   </tr>

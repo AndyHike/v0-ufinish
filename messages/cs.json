@@ -398,7 +398,17 @@
     "dataExportDescription": "Exportujte data ze systému pro zálohování nebo analýzu",
     "bulkImportDescription": "Importujte data ze souborů CSV pro hromadné aktualizace",
     "refresh": "Obnovit",
-    "refreshing": "Obnovování..."
+    "refreshing": "Obnovování...",
+    "serviceUk": "Služba (Ukrajinština)",
+    "serviceEn": "Služba (Angličtina)",
+    "serviceCs": "Služba (Čeština)",
+    "descriptionUk": "Popis (Ukrajinština)",
+    "descriptionEn": "Popis (Angličtina)",
+    "descriptionCs": "Popis (Čeština)",
+    "multilingualImport": "Vícejazyčný import",
+    "multilingualImportDescription": "Importujte služby s překlady v různých jazycích",
+    "requiredTranslation": "Povinný překlad",
+    "optionalTranslation": "Volitelný překlad"
   },
   "About": {
     "about": "O nás",
