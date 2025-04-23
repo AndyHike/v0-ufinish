@@ -1,48 +1,72 @@
-// This is a wrapper for the Remonline API using the approach shown in the example
+// This is a wrapper for the Remonline API
 class RemonlineClient {
   private apiKey: string
   private token: string | null = null
+  private tokenExpiry: number | null = null
+  private baseUrl = "https://api.remonline.app"
 
   constructor(apiKey: string) {
     this.apiKey = apiKey
   }
 
   // Authenticate with the Remonline API
-  async auth(apiKey?: string) {
+  async auth() {
     try {
-      const key = apiKey || this.apiKey
+      console.log("Authenticating with Remonline API...")
 
-      // Make a direct POST request to get a token
-      const response = await fetch("https://api.remonline.app/token/new", {
+      // Check if we have a valid token already
+      if (this.token && this.tokenExpiry && Date.now() < this.tokenExpiry) {
+        console.log("Using existing token (still valid)")
+        return { success: true, token: this.token }
+      }
+
+      // Make a POST request to get a token
+      const response = await fetch(`${this.baseUrl}/token/new`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ api_key: key }),
+        body: JSON.stringify({ api_key: this.apiKey }),
       })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`Authentication failed with status ${response.status}: ${errorText}`)
+        return {
+          success: false,
+          message: `Authentication failed with status ${response.status}`,
+          details: errorText,
+        }
+      }
 
       const data = await response.json()
       console.log("Auth response:", data)
 
       if (data.success) {
         this.token = data.token
+        // Token expires in 24 hours, but we'll set it to expire in 23 hours to be safe
+        this.tokenExpiry = Date.now() + 23 * 60 * 60 * 1000
         return { success: true, token: data.token }
       } else {
         console.error("Authentication failed:", data)
-        return { success: false, message: data.message || "Authentication failed" }
+        return { success: false, message: data.message || "Authentication failed", details: data }
       }
     } catch (error) {
       console.error("Remonline auth error:", error)
-      return { success: false, message: "Failed to authenticate with Remonline API" }
+      return {
+        success: false,
+        message: "Failed to authenticate with Remonline API",
+        details: error instanceof Error ? error.message : String(error),
+      }
     }
   }
 
   // Ensure we have a valid token before making requests
   private async ensureAuth() {
-    if (!this.token) {
+    if (!this.token || !this.tokenExpiry || Date.now() >= this.tokenExpiry) {
       const authResult = await this.auth()
       if (!authResult.success) {
-        throw new Error("Failed to authenticate with Remonline API")
+        throw new Error(`Failed to authenticate with Remonline API: ${authResult.message}`)
       }
     }
     return this.token
@@ -59,7 +83,7 @@ class RemonlineClient {
         queryParams.append(key, String(value))
       })
 
-      const url = `https://api.remonline.app/clients/?${queryParams.toString()}`
+      const url = `${this.baseUrl}/clients/?${queryParams.toString()}`
       console.log("Fetching clients from:", url)
 
       const response = await fetch(url, {
@@ -69,6 +93,16 @@ class RemonlineClient {
         },
       })
 
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`Failed to fetch clients with status ${response.status}: ${errorText}`)
+        return {
+          success: false,
+          message: `Failed to fetch clients with status ${response.status}`,
+          details: errorText,
+        }
+      }
+
       const data = await response.json()
       console.log("Clients response:", data)
 
@@ -76,11 +110,15 @@ class RemonlineClient {
         return { success: true, data }
       } else {
         console.error("Failed to fetch clients:", data)
-        return { success: false, message: data.message || "Failed to fetch clients" }
+        return { success: false, message: data.message || "Failed to fetch clients", details: data }
       }
     } catch (error) {
       console.error("Remonline getClients error:", error)
-      return { success: false, message: "Failed to fetch clients from Remonline API" }
+      return {
+        success: false,
+        message: "Failed to fetch clients from Remonline API",
+        details: error instanceof Error ? error.message : String(error),
+      }
     }
   }
 
@@ -105,10 +143,20 @@ class RemonlineClient {
         }
       }
 
-      return { success: false, exists: false, message: "Failed to find client" }
+      return {
+        success: false,
+        exists: false,
+        message: "Failed to find client",
+        details: response,
+      }
     } catch (error) {
       console.error("Remonline getClientByEmail error:", error)
-      return { success: false, exists: false, message: "Failed to find client by email" }
+      return {
+        success: false,
+        exists: false,
+        message: "Failed to find client by email",
+        details: error instanceof Error ? error.message : String(error),
+      }
     }
   }
 
@@ -142,10 +190,20 @@ class RemonlineClient {
         }
       }
 
-      return { success: false, exists: false, message: "Failed to find client" }
+      return {
+        success: false,
+        exists: false,
+        message: "Failed to find client",
+        details: response,
+      }
     } catch (error) {
       console.error("Remonline getClientByPhone error:", error)
-      return { success: false, exists: false, message: "Failed to find client by phone" }
+      return {
+        success: false,
+        exists: false,
+        message: "Failed to find client by phone",
+        details: error instanceof Error ? error.message : String(error),
+      }
     }
   }
 
@@ -162,7 +220,7 @@ class RemonlineClient {
 
       console.log("Creating client with data:", clientData)
 
-      const response = await fetch("https://api.remonline.app/clients/", {
+      const response = await fetch(`${this.baseUrl}/clients/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -171,6 +229,16 @@ class RemonlineClient {
         body: JSON.stringify(clientData),
       })
 
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`Failed to create client with status ${response.status}: ${errorText}`)
+        return {
+          success: false,
+          message: `Failed to create client with status ${response.status}`,
+          details: errorText,
+        }
+      }
+
       const data = await response.json()
       console.log("Create client response:", data)
 
@@ -178,17 +246,22 @@ class RemonlineClient {
         return { success: true, client: data.data }
       } else {
         console.error("Failed to create client:", data)
-        return { success: false, message: data.message || "Failed to create client" }
+        return { success: false, message: data.message || "Failed to create client", details: data }
       }
     } catch (error) {
       console.error("Remonline createClient error:", error)
-      return { success: false, message: "Failed to create client in Remonline API" }
+      return {
+        success: false,
+        message: "Failed to create client in Remonline API",
+        details: error instanceof Error ? error.message : String(error),
+      }
     }
   }
 }
 
 // Create a singleton instance
 const apiKey = process.env.REMONLINE_API_TOKEN || ""
+console.log("Initializing Remonline client with API key:", apiKey ? "Key exists" : "No key provided")
 const remonline = new RemonlineClient(apiKey)
 
 export default remonline

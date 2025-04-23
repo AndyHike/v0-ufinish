@@ -29,7 +29,10 @@ export async function checkUserExists(identifier: string): Promise<{
     const isEmail = identifier.includes("@")
 
     // First authenticate with Remonline API
+    console.log("Authenticating with Remonline API...")
     const authResult = await remonline.auth()
+    console.log("Authentication result:", authResult)
+
     if (!authResult.success) {
       console.error("Failed to authenticate with Remonline API:", authResult.message)
       return {
@@ -39,6 +42,7 @@ export async function checkUserExists(identifier: string): Promise<{
     }
 
     // Search for the client
+    console.log(`Searching for client by ${isEmail ? "email" : "phone"}...`)
     let response
     if (isEmail) {
       response = await remonline.getClientByEmail(identifier)
