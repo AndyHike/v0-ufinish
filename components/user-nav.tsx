@@ -34,7 +34,7 @@ export function UserNav({ user }: UserNavProps) {
   if (!user) {
     return (
       <Button variant="ghost" size="sm" asChild>
-        <Link href={`/${locale}/auth/signin`}>
+        <Link href={`/${locale}/auth/login`}>
           <LogIn className="mr-2 h-4 w-4" />
           {t("login")}
         </Link>

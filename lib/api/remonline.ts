@@ -1,99 +1,150 @@
-// Remonline API client
+const API_BASE_URL = "https://api.remonline.app"
 
-interface RemonlineClient {
-  id: number
-  name: string
-  first_name: string
-  last_name: string
-  email: string
-  phone: string[]
-  [key: string]: any
-}
-
-interface RemonlineResponse<T> {
-  data: T
-  page?: number
-  count?: number
-  success: boolean
-}
-
-interface CreateClientData {
-  first_name: string
-  last_name: string
-  email: string
-  address?: string
-  phone?: string
-  [key: string]: any
-}
-
-class RemonlineAPI {
-  private baseUrl = "https://api.remonline.app"
+class RemonlineClient {
   private token: string | null = null
+  private apiKey: string
 
-  auth(token: string) {
-    this.token = token
-    return this
+  constructor(apiKey: string) {
+    this.apiKey = apiKey
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<RemonlineResponse<T>> {
+  async auth(apiKey?: string) {
+    const key = apiKey || this.apiKey
+    try {
+      const response = await fetch(`${API_BASE_URL}/token/new`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ api_key: key }),
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        this.token = data.token
+        return { success: true, token: data.token }
+      } else {
+        return { success: false, message: data.message || "Authentication failed" }
+      }
+    } catch (error) {
+      console.error("Remonline auth error:", error)
+      return { success: false, message: "Failed to authenticate with Remonline API" }
+    }
+  }
+
+  private async ensureAuth() {
     if (!this.token) {
-      throw new Error("Authentication token is required")
+      await this.auth()
     }
-
-    const url = new URL(`${this.baseUrl}${endpoint}`)
-
-    // Add token to query parameters
-    url.searchParams.append("token", this.token)
-
-    const response = await fetch(url.toString(), {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || "API request failed")
-    }
-
-    return await response.json()
   }
 
-  async getClients(params: Record<string, string> = {}): Promise<RemonlineResponse<RemonlineClient[]>> {
-    const queryParams = new URLSearchParams(params).toString()
-    const endpoint = `/clients?${queryParams}`
-    return this.request<RemonlineClient[]>(endpoint)
-  }
-
-  async getClientByEmail(email: string): Promise<RemonlineClient | null> {
+  async getClients(params = {}) {
+    await this.ensureAuth()
     try {
-      const response = await this.getClients({ email })
-      return response.data.length > 0 ? response.data[0] : null
+      const queryParams = new URLSearchParams(params as Record<string, string>).toString()
+      const url = `${API_BASE_URL}/clients/?${queryParams}`
+
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.token}`,
+        },
+      })
+
+      const data = await response.json()
+      return { success: true, data }
     } catch (error) {
-      console.error("Error fetching client by email:", error)
-      return null
+      console.error("Remonline getClients error:", error)
+      return { success: false, message: "Failed to fetch clients from Remonline API" }
     }
   }
 
-  async getClientByPhone(phone: string): Promise<RemonlineClient | null> {
+  async getClientByEmail(email: string) {
+    await this.ensureAuth()
     try {
-      const response = await this.getClients({ phone })
-      return response.data.length > 0 ? response.data[0] : null
+      const response = await this.getClients({ query: email })
+
+      if (response.success && response.data.data) {
+        const client = response.data.data.find((c: any) => c.email && c.email.toLowerCase() === email.toLowerCase())
+
+        return {
+          success: true,
+          exists: !!client,
+          client: client || null,
+        }
+      }
+
+      return { success: false, exists: false, message: "Failed to find client" }
     } catch (error) {
-      console.error("Error fetching client by phone:", error)
-      return null
+      console.error("Remonline getClientByEmail error:", error)
+      return { success: false, exists: false, message: "Failed to find client by email" }
     }
   }
 
-  async createClient(data: CreateClientData): Promise<RemonlineResponse<RemonlineClient>> {
-    return this.request<RemonlineClient>("/clients", {
-      method: "POST",
-      body: JSON.stringify(data),
-    })
+  async getClientByPhone(phone: string) {
+    await this.ensureAuth()
+    try {
+      // Normalize phone number by removing non-digit characters
+      const normalizedPhone = phone.replace(/\D/g, "")
+
+      const response = await this.getClients({ query: normalizedPhone })
+
+      if (response.success && response.data.data) {
+        const client = response.data.data.find((c: any) => {
+          if (!c.phone || !Array.isArray(c.phone)) return false
+
+          // Normalize stored phone numbers for comparison
+          const clientPhones = c.phone.map((p: string) => p.replace(/\D/g, ""))
+          return clientPhones.some((p) => p.includes(normalizedPhone) || normalizedPhone.includes(p))
+        })
+
+        return {
+          success: true,
+          exists: !!client,
+          client: client || null,
+        }
+      }
+
+      return { success: false, exists: false, message: "Failed to find client" }
+    } catch (error) {
+      console.error("Remonline getClientByPhone error:", error)
+      return { success: false, exists: false, message: "Failed to find client by phone" }
+    }
+  }
+
+  async createClient(clientData: {
+    first_name: string
+    last_name: string
+    email: string
+    phone?: string[]
+    address?: string
+  }) {
+    await this.ensureAuth()
+    try {
+      const response = await fetch(`${API_BASE_URL}/clients/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.token}`,
+        },
+        body: JSON.stringify(clientData),
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        return { success: true, client: data.data }
+      } else {
+        return { success: false, message: data.message || "Failed to create client" }
+      }
+    } catch (error) {
+      console.error("Remonline createClient error:", error)
+      return { success: false, message: "Failed to create client in Remonline API" }
+    }
   }
 }
 
-const remonline = new RemonlineAPI()
+// Create a singleton instance
+const apiKey = process.env.REMONLINE_API_TOKEN || ""
+const remonline = new RemonlineClient(apiKey)
+
 export default remonline

@@ -34,7 +34,7 @@ export default async function middleware(request: NextRequest) {
       const locale = pathname.split("/")[1] || defaultLocale
 
       // Redirect to login page
-      const redirectUrl = new URL(`/${locale}/auth/signin`, request.url)
+      const redirectUrl = new URL(`/${locale}/auth/login`, request.url)
       redirectUrl.searchParams.set("redirect", pathname)
       return NextResponse.redirect(redirectUrl)
     }

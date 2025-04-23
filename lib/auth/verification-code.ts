@@ -1,81 +1,67 @@
-import { createServerSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase"
 
-// Generate a random verification code
-export function generateVerificationCode(length = 6): string {
-  // Generate a random numeric code
-  return Array.from({ length }, () => Math.floor(Math.random() * 10)).join("")
+// Generate a random 6-digit code
+export function generateVerificationCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
-// Store verification code in the database
-export async function storeVerificationCode(
-  userId: string | null,
+// Save verification code to database
+export async function saveVerificationCode(
   email: string,
   code: string,
-  type: "login" | "registration" = "login",
+  type: "login" | "registration",
+  userId?: string,
 ): Promise<boolean> {
-  try {
-    const supabase = createServerSupabaseClient()
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+  const supabase = createClient()
 
-    // Delete any existing codes for this email
-    await supabase.from("verification_codes").delete().eq("email", email)
+  // Set expiration time (15 minutes from now)
+  const expiresAt = new Date()
+  expiresAt.setMinutes(expiresAt.getMinutes() + 15)
 
-    // Create a new code
-    const { error } = await supabase.from("verification_codes").insert([
-      {
-        user_id: userId,
-        email,
-        code,
-        type,
-        expires_at: expiresAt.toISOString(),
-      },
-    ])
+  // Delete any existing codes for this email and type
+  await supabase.from("verification_codes").delete().eq("email", email).eq("type", type)
 
-    if (error) {
-      console.error("Error creating verification code:", error)
-      return false
-    }
+  // Insert new code
+  const { error } = await supabase.from("verification_codes").insert({
+    user_id: userId,
+    email,
+    code,
+    type,
+    expires_at: expiresAt.toISOString(),
+  })
 
-    return true
-  } catch (error) {
-    console.error("Error in storeVerificationCode:", error)
-    return false
-  }
+  return !error
 }
 
-// Verify a code
+// Verify code
 export async function verifyCode(
   email: string,
   code: string,
-): Promise<{ valid: boolean; userId?: string; error?: string }> {
-  try {
-    const supabase = createServerSupabaseClient()
+  type: "login" | "registration",
+): Promise<{ valid: boolean; userId?: string; message?: string }> {
+  const supabase = createClient()
 
-    // Get the code
-    const { data: codeData, error: codeError } = await supabase
-      .from("verification_codes")
-      .select("id, user_id, expires_at, type")
-      .eq("email", email)
-      .eq("code", code)
-      .single()
+  // Get code from database
+  const { data, error } = await supabase
+    .from("verification_codes")
+    .select("*")
+    .eq("email", email)
+    .eq("code", code)
+    .eq("type", type)
+    .single()
 
-    if (codeError || !codeData) {
-      console.error("Code not found or error:", codeError)
-      return { valid: false, error: "Invalid code" }
-    }
-
-    // Check if code is expired
-    if (new Date(codeData.expires_at) < new Date()) {
-      console.error("Code expired")
-      return { valid: false, error: "Code expired" }
-    }
-
-    // Delete the code
-    await supabase.from("verification_codes").delete().eq("id", codeData.id)
-
-    return { valid: true, userId: codeData.user_id }
-  } catch (error) {
-    console.error("Error in verifyCode:", error)
-    return { valid: false, error: "An unexpected error occurred" }
+  if (error || !data) {
+    return { valid: false, message: "Invalid verification code" }
   }
+
+  // Check if code is expired
+  const expiresAt = new Date(data.expires_at)
+  if (expiresAt < new Date()) {
+    return { valid: false, message: "Verification code has expired" }
+  }
+
+  // Delete the code after successful verification
+  await supabase.from("verification_codes").delete().eq("id", data.id)
+
+  return { valid: true, userId: data.user_id }
 }
