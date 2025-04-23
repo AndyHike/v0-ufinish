@@ -159,9 +159,13 @@ export default function LoginClient() {
 
         {step === "credentials" ? (
           <Tabs defaultValue="email" onValueChange={(value) => setLoginMethod(value as "email" | "phone")}>
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="email">{t("loginWithEmail")}</TabsTrigger>
-              <TabsTrigger value="phone">{t("loginWithPhone")}</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-4 w-full">
+              <TabsTrigger value="email" className="whitespace-nowrap">
+                {t("loginWithEmail")}
+              </TabsTrigger>
+              <TabsTrigger value="phone" className="whitespace-nowrap">
+                {t("loginWithPhone")}
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="email">
               <form onSubmit={emailForm.handleSubmit(handleCredentialsSubmit)} className="space-y-4">
@@ -178,7 +182,7 @@ export default function LoginClient() {
                     <p className="text-sm text-destructive">{emailForm.formState.errors.email.message}</p>
                   )}
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full min-w-0" disabled={isLoading}>
                   {isLoading ? t("processing") : t("signIn")}
                 </Button>
               </form>
@@ -198,7 +202,7 @@ export default function LoginClient() {
                     <p className="text-sm text-destructive">{phoneForm.formState.errors.phone.message}</p>
                   )}
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full min-w-0" disabled={isLoading}>
                   {isLoading ? t("processing") : t("signIn")}
                 </Button>
               </form>
@@ -224,13 +228,13 @@ export default function LoginClient() {
                   <p className="text-sm text-destructive">{verificationForm.formState.errors.code.message}</p>
                 )}
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full min-w-0" disabled={isLoading}>
                 {isLoading ? t("processing") : t("verifyCode")}
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full min-w-0"
                 onClick={handleResendCode}
                 disabled={isLoading}
               >
@@ -239,7 +243,7 @@ export default function LoginClient() {
               <Button
                 type="button"
                 variant="link"
-                className="w-full"
+                className="w-full min-w-0"
                 onClick={() => setStep("credentials")}
                 disabled={isLoading}
               >
