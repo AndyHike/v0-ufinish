@@ -14,10 +14,10 @@ class RemonlineClient {
         this.token = token
 
         // Validate the token by making a simple API call
-        const testResponse = await fetch(`${this.baseUrl}/clients?limit=1`, {
+        const testResponse = await fetch(`${this.baseUrl}/clients?token=${this.token}&limit=1`, {
+          method: "GET",
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${this.token}`,
+            accept: "application/json",
           },
         })
 
@@ -48,10 +48,10 @@ class RemonlineClient {
       this.token = envToken
 
       // Validate the token
-      const testResponse = await fetch(`${this.baseUrl}/clients?limit=1`, {
+      const testResponse = await fetch(`${this.baseUrl}/clients?token=${this.token}&limit=1`, {
+        method: "GET",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.token}`,
+          accept: "application/json",
         },
       })
 
@@ -95,14 +95,17 @@ class RemonlineClient {
         queryParams.append(key, String(value))
       })
 
-      const url = `${this.baseUrl}/clients?${queryParams.toString()}`
+      let url = `${this.baseUrl}/clients?token=${this.token}`
+      if (queryParams.toString()) {
+        url += `&${queryParams.toString()}`
+      }
+
       console.log("Fetching clients from:", url)
 
       const response = await fetch(url, {
         method: "GET",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.token}`,
+          accept: "application/json",
         },
       })
 
@@ -236,11 +239,11 @@ class RemonlineClient {
 
       console.log("Creating client with data:", clientData)
 
-      const response = await fetch(`${this.baseUrl}/clients/`, {
+      const response = await fetch(`${this.baseUrl}/clients?token=${this.token}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.token}`,
+          accept: "application/json",
         },
         body: JSON.stringify(clientData),
       })
