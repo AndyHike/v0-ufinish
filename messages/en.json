@@ -223,8 +223,9 @@
     "phoneLogin": "Phone",
     "continueLogin": "Continue",
     "verifyAndLogin": "Verify and Login",
-    "backToLogin": "Back to login",
-    "sentToEmail": "Code sent to your email address"
+    "backToLogin": "Back to Login",
+    "sentToEmail": "Code sent to your email",
+    "noEmailForVerification": "No email found for verification"
   },
   "Admin": {
     "adminPanel": "Admin Panel",

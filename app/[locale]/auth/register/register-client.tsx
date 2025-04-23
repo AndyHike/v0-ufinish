@@ -72,10 +72,12 @@ export default function RegisterClient() {
     setIsLoading(true)
 
     try {
+      console.log("Registration initial data:", data)
       setIdentifier(data)
 
       // Check if user already exists
       const userExists = await checkUserExists(data.email)
+      console.log("User exists check result:", userExists)
 
       if (userExists.success) {
         setError(t("userAlreadyExists"))
@@ -85,6 +87,7 @@ export default function RegisterClient() {
 
       // Send verification code
       const result = await sendVerificationCode(data.email, "registration")
+      console.log("Send verification code result:", result)
 
       if (!result.success) {
         setError(result.message || t("somethingWentWrong"))
@@ -107,7 +110,10 @@ export default function RegisterClient() {
     setIsLoading(true)
 
     try {
+      console.log(`Verifying code for ${identifier.email}: ${data.code}`)
+
       const result = await verifyCode(identifier.email, data.code, "registration")
+      console.log("Verification result:", result)
 
       if (!result.success) {
         setError(result.message || t("invalidVerificationCode"))
@@ -130,6 +136,8 @@ export default function RegisterClient() {
     setIsLoading(true)
 
     try {
+      console.log("Creating user with data:", { ...identifier, address: data.address })
+
       const result = await createUser({
         first_name: identifier.firstName,
         last_name: identifier.lastName,
@@ -137,6 +145,8 @@ export default function RegisterClient() {
         phone: [identifier.phone],
         address: data.address || "",
       })
+
+      console.log("Create user result:", result)
 
       if (!result.success) {
         setError(result.message || t("registrationFailed"))
@@ -159,7 +169,10 @@ export default function RegisterClient() {
     setIsLoading(true)
 
     try {
+      console.log(`Resending verification code to ${identifier.email}`)
+
       const result = await sendVerificationCode(identifier.email, "registration")
+      console.log("Resend verification code result:", result)
 
       if (!result.success) {
         setError(result.message || t("somethingWentWrong"))

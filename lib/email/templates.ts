@@ -1,30 +1,22 @@
-// Email templates for various authentication flows
-
 export function getVerificationEmailTemplate(verificationLink: string, locale: string): string {
   const translations = {
     en: {
       title: "Verify your email address",
-      greeting: "Hello,",
-      message: "Please verify your email address by clicking the button below:",
-      button: "Verify Email",
-      alternative: "If the button doesn't work, copy and paste this link into your browser:",
-      footer: "If you didn't request this email, you can safely ignore it.",
+      message: "Please click the link below to verify your email address:",
+      buttonText: "Verify Email",
+      footer: "If you didn't request this, please ignore this email.",
     },
     uk: {
       title: "Підтвердіть вашу електронну адресу",
-      greeting: "Вітаємо,",
-      message: "Будь ласка, підтвердіть вашу електронну адресу, натиснувши кнопку нижче:",
-      button: "Підтвердити Email",
-      alternative: "Якщо кнопка не працює, скопіюйте та вставте це посилання у ваш браузер:",
-      footer: "Якщо ви не запитували цей лист, ви можете безпечно ігнорувати його.",
+      message: "Будь ласка, натисніть на посилання нижче, щоб підтвердити вашу електронну адресу:",
+      buttonText: "Підтвердити Email",
+      footer: "Якщо ви не запитували це, будь ласка, ігноруйте цей лист.",
     },
     cs: {
       title: "Ověřte svou e-mailovou adresu",
-      greeting: "Dobrý den,",
-      message: "Ověřte prosím svou e-mailovou adresu kliknutím na tlačítko níže:",
-      button: "Ověřit Email",
-      alternative: "Pokud tlačítko nefunguje, zkopírujte a vložte tento odkaz do prohlížeče:",
-      footer: "Pokud jste o tento e-mail nežádali, můžete jej bezpečně ignorovat.",
+      message: "Klikněte prosím na odkaz níže pro ověření vaší e-mailové adresy:",
+      buttonText: "Ověřit E-mail",
+      footer: "Pokud jste o to nepožádali, ignorujte prosím tento e-mail.",
     },
   }
 
@@ -39,19 +31,15 @@ export function getVerificationEmailTemplate(verificationLink: string, locale: s
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
         .container { border: 1px solid #ddd; border-radius: 5px; padding: 20px; }
-        .button { display: inline-block; background-color: #4F46E5; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; margin: 20px 0; }
-        .link { word-break: break-all; color: #4F46E5; }
+        .button { background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px; }
         .footer { margin-top: 30px; font-size: 0.8em; color: #666; }
       </style>
     </head>
     <body>
       <div class="container">
         <h2>${t.title}</h2>
-        <p>${t.greeting}</p>
         <p>${t.message}</p>
-        <a href="${verificationLink}" class="button">${t.button}</a>
-        <p>${t.alternative}</p>
-        <p class="link">${verificationLink}</p>
+        <a href="${verificationLink}" class="button">${t.buttonText}</a>
         <p class="footer">${t.footer}</p>
       </div>
     </body>
@@ -63,30 +51,21 @@ export function getPasswordResetEmailTemplate(resetLink: string, locale: string)
   const translations = {
     en: {
       title: "Reset your password",
-      greeting: "Hello,",
-      message: "We received a request to reset your password. Click the button below to create a new password:",
-      button: "Reset Password",
-      alternative: "If the button doesn't work, copy and paste this link into your browser:",
-      expiry: "This link will expire in 24 hours.",
-      footer: "If you didn't request a password reset, you can safely ignore this email.",
+      message: "Please click the link below to reset your password:",
+      buttonText: "Reset Password",
+      footer: "If you didn't request this, please ignore this email.",
     },
     uk: {
       title: "Скидання вашого пароля",
-      greeting: "Вітаємо,",
-      message: "Ми отримали запит на скидання вашого пароля. Натисніть кнопку нижче, щоб створити новий пароль:",
-      button: "Скинути Пароль",
-      alternative: "Якщо кнопка не працює, скопіюйте та вставте це посилання у ваш браузер:",
-      expiry: "Це посилання буде дійсним протягом 24 годин.",
-      footer: "Якщо ви не запитували скидання пароля, ви можете безпечно ігнорувати цей лист.",
+      message: "Будь ласка, натисніть на посилання нижче, щоб скинути ваш пароль:",
+      buttonText: "Скинути пароль",
+      footer: "Якщо ви не запитували це, будь ласка, ігноруйте цей лист.",
     },
     cs: {
       title: "Obnovení hesla",
-      greeting: "Dobrý den,",
-      message: "Obdrželi jsme žádost o obnovení hesla. Klikněte na tlačítko níže pro vytvoření nového hesla:",
-      button: "Obnovit Heslo",
-      alternative: "Pokud tlačítko nefunguje, zkopírujte a vložte tento odkaz do prohlížeče:",
-      expiry: "Tento odkaz vyprší za 24 hodin.",
-      footer: "Pokud jste o obnovení hesla nežádali, můžete tento e-mail bezpečně ignorovat.",
+      message: "Klikněte prosím na odkaz níže pro obnovení vašeho hesla:",
+      buttonText: "Obnovit heslo",
+      footer: "Pokud jste o to nepožádali, ignorujte prosím tento e-mail.",
     },
   }
 
@@ -101,20 +80,15 @@ export function getPasswordResetEmailTemplate(resetLink: string, locale: string)
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
         .container { border: 1px solid #ddd; border-radius: 5px; padding: 20px; }
-        .button { display: inline-block; background-color: #4F46E5; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; margin: 20px 0; }
-        .link { word-break: break-all; color: #4F46E5; }
+        .button { background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px; }
         .footer { margin-top: 30px; font-size: 0.8em; color: #666; }
       </style>
     </head>
     <body>
       <div class="container">
         <h2>${t.title}</h2>
-        <p>${t.greeting}</p>
         <p>${t.message}</p>
-        <a href="${resetLink}" class="button">${t.button}</a>
-        <p>${t.alternative}</p>
-        <p class="link">${resetLink}</p>
-        <p>${t.expiry}</p>
+        <a href="${resetLink}" class="button">${t.buttonText}</a>
         <p class="footer">${t.footer}</p>
       </div>
     </body>

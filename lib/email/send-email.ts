@@ -40,7 +40,7 @@ function createTransporter() {
   })
 }
 
-export async function sendVerificationEmail(email: string, token: string, locale: string) {
+export async function sendVerificationEmail(email: string, token: string, locale = "uk") {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ? process.env.NEXT_PUBLIC_APP_URL.trim() : ""
   const verificationLink = `${appUrl}/${locale}/auth/verify?token=${token}`
 
@@ -54,10 +54,10 @@ export async function sendVerificationEmail(email: string, token: string, locale
 
   const subject = translations[locale as keyof typeof translations] || translations.en
 
-  await sendEmail(email, subject, emailTemplate)
+  return await sendEmail(email, subject, emailTemplate)
 }
 
-export async function sendPasswordResetEmail(email: string, token: string, locale: string) {
+export async function sendPasswordResetEmail(email: string, token: string, locale = "uk") {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ? process.env.NEXT_PUBLIC_APP_URL.trim() : ""
   const resetLink = `${appUrl}/${locale}/auth/reset-password?token=${token}`
 
@@ -71,10 +71,10 @@ export async function sendPasswordResetEmail(email: string, token: string, local
 
   const subject = translations[locale as keyof typeof translations] || translations.en
 
-  await sendEmail(email, subject, emailTemplate)
+  return await sendEmail(email, subject, emailTemplate)
 }
 
-export async function sendVerificationCode(email: string, code: string, locale: string, isLogin = true) {
+export async function sendVerificationCode(email: string, code: string, locale = "uk", isLogin = true) {
   const emailTemplate = getVerificationCodeEmailTemplate(code, locale, isLogin)
 
   const translations = {
@@ -85,11 +85,13 @@ export async function sendVerificationCode(email: string, code: string, locale: 
 
   const subject = translations[locale as keyof typeof translations] || translations.en
 
-  await sendEmail(email, subject, emailTemplate)
+  return await sendEmail(email, subject, emailTemplate)
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
   try {
+    console.log(`Attempting to send email to ${to} with subject "${subject}"`)
+
     // Create a new transporter for each email to ensure we have the latest config
     const transporter = createTransporter()
 
@@ -105,9 +107,9 @@ async function sendEmail(to: string, subject: string, html: string) {
     })
 
     console.log(`Email sent successfully to ${to}`)
-    return result
+    return true
   } catch (error) {
     console.error("Error sending email:", error)
-    throw error
+    return false
   }
 }

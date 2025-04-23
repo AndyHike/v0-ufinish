@@ -207,7 +207,7 @@
     "emailLogin": "Пошта",
     "phoneLogin": "Телефон",
     "enterVerificationCode": "Введіть код підтвердження",
-    "verificationCodeSent": "Код підтвердження надіслано на вашу електронну пошту",
+    "verificationCodeSent": "Код підтвердження надіслано",
     "verifyCode": "Перевірити код",
     "resendCode": "Надіслати код повторно",
     "invalidVerificationCode": "Невірний код підтвердження",
@@ -235,8 +235,7 @@
     "verifyAndLogin": "Перевірити та увійти",
     "backToLogin": "Назад до входу",
     "sentToEmail": "Код надіслано на вашу електронну пошту",
-    "userNotFound": "Користувача не знайдено. Перевірте введені дані або зареєструйтеся.",
-    "invalidVerificationCode": "Невірний код підтвердження. Спробуйте ще раз."
+    "noEmailForVerification": "Не знайдено електронної пошти для перевірки"
   },
   "Admin": {
     "adminPanel": "Панель адміністратора",

@@ -209,8 +209,12 @@
     "verifyAndLogin": "Ověřit a přihlásit se",
     "backToLogin": "Zpět k přihlášení",
     "sentToEmail": "Kód byl odeslán na váš e-mail",
-    "userNotFound": "Uživatel nenalezen. Zkontrolujte své údaje nebo se zaregistrujte.",
-    "invalidVerificationCode": "Neplatný ověřovací kód. Zkuste to prosím znovu."
+    "noEmailForVerification": "Nebyl nalezen e-mail pro ověření",
+    "userNotFound": "Uživatel nenalezen",
+    "invalidVerificationCode": "Neplatný ověřovací kód",
+    "verificationCodeSent": "Ověřovací kód byl odeslán",
+    "verificationCodeExpired": "Ověřovací kód vypršel",
+    "resendCode": "Znovu odeslat kód"
   },
   "Admin": {
     "adminPanel": "Administrátorský panel",
