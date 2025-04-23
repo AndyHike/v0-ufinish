@@ -208,9 +208,9 @@
     "verificationCodeSent": "Verification code has been sent to your email",
     "verifyCode": "Verify Code",
     "resendCode": "Resend Code",
-    "invalidVerificationCode": "Invalid verification code",
+    "invalidVerificationCode": "Invalid verification code. Please try again.",
     "verificationCodeExpired": "Verification code has expired",
-    "userNotFound": "User not found",
+    "userNotFound": "User not found. Please check your information or register.",
     "userAlreadyExists": "User with this email or phone already exists",
     "continueRegistration": "Continue Registration",
     "firstName": "First Name",
@@ -220,7 +220,11 @@
     "address": "Address",
     "addressPlaceholder": "Enter your address",
     "emailLogin": "Email",
-    "phoneLogin": "Phone"
+    "phoneLogin": "Phone",
+    "continueLogin": "Continue",
+    "verifyAndLogin": "Verify and Login",
+    "backToLogin": "Back to login",
+    "sentToEmail": "Code sent to your email address"
   },
   "Admin": {
     "adminPanel": "Admin Panel",
