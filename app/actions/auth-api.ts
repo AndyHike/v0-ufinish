@@ -7,7 +7,7 @@ import {
   saveVerificationCode,
   verifyCode as verifyCodeLib,
 } from "@/lib/auth/verification-code"
-import { sendVerificationEmail } from "@/lib/email/send-email"
+import { sendVerificationCode as sendVerificationCodeEmail } from "@/lib/email/send-email"
 import remonline from "@/lib/api/remonline"
 
 // Check if user exists in Remonline API and return user data
@@ -23,17 +23,22 @@ export async function checkUserExists(identifier: string): Promise<{
   }
 }> {
   try {
-    // Ensure we have a valid API token
-    const authResult = await remonline.auth()
-    if (!authResult.success) {
-      console.error("Failed to authenticate with Remonline API:", authResult.message)
-      return { success: false, message: "API authentication failed" }
-    }
+    console.log(`Checking if user exists with identifier: ${identifier}`)
 
     // Determine if identifier is email or phone
     const isEmail = identifier.includes("@")
-    console.log(`Checking if user exists with ${isEmail ? "email" : "phone"}: ${identifier}`)
 
+    // First authenticate with Remonline API
+    const authResult = await remonline.auth()
+    if (!authResult.success) {
+      console.error("Failed to authenticate with Remonline API:", authResult.message)
+      return {
+        success: false,
+        message: "Failed to connect to the service. Please try again later.",
+      }
+    }
+
+    // Search for the client
     let response
     if (isEmail) {
       response = await remonline.getClientByEmail(identifier)
@@ -57,8 +62,8 @@ export async function checkUserExists(identifier: string): Promise<{
         userData: {
           id: response.client.id,
           email: response.client.email,
-          first_name: response.client.first_name,
-          last_name: response.client.last_name,
+          first_name: response.client.first_name || "",
+          last_name: response.client.last_name || "",
           phone: response.client.phone,
         },
       }
@@ -70,17 +75,39 @@ export async function checkUserExists(identifier: string): Promise<{
     }
   } catch (error) {
     console.error("Check user error:", error)
-    return { success: false, message: "Failed to check if user exists" }
+    return {
+      success: false,
+      message: "Failed to check if user exists. Please try again later.",
+    }
   }
 }
 
 // Send verification code
 export async function sendVerificationCode(
-  email: string,
+  identifier: string,
   type: "login" | "registration",
-): Promise<{ success: boolean; message?: string }> {
+): Promise<{ success: boolean; message?: string; email?: string }> {
   try {
-    console.log(`Sending verification code to ${email} for ${type}`)
+    console.log(`Sending verification code for ${type} to identifier: ${identifier}`)
+
+    // If identifier is an email, use it directly
+    // If it's a phone number, we need to find the associated email
+    let email = identifier
+
+    if (!identifier.includes("@")) {
+      // It's a phone number, find the associated email
+      const userResult = await checkUserExists(identifier)
+      if (!userResult.success || !userResult.userData) {
+        return {
+          success: false,
+          message: "Could not find a user with this phone number",
+        }
+      }
+
+      email = userResult.userData.email
+    }
+
+    console.log(`Will send verification code to email: ${email}`)
 
     // Generate verification code
     const code = generateVerificationCode()
@@ -90,38 +117,66 @@ export async function sendVerificationCode(
     const saved = await saveVerificationCode(email, code, type)
     if (!saved) {
       console.error("Failed to save verification code to database")
-      return { success: false, message: "Failed to save verification code" }
+      return {
+        success: false,
+        message: "Failed to generate verification code",
+      }
     }
 
     // Send email with code
     try {
-      await sendVerificationEmail(email, code)
+      await sendVerificationCodeEmail(email, code, "uk", type === "login")
       console.log(`Verification code sent to ${email}`)
-      return { success: true }
+      return { success: true, email }
     } catch (emailError) {
       console.error("Failed to send verification email:", emailError)
-      return { success: false, message: "Failed to send verification email" }
+      return {
+        success: false,
+        message: "Failed to send verification email",
+      }
     }
   } catch (error) {
     console.error("Send verification code error:", error)
-    return { success: false, message: "Failed to send verification code" }
+    return {
+      success: false,
+      message: "Failed to send verification code. Please try again later.",
+    }
   }
 }
 
 // Verify code and create session
 export async function verifyCode(
-  email: string,
+  identifier: string,
   code: string,
   type: "login" | "registration",
 ): Promise<{ success: boolean; message?: string }> {
   try {
-    console.log(`Verifying code for ${email}: ${code}`)
+    console.log(`Verifying code for ${identifier}: ${code}`)
+
+    // If identifier is a phone number, we need to find the associated email
+    let email = identifier
+
+    if (!identifier.includes("@")) {
+      // It's a phone number, find the associated email
+      const userResult = await checkUserExists(identifier)
+      if (!userResult.success || !userResult.userData) {
+        return {
+          success: false,
+          message: "Could not find a user with this phone number",
+        }
+      }
+
+      email = userResult.userData.email
+    }
 
     // Verify code
     const verification = await verifyCodeLib(email, code, type)
     if (!verification.valid) {
       console.error("Invalid verification code:", verification.message)
-      return { success: false, message: verification.message }
+      return {
+        success: false,
+        message: verification.message || "Invalid verification code",
+      }
     }
 
     console.log("Code verified successfully")
@@ -132,7 +187,10 @@ export async function verifyCode(
       const userResponse = await remonline.getClientByEmail(email)
       if (!userResponse.success || !userResponse.exists || !userResponse.client) {
         console.error("User not found in Remonline after verification")
-        return { success: false, message: "User not found" }
+        return {
+          success: false,
+          message: "User not found",
+        }
       }
 
       console.log("User found in Remonline:", userResponse.client)
@@ -143,15 +201,17 @@ export async function verifyCode(
       // Check if user exists in Supabase
       const { data: existingUser } = await supabase
         .from("users")
-        .select("id")
+        .select("id, role")
         .eq("email", email.toLowerCase())
         .maybeSingle()
 
       let userId
+      let userRole = "user"
 
       if (existingUser) {
         console.log("User exists in Supabase:", existingUser)
         userId = existingUser.id
+        userRole = existingUser.role
       } else {
         console.log("Creating new user in Supabase")
         // Create user in Supabase
@@ -160,7 +220,7 @@ export async function verifyCode(
           .insert({
             email: email.toLowerCase(),
             role: "user",
-            name: `${userResponse.client.first_name} ${userResponse.client.last_name}`.trim(),
+            name: `${userResponse.client.first_name || ""} ${userResponse.client.last_name || ""}`.trim(),
             remonline_id: userResponse.client.id,
           })
           .select("id")
@@ -168,7 +228,10 @@ export async function verifyCode(
 
         if (createError) {
           console.error("Failed to create user in Supabase:", createError)
-          return { success: false, message: "Failed to create user account" }
+          return {
+            success: false,
+            message: "Failed to create user account",
+          }
         }
 
         userId = newUser.id
@@ -176,7 +239,7 @@ export async function verifyCode(
         // Create profile
         const { error: profileError } = await supabase.from("profiles").insert({
           id: userId,
-          name: `${userResponse.client.first_name} ${userResponse.client.last_name}`.trim(),
+          name: `${userResponse.client.first_name || ""} ${userResponse.client.last_name || ""}`.trim(),
           phone: userResponse.client.phone?.[0] || null,
           email: email.toLowerCase(),
         })
@@ -201,7 +264,10 @@ export async function verifyCode(
 
       if (sessionError) {
         console.error("Failed to create session:", sessionError)
-        return { success: false, message: "Failed to create session" }
+        return {
+          success: false,
+          message: "Failed to create session",
+        }
       }
 
       console.log("Session created:", session)
@@ -218,7 +284,10 @@ export async function verifyCode(
     return { success: true }
   } catch (error) {
     console.error("Verify code error:", error)
-    return { success: false, message: "Failed to verify code" }
+    return {
+      success: false,
+      message: "Failed to verify code. Please try again later.",
+    }
   }
 }
 
@@ -233,18 +302,24 @@ export async function createUser(userData: {
   try {
     console.log("Creating user in Remonline:", userData)
 
-    // Ensure we have a valid API token
+    // First authenticate with Remonline API
     const authResult = await remonline.auth()
     if (!authResult.success) {
       console.error("Failed to authenticate with Remonline API:", authResult.message)
-      return { success: false, message: "API authentication failed" }
+      return {
+        success: false,
+        message: "Failed to connect to the service. Please try again later.",
+      }
     }
 
     // Create user in Remonline
     const response = await remonline.createClient(userData)
     if (!response.success) {
       console.error("Failed to create client in Remonline:", response.message)
-      return { success: false, message: response.message }
+      return {
+        success: false,
+        message: response.message || "Failed to create user",
+      }
     }
 
     console.log("User created in Remonline:", response.client)
@@ -279,7 +354,10 @@ export async function createUser(userData: {
 
       if (sessionError) {
         console.error("Failed to create session:", sessionError)
-        return { success: false, message: "Failed to create session" }
+        return {
+          success: false,
+          message: "Failed to create session",
+        }
       }
 
       // Set session cookie
@@ -307,7 +385,10 @@ export async function createUser(userData: {
 
     if (error) {
       console.error("Failed to create user in Supabase:", error)
-      return { success: false, message: "Failed to create user account" }
+      return {
+        success: false,
+        message: "Failed to create user account",
+      }
     }
 
     // Create profile
@@ -337,7 +418,10 @@ export async function createUser(userData: {
 
     if (sessionError) {
       console.error("Failed to create session:", sessionError)
-      return { success: false, message: "Failed to create session" }
+      return {
+        success: false,
+        message: "Failed to create session",
+      }
     }
 
     // Set session cookie
@@ -351,6 +435,9 @@ export async function createUser(userData: {
     return { success: true }
   } catch (error) {
     console.error("Create user error:", error)
-    return { success: false, message: "Failed to create user" }
+    return {
+      success: false,
+      message: "Failed to create user. Please try again later.",
+    }
   }
 }

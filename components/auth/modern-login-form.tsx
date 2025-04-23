@@ -36,35 +36,31 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
     setError("")
 
     try {
-      console.log(`Attempting to login with ${loginMethod}: ${identifier}`)
+      console.log(`Submitting login with ${loginMethod}: ${identifier}`)
 
       // Check if user exists in Remonline API
-      const userExistsResult = await checkUserExists(identifier)
-      console.log("User exists result:", userExistsResult)
+      const userExists = await checkUserExists(identifier)
 
-      if (!userExistsResult.success) {
-        setError(userExistsResult.message || t("userNotFound"))
+      if (!userExists.success) {
+        setError(userExists.message || t("userNotFound"))
         setIsLoading(false)
         return
       }
 
-      // Store the user's email for verification
-      if (userExistsResult.userData?.email) {
-        setUserEmail(userExistsResult.userData.email)
-      } else {
-        setError(t("noEmailForVerification"))
-        setIsLoading(false)
-        return
-      }
+      console.log("User exists:", userExists)
 
-      // Send verification code to email
-      const result = await sendVerificationCode(userExistsResult.userData.email, "login")
-      console.log("Send verification code result:", result)
+      // Send verification code
+      const result = await sendVerificationCode(identifier, "login")
 
       if (!result.success) {
         setError(result.message || t("somethingWentWrong"))
         setIsLoading(false)
         return
+      }
+
+      // If the verification code was sent to a different email (in case of phone login)
+      if (result.email) {
+        setUserEmail(result.email)
       }
 
       // Move to verification step
@@ -83,19 +79,14 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
     setError("")
 
     try {
-      console.log(`Verifying code for ${userEmail}: ${verificationCode}`)
-
       // Verify the code
-      const result = await verifyCode(userEmail, verificationCode, "login")
-      console.log("Verification result:", result)
+      const result = await verifyCode(identifier, verificationCode, "login")
 
       if (!result.success) {
         setError(result.message || t("invalidVerificationCode"))
         setIsLoading(false)
         return
       }
-
-      console.log("Login successful, redirecting...")
 
       // Redirect to appropriate page after successful login
       router.push(`/${locale}`)
@@ -112,10 +103,7 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
     setError("")
 
     try {
-      console.log(`Resending verification code to ${userEmail}`)
-
-      const result = await sendVerificationCode(userEmail, "login")
-      console.log("Resend verification code result:", result)
+      const result = await sendVerificationCode(identifier, "login")
 
       if (!result.success) {
         setError(result.message || t("somethingWentWrong"))
@@ -219,7 +207,7 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
 
             <div className="text-center mb-4">
               <p>{t("verificationCodeSent")}</p>
-              <p className="text-sm text-muted-foreground mt-1">{userEmail}</p>
+              <p className="text-sm text-muted-foreground mt-1">{userEmail || identifier}</p>
             </div>
 
             <form onSubmit={handleVerificationSubmit} className="space-y-4">
