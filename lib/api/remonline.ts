@@ -1,56 +1,33 @@
 // This is a wrapper for the Remonline API
 class RemonlineClient {
-  private apiKey: string
   private token: string | null = null
-  private tokenExpiry: number | null = null
   private baseUrl = "https://api.remonline.app"
 
-  constructor(apiKey: string) {
-    this.apiKey = apiKey
-  }
-
-  // Authenticate with the Remonline API
-  async auth() {
+  // Authenticate with the Remonline API using the token directly
+  async auth(token?: string) {
     try {
       console.log("Authenticating with Remonline API...")
 
-      // Check if we have a valid token already
-      if (this.token && this.tokenExpiry && Date.now() < this.tokenExpiry) {
-        console.log("Using existing token (still valid)")
-        return { success: true, token: this.token }
+      // If token is provided, use it directly
+      if (token) {
+        console.log("Using provided token")
+        this.token = token
+        return { success: true, token }
       }
 
-      // Make a POST request to get a token
-      const response = await fetch(`${this.baseUrl}/token/new`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ api_key: this.apiKey }),
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error(`Authentication failed with status ${response.status}: ${errorText}`)
+      // Otherwise, use the token from environment variable
+      const envToken = process.env.REMONLINE_API_TOKEN
+      if (!envToken) {
+        console.error("No token provided and REMONLINE_API_TOKEN environment variable is not set")
         return {
           success: false,
-          message: `Authentication failed with status ${response.status}`,
-          details: errorText,
+          message: "No token provided and REMONLINE_API_TOKEN environment variable is not set",
         }
       }
 
-      const data = await response.json()
-      console.log("Auth response:", data)
-
-      if (data.success) {
-        this.token = data.token
-        // Token expires in 24 hours, but we'll set it to expire in 23 hours to be safe
-        this.tokenExpiry = Date.now() + 23 * 60 * 60 * 1000
-        return { success: true, token: data.token }
-      } else {
-        console.error("Authentication failed:", data)
-        return { success: false, message: data.message || "Authentication failed", details: data }
-      }
+      console.log("Using token from environment variable")
+      this.token = envToken
+      return { success: true, token: envToken }
     } catch (error) {
       console.error("Remonline auth error:", error)
       return {
@@ -61,21 +38,18 @@ class RemonlineClient {
     }
   }
 
-  // Ensure we have a valid token before making requests
-  private async ensureAuth() {
-    if (!this.token || !this.tokenExpiry || Date.now() >= this.tokenExpiry) {
-      const authResult = await this.auth()
-      if (!authResult.success) {
-        throw new Error(`Failed to authenticate with Remonline API: ${authResult.message}`)
-      }
-    }
-    return this.token
-  }
-
   // Get clients with optional query parameters
   async getClients(params = {}) {
     try {
-      const token = await this.ensureAuth()
+      if (!this.token) {
+        const authResult = await this.auth()
+        if (!authResult.success) {
+          return {
+            success: false,
+            message: "Not authenticated. Please call auth() first.",
+          }
+        }
+      }
 
       // Build query string from params
       const queryParams = new URLSearchParams()
@@ -89,7 +63,7 @@ class RemonlineClient {
       const response = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${this.token}`,
         },
       })
 
@@ -216,7 +190,15 @@ class RemonlineClient {
     address?: string
   }) {
     try {
-      const token = await this.ensureAuth()
+      if (!this.token) {
+        const authResult = await this.auth()
+        if (!authResult.success) {
+          return {
+            success: false,
+            message: "Not authenticated. Please call auth() first.",
+          }
+        }
+      }
 
       console.log("Creating client with data:", clientData)
 
@@ -224,7 +206,7 @@ class RemonlineClient {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${this.token}`,
         },
         body: JSON.stringify(clientData),
       })
@@ -260,8 +242,7 @@ class RemonlineClient {
 }
 
 // Create a singleton instance
-const apiKey = process.env.REMONLINE_API_TOKEN || ""
-console.log("Initializing Remonline client with API key:", apiKey ? "Key exists" : "No key provided")
-const remonline = new RemonlineClient(apiKey)
+console.log("Initializing Remonline client")
+const remonline = new RemonlineClient()
 
 export default remonline

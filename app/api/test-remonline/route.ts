@@ -4,7 +4,7 @@ import remonline from "@/lib/api/remonline"
 export async function GET() {
   try {
     console.log("Testing Remonline API connection...")
-    console.log("API Key:", process.env.REMONLINE_API_TOKEN ? "Key exists" : "No key provided")
+    console.log("API Token:", process.env.REMONLINE_API_TOKEN ? "Token exists" : "No token provided")
 
     if (!process.env.REMONLINE_API_TOKEN) {
       return NextResponse.json(
@@ -17,7 +17,7 @@ export async function GET() {
     }
 
     // Test authentication
-    const authResult = await remonline.auth()
+    const authResult = await remonline.auth(process.env.REMONLINE_API_TOKEN)
     console.log("Auth result:", authResult)
 
     if (!authResult.success) {

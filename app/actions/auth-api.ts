@@ -30,7 +30,7 @@ export async function checkUserExists(identifier: string): Promise<{
 
     // First authenticate with Remonline API
     console.log("Authenticating with Remonline API...")
-    const authResult = await remonline.auth()
+    const authResult = await remonline.auth(process.env.REMONLINE_API_TOKEN)
     console.log("Authentication result:", authResult)
 
     if (!authResult.success) {
@@ -307,7 +307,7 @@ export async function createUser(userData: {
     console.log("Creating user in Remonline:", userData)
 
     // First authenticate with Remonline API
-    const authResult = await remonline.auth()
+    const authResult = await remonline.auth(process.env.REMONLINE_API_TOKEN)
     if (!authResult.success) {
       console.error("Failed to authenticate with Remonline API:", authResult.message)
       return {
