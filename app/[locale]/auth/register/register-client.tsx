@@ -15,11 +15,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DevEmailNotification } from "@/components/dev-email-notification"
 
-import { checkUserExists, createUser, sendVerificationCode, verifyCode } from "@/app/actions/auth-api"
+import { checkUserExists, sendVerificationCode, verifyCode, createUser } from "@/app/actions/auth-api"
 
 const initialSchema = z.object({
   email: z.string().email(),
   phone: z.string().min(9).max(15),
+  firstName: z.string().min(2),
+  lastName: z.string().min(2),
 })
 
 const verificationSchema = z.object({
@@ -27,8 +29,6 @@ const verificationSchema = z.object({
 })
 
 const registrationSchema = z.object({
-  firstName: z.string().min(2),
-  lastName: z.string().min(2),
   address: z.string().optional(),
 })
 
@@ -39,7 +39,7 @@ export default function RegisterClient() {
   const locale = params.locale as string
 
   const [step, setStep] = useState<"initial" | "verification" | "registration">("initial")
-  const [identifier, setIdentifier] = useState({ email: "", phone: "" })
+  const [identifier, setIdentifier] = useState({ email: "", phone: "", firstName: "", lastName: "" })
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -48,6 +48,8 @@ export default function RegisterClient() {
     defaultValues: {
       email: "",
       phone: "",
+      firstName: "",
+      lastName: "",
     },
   })
 
@@ -61,13 +63,11 @@ export default function RegisterClient() {
   const registrationForm = useForm({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
       address: "",
     },
   })
 
-  const handleInitialSubmit = async (data: { email: string; phone: string }) => {
+  const handleInitialSubmit = async (data: { email: string; phone: string; firstName: string; lastName: string }) => {
     setError(null)
     setIsLoading(true)
 
@@ -125,14 +125,14 @@ export default function RegisterClient() {
     }
   }
 
-  const handleRegistrationSubmit = async (data: { firstName: string; lastName: string; address?: string }) => {
+  const handleRegistrationSubmit = async (data: { address?: string }) => {
     setError(null)
     setIsLoading(true)
 
     try {
       const result = await createUser({
-        first_name: data.firstName,
-        last_name: data.lastName,
+        first_name: identifier.firstName,
+        last_name: identifier.lastName,
         email: identifier.email,
         phone: [identifier.phone],
         address: data.address || "",
@@ -192,6 +192,32 @@ export default function RegisterClient() {
 
         {step === "initial" && (
           <form onSubmit={initialForm.handleSubmit(handleInitialSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">{t("firstName")}</Label>
+              <Input
+                id="firstName"
+                type="text"
+                placeholder={t("firstNamePlaceholder")}
+                {...initialForm.register("firstName")}
+                disabled={isLoading}
+              />
+              {initialForm.formState.errors.firstName && (
+                <p className="text-sm text-destructive">{initialForm.formState.errors.firstName.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">{t("lastName")}</Label>
+              <Input
+                id="lastName"
+                type="text"
+                placeholder={t("lastNamePlaceholder")}
+                {...initialForm.register("lastName")}
+                disabled={isLoading}
+              />
+              {initialForm.formState.errors.lastName && (
+                <p className="text-sm text-destructive">{initialForm.formState.errors.lastName.message}</p>
+              )}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">{t("email")}</Label>
               <Input
@@ -271,32 +297,6 @@ export default function RegisterClient() {
 
         {step === "registration" && (
           <form onSubmit={registrationForm.handleSubmit(handleRegistrationSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">{t("firstName")}</Label>
-              <Input
-                id="firstName"
-                type="text"
-                placeholder={t("firstNamePlaceholder")}
-                {...registrationForm.register("firstName")}
-                disabled={isLoading}
-              />
-              {registrationForm.formState.errors.firstName && (
-                <p className="text-sm text-destructive">{registrationForm.formState.errors.firstName.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">{t("lastName")}</Label>
-              <Input
-                id="lastName"
-                type="text"
-                placeholder={t("lastNamePlaceholder")}
-                {...registrationForm.register("lastName")}
-                disabled={isLoading}
-              />
-              {registrationForm.formState.errors.lastName && (
-                <p className="text-sm text-destructive">{registrationForm.formState.errors.lastName.message}</p>
-              )}
-            </div>
             <div className="space-y-2">
               <Label htmlFor="address">{t("address")}</Label>
               <Input
