@@ -1,5 +1,9 @@
 import nodemailer from "nodemailer"
-import { getVerificationEmailTemplate, getPasswordResetEmailTemplate } from "./templates"
+import {
+  getVerificationEmailTemplate,
+  getPasswordResetEmailTemplate,
+  getVerificationCodeEmailTemplate,
+} from "./templates"
 
 // Configure email transporter
 function createTransporter() {
@@ -63,6 +67,20 @@ export async function sendPasswordResetEmail(email: string, token: string, local
     en: "Reset your password",
     uk: "Скидання вашого пароля",
     cs: "Obnovení hesla",
+  }
+
+  const subject = translations[locale as keyof typeof translations] || translations.en
+
+  await sendEmail(email, subject, emailTemplate)
+}
+
+export async function sendVerificationCode(email: string, code: string, locale: string, isLogin = true) {
+  const emailTemplate = getVerificationCodeEmailTemplate(code, locale, isLogin)
+
+  const translations = {
+    en: isLogin ? "Your login verification code" : "Your registration verification code",
+    uk: isLogin ? "Ваш код підтвердження входу" : "Ваш код підтвердження реєстрації",
+    cs: isLogin ? "Váš ověřovací kód pro přihlášení" : "Váš ověřovací kód pro registraci",
   }
 
   const subject = translations[locale as keyof typeof translations] || translations.en

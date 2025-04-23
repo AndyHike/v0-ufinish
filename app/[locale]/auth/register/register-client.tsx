@@ -9,24 +9,27 @@ import { useTranslations, useLocale } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Smartphone, CheckCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { saveUserName } from "@/lib/auth/actions"
+import { initiateRegistration, verifyRegistrationCode } from "@/app/actions/auth-api"
 
 export default function RegisterClient() {
   const t = useTranslations("Auth")
   const locale = useLocale()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const [name, setName] = useState("")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
-  const [password, setPassword] = useState("")
+  const [address, setAddress] = useState("")
+  const [verificationCode, setVerificationCode] = useState("")
   const [error, setError] = useState("")
-  const [isSuccess, setIsSuccess] = useState(false)
+  const [step, setStep] = useState<"form" | "verification" | "success">("form")
+  const [maskedEmail, setMaskedEmail] = useState("")
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleInitiateRegistration = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
@@ -34,38 +37,66 @@ export default function RegisterClient() {
     try {
       // Create form data
       const formData = new FormData()
-      formData.append("name", name)
+      formData.append("firstName", firstName)
+      formData.append("lastName", lastName)
       formData.append("email", email)
       formData.append("phone", phone)
-      formData.append("password", password)
-      formData.append("locale", locale)
+      formData.append("address", address)
 
       // Send registration request
-      const response = await fetch(`/api/auth/register`, {
-        method: "POST",
-        body: formData,
-      })
-
-      const result = await response.json()
+      const result = await initiateRegistration(formData)
 
       if (result.success) {
-        // Save the user's name in both tables
-        await saveUserName(result.userId, formData.get("name") as string)
-
-        setIsSuccess(true)
-        setIsLoading(false)
+        setMaskedEmail(result.email || "")
+        setStep("verification")
       } else {
-        setError(result.message || t("registrationFailed"))
-        setIsLoading(false)
+        if (result.message === "userAlreadyExists") {
+          // Redirect to login page if user already exists
+          router.push(`/${locale}/auth/login`)
+        } else {
+          setError(t(result.message || "registrationFailed"))
+        }
       }
     } catch (error) {
       console.error("Registration error:", error)
       setError(t("somethingWentWrong"))
+    } finally {
       setIsLoading(false)
     }
   }
 
-  if (isSuccess) {
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const result = await verifyRegistrationCode(verificationCode)
+
+      if (result.success) {
+        setStep("success")
+        // Redirect to profile page after a short delay
+        setTimeout(() => {
+          router.push(`/${locale}/profile`)
+        }, 3000)
+      } else {
+        setError(t(result.message || "verificationFailed"))
+      }
+    } catch (error) {
+      console.error("Verification error:", error)
+      setError(t("somethingWentWrong"))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleBackToForm = () => {
+    setStep("form")
+    setVerificationCode("")
+    setError("")
+  }
+
+  if (step === "success") {
     return (
       <Card>
         <CardHeader>
@@ -81,13 +112,8 @@ export default function RegisterClient() {
             <AlertTitle>{t("registrationSuccess")}</AlertTitle>
             <AlertDescription>{t("accountCreatedSuccessfully")}</AlertDescription>
           </Alert>
-          <p className="text-center text-muted-foreground mb-4">{t("youCanNowLogin")}</p>
+          <p className="text-center text-muted-foreground mb-4">{t("redirectingToProfile")}</p>
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button asChild>
-            <Link href={`/${locale}/auth/signin`}>{t("signIn")}</Link>
-          </Button>
-        </CardFooter>
       </Card>
     )
   }
@@ -103,60 +129,98 @@ export default function RegisterClient() {
         </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">{t("name")}</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("namePlaceholder")}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">{t("email")}</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("emailPlaceholder")}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="phone">{t("phone")}</Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder={t("phonePlaceholder")}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">{t("password")}</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t("passwordPlaceholder")}
-              required
-              minLength={8}
-            />
-            <p className="text-xs text-muted-foreground">{t("passwordRequirements")}</p>
-          </div>
-          {error && <div className="text-sm text-destructive">{error}</div>}
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? t("processing") : t("register")}
-          </Button>
-        </form>
+        {step === "form" ? (
+          <form onSubmit={handleInitiateRegistration} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">{t("firstName")}</Label>
+                <Input
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder={t("firstNamePlaceholder")}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">{t("lastName")}</Label>
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder={t("lastNamePlaceholder")}
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">{t("email")}</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t("emailPlaceholder")}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">{t("phone")}</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder={t("phonePlaceholder")}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">{t("address")}</Label>
+              <Input
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder={t("addressPlaceholder")}
+              />
+            </div>
+            {error && <div className="text-sm text-destructive">{error}</div>}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? t("processing") : t("register")}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyCode} className="space-y-4">
+            <div className="space-y-2 text-center mb-4">
+              <p className="text-muted-foreground">
+                {t("verificationCodeSent")} {maskedEmail}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="verification-code">{t("verificationCode")}</Label>
+              <Input
+                id="verification-code"
+                type="text"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                placeholder={t("verificationCodePlaceholder")}
+                required
+                maxLength={6}
+                className="text-center text-xl tracking-widest"
+              />
+            </div>
+            {error && <div className="text-sm text-destructive">{error}</div>}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? t("processing") : t("verify")}
+            </Button>
+            <Button type="button" variant="ghost" className="w-full" onClick={handleBackToForm} disabled={isLoading}>
+              {t("backToRegistration")}
+            </Button>
+          </form>
+        )}
         <div className="mt-4 text-center text-sm">
           <span className="text-muted-foreground">{t("alreadyHaveAccount")}</span>{" "}
-          <Link href={`/${locale}/auth/signin`} className="text-primary hover:underline">
+          <Link href={`/${locale}/auth/login`} className="text-primary hover:underline">
             {t("signIn")}
           </Link>
         </div>
