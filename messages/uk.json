@@ -204,6 +204,8 @@
     "registrationFailed": "Не вдалося зареєструватися. Спробуйте ще раз.",
     "loginWithEmail": "Увійти за допомогою електронної пошти",
     "loginWithPhone": "Увійти за допомогою телефону",
+    "emailLogin": "Пошта",
+    "phoneLogin": "Телефон",
     "enterVerificationCode": "Введіть код підтвердження",
     "verificationCodeSent": "Код підтвердження надіслано на вашу електронну пошту",
     "verifyCode": "Перевірити код",

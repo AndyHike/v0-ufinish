@@ -218,7 +218,9 @@
     "firstNamePlaceholder": "Enter your first name",
     "lastNamePlaceholder": "Enter your last name",
     "address": "Address",
-    "addressPlaceholder": "Enter your address"
+    "addressPlaceholder": "Enter your address",
+    "emailLogin": "Email",
+    "phoneLogin": "Phone"
   },
   "Admin": {
     "adminPanel": "Admin Panel",

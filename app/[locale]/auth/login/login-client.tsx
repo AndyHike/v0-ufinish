@@ -161,10 +161,10 @@ export default function LoginClient() {
           <Tabs defaultValue="email" onValueChange={(value) => setLoginMethod(value as "email" | "phone")}>
             <TabsList className="flex w-full flex-col space-y-2 sm:space-y-0 sm:flex-row sm:grid sm:grid-cols-2 mb-4">
               <TabsTrigger value="email" className="h-auto py-2 px-4">
-                {t("loginWithEmail")}
+                {t("emailLogin")}
               </TabsTrigger>
               <TabsTrigger value="phone" className="h-auto py-2 px-4">
-                {t("loginWithPhone")}
+                {t("phoneLogin")}
               </TabsTrigger>
             </TabsList>
             <TabsContent value="email">

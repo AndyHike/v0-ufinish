@@ -218,7 +218,9 @@
     "firstNamePlaceholder": "Zadejte své jméno",
     "lastNamePlaceholder": "Zadejte své příjmení",
     "address": "Adresa",
-    "addressPlaceholder": "Zadejte svou adresu"
+    "addressPlaceholder": "Zadejte svou adresu",
+    "emailLogin": "E-mail",
+    "phoneLogin": "Telefon"
   },
   "Admin": {
     "adminPanel": "Administrátorský panel",
