@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Loader2, CheckCircle, XCircle } from "lucide-react"
+import { Loader2, CheckCircle, XCircle, ExternalLink } from "lucide-react"
+import Link from "next/link"
 
 export default function TestRemonlinePage() {
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
@@ -52,6 +53,23 @@ export default function TestRemonlinePage() {
   return (
     <div className="container py-10">
       <h1 className="text-3xl font-bold mb-6">Remonline API Test</h1>
+
+      <Alert className="mb-4">
+        <AlertTitle>API Documentation</AlertTitle>
+        <AlertDescription>
+          <p>Make sure your Remonline API token is correctly set in the environment variables.</p>
+          <p className="mt-2">
+            <Link
+              href="https://remonline.app/api/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center text-primary hover:underline"
+            >
+              View Remonline API Documentation <ExternalLink className="ml-1 h-4 w-4" />
+            </Link>
+          </p>
+        </AlertDescription>
+      </Alert>
 
       <Tabs defaultValue="connection">
         <TabsList>

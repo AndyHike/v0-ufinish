@@ -31,7 +31,7 @@ export async function GET() {
       )
     }
 
-    // Test getting clients
+    // Test getting clients with a smaller limit to avoid large responses
     const clientsResult = await remonline.getClients({ limit: 5 })
 
     return NextResponse.json({

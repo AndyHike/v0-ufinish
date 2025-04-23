@@ -12,6 +12,25 @@ class RemonlineClient {
       if (token) {
         console.log("Using provided token")
         this.token = token
+
+        // Validate the token by making a simple API call
+        const testResponse = await fetch(`${this.baseUrl}/clients?limit=1`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.token}`,
+          },
+        })
+
+        if (!testResponse.ok) {
+          const errorText = await testResponse.text()
+          console.error(`Token validation failed with status ${testResponse.status}: ${errorText}`)
+          return {
+            success: false,
+            message: `Invalid token: ${testResponse.status}`,
+            details: errorText,
+          }
+        }
+
         return { success: true, token }
       }
 
@@ -27,6 +46,25 @@ class RemonlineClient {
 
       console.log("Using token from environment variable")
       this.token = envToken
+
+      // Validate the token
+      const testResponse = await fetch(`${this.baseUrl}/clients?limit=1`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.token}`,
+        },
+      })
+
+      if (!testResponse.ok) {
+        const errorText = await testResponse.text()
+        console.error(`Token validation failed with status ${testResponse.status}: ${errorText}`)
+        return {
+          success: false,
+          message: `Invalid token: ${testResponse.status}`,
+          details: errorText,
+        }
+      }
+
       return { success: true, token: envToken }
     } catch (error) {
       console.error("Remonline auth error:", error)
@@ -57,10 +95,11 @@ class RemonlineClient {
         queryParams.append(key, String(value))
       })
 
-      const url = `${this.baseUrl}/clients/?${queryParams.toString()}`
+      const url = `${this.baseUrl}/clients?${queryParams.toString()}`
       console.log("Fetching clients from:", url)
 
       const response = await fetch(url, {
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${this.token}`,
@@ -80,12 +119,7 @@ class RemonlineClient {
       const data = await response.json()
       console.log("Clients response:", data)
 
-      if (data.success) {
-        return { success: true, data }
-      } else {
-        console.error("Failed to fetch clients:", data)
-        return { success: false, message: data.message || "Failed to fetch clients", details: data }
-      }
+      return { success: true, data }
     } catch (error) {
       console.error("Remonline getClients error:", error)
       return {
