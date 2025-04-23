@@ -159,11 +159,11 @@ export default function LoginClient() {
 
         {step === "credentials" ? (
           <Tabs defaultValue="email" onValueChange={(value) => setLoginMethod(value as "email" | "phone")}>
-            <TabsList className="grid w-full grid-cols-2 mb-4 w-full">
-              <TabsTrigger value="email" className="whitespace-nowrap">
+            <TabsList className="flex w-full flex-col space-y-2 sm:space-y-0 sm:flex-row sm:grid sm:grid-cols-2 mb-4">
+              <TabsTrigger value="email" className="h-auto py-2 px-4">
                 {t("loginWithEmail")}
               </TabsTrigger>
-              <TabsTrigger value="phone" className="whitespace-nowrap">
+              <TabsTrigger value="phone" className="h-auto py-2 px-4">
                 {t("loginWithPhone")}
               </TabsTrigger>
             </TabsList>
@@ -182,7 +182,7 @@ export default function LoginClient() {
                     <p className="text-sm text-destructive">{emailForm.formState.errors.email.message}</p>
                   )}
                 </div>
-                <Button type="submit" className="w-full min-w-0" disabled={isLoading}>
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? t("processing") : t("signIn")}
                 </Button>
               </form>
@@ -202,7 +202,7 @@ export default function LoginClient() {
                     <p className="text-sm text-destructive">{phoneForm.formState.errors.phone.message}</p>
                   )}
                 </div>
-                <Button type="submit" className="w-full min-w-0" disabled={isLoading}>
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? t("processing") : t("signIn")}
                 </Button>
               </form>
@@ -228,13 +228,13 @@ export default function LoginClient() {
                   <p className="text-sm text-destructive">{verificationForm.formState.errors.code.message}</p>
                 )}
               </div>
-              <Button type="submit" className="w-full min-w-0" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? t("processing") : t("verifyCode")}
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                className="w-full min-w-0"
+                className="w-full"
                 onClick={handleResendCode}
                 disabled={isLoading}
               >
@@ -243,7 +243,7 @@ export default function LoginClient() {
               <Button
                 type="button"
                 variant="link"
-                className="w-full min-w-0"
+                className="w-full"
                 onClick={() => setStep("credentials")}
                 disabled={isLoading}
               >
