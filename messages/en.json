@@ -446,7 +446,20 @@
     "multilingualImport": "Multilingual Import",
     "multilingualImportDescription": "Import services with translations in different languages",
     "requiredTranslation": "Required translation",
-    "optionalTranslation": "Optional translation"
+    "optionalTranslation": "Optional translation",
+    "syncWithRemonline": "Sync with RemOnline",
+    "syncWithRemonlineDescription": "Synchronize users between your database and RemOnline",
+    "manualSync": "Manual Synchronization",
+    "manualSyncDescription": "Manually trigger synchronization of users without RemOnline ID",
+    "syncNow": "Sync Now",
+    "syncing": "Syncing...",
+    "syncFailed": "Synchronization Failed",
+    "syncCompleted": "Synchronization Completed",
+    "syncProcessed": "Processed {count} users",
+    "syncResults": "Synchronization Results",
+    "synced": "Synced",
+    "failed": "Failed",
+    "remonlineId": "RemOnline ID"
   },
   "About": {
     "about": "About Us",

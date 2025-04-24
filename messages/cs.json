@@ -360,7 +360,20 @@
     "multilingualImport": "Vícejazyčný import",
     "multilingualImportDescription": "Importujte služby s překlady v různých jazycích",
     "requiredTranslation": "Povinný překlad",
-    "optionalTranslation": "Volitelný překlad"
+    "optionalTranslation": "Volitelný překlad",
+    "syncWithRemonline": "Synchronizace s RemOnline",
+    "syncWithRemonlineDescription": "Synchronizujte uživatele mezi vaší databází a RemOnline",
+    "manualSync": "Ruční synchronizace",
+    "manualSyncDescription": "Ručně spusťte synchronizaci uživatelů bez ID RemOnline",
+    "syncNow": "Synchronizovat nyní",
+    "syncing": "Synchronizace...",
+    "syncFailed": "Synchronizace selhala",
+    "syncCompleted": "Synchronizace dokončena",
+    "syncProcessed": "Zpracováno {count} uživatelů",
+    "syncResults": "Výsledky synchronizace",
+    "synced": "Synchronizováno",
+    "failed": "Selhalo",
+    "remonlineId": "ID RemOnline"
   },
   "About": {
     "about": "O nás",

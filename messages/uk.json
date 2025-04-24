@@ -454,7 +454,20 @@
     "missingToken": "Відсутній токен",
     "passwordResetError": "Помилка скидання пароля",
     "missingTokenDescription": "Відсутній токен підтвердження. Спробуйте ще раз.",
-    "passwordResetErrorDescription": "Не вдалося скинути пароль. Посилання на скидання пароля могло закінчитися або є недійсним."
+    "passwordResetErrorDescription": "Не вдалося скинути пароль. Посилання на скидання пароля могло закінчитися або є недійсним.",
+    "syncWithRemonline": "Синхронізація з RemOnline",
+    "syncWithRemonlineDescription": "Синхронізуйте користувачів між вашою базою даних та RemOnline",
+    "manualSync": "Ручна синхронізація",
+    "manualSyncDescription": "Вручну запустіть синхронізацію користувачів без ID RemOnline",
+    "syncNow": "Синхронізувати зараз",
+    "syncing": "Синхронізація...",
+    "syncFailed": "Помилка синхронізації",
+    "syncCompleted": "Синхронізація завершена",
+    "syncProcessed": "Оброблено {count} користувачів",
+    "syncResults": "Результати синхронізації",
+    "synced": "Синхронізовано",
+    "failed": "Помилка",
+    "remonlineId": "ID RemOnline"
   },
   "About": {
     "about": "Про нас",

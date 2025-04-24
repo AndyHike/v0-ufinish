@@ -8,67 +8,92 @@ import {
   verifyCode as verifyCodeLib,
 } from "@/lib/auth/verification-code"
 import { sendVerificationCode as sendVerificationCodeEmail } from "@/lib/email/send-email"
-import remonline from "@/lib/api/remonline"
+import { syncClientToRemonline, updateRemonlineIdForUser } from "@/lib/services/remonline-sync"
+import { hash } from "@/lib/auth/utils"
 
-// Check if user exists in Remonline API and return user data
+// Check if user exists in our database
 export async function checkUserExists(identifier: string): Promise<{
   success: boolean
   message?: string
   userData?: {
-    id: number
+    id: string
     email: string
-    first_name: string
-    last_name: string
-    phone?: string[]
+    name: string
+    phone?: string
   }
 }> {
   try {
     console.log(`Checking if user exists with identifier: ${identifier}`)
 
+    const supabase = createClient()
+
     // Determine if identifier is email or phone
     const isEmail = identifier.includes("@")
 
-    // First authenticate with Remonline API
-    console.log("Authenticating with Remonline API...")
-    const authResult = await remonline.auth(process.env.REMONLINE_API_TOKEN)
-    console.log("Authentication result:", authResult)
+    let userData
 
-    if (!authResult.success) {
-      console.error("Failed to authenticate with Remonline API:", authResult.message)
-      return {
-        success: false,
-        message: "Failed to connect to the service. Please try again later.",
-      }
-    }
-
-    // Search for the client
-    console.log(`Searching for client by ${isEmail ? "email" : "phone"}...`)
-    let response
     if (isEmail) {
-      response = await remonline.getClientByEmail(identifier)
-    } else {
-      response = await remonline.getClientByPhone(identifier)
-    }
+      // Search by email
+      const { data, error } = await supabase
+        .from("users")
+        .select(`
+          id, 
+          email, 
+          name,
+          profiles!inner(phone)
+        `)
+        .eq("email", identifier.toLowerCase())
+        .maybeSingle()
 
-    console.log("Remonline API response:", response)
-
-    if (response.success && response.exists && response.client) {
-      // Check if the client has an email (required for verification)
-      if (!response.client.email) {
+      if (error) {
+        console.error("Error checking user by email:", error)
         return {
           success: false,
-          message: "User found but has no email address for verification",
+          message: "Error checking user. Please try again later.",
         }
       }
 
+      userData = data
+    } else {
+      // Search by phone
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          phone,
+          email,
+          name,
+          users!inner(id, email, name)
+        `)
+        .eq("phone", identifier)
+        .maybeSingle()
+
+      if (error) {
+        console.error("Error checking user by phone:", error)
+        return {
+          success: false,
+          message: "Error checking user. Please try again later.",
+        }
+      }
+
+      if (data) {
+        userData = {
+          id: data.users.id,
+          email: data.users.email,
+          name: data.users.name,
+          phone: data.phone,
+        }
+      }
+    }
+
+    if (userData) {
       return {
         success: true,
         userData: {
-          id: response.client.id,
-          email: response.client.email,
-          first_name: response.client.first_name || "",
-          last_name: response.client.last_name || "",
-          phone: response.client.phone,
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          phone: isEmail ? userData.profiles?.phone : userData.phone,
         },
       }
     }
@@ -159,6 +184,7 @@ export async function verifyCode(
 
     // If identifier is a phone number, we need to find the associated email
     let email = identifier
+    let userId = null
 
     if (!identifier.includes("@")) {
       // It's a phone number, find the associated email
@@ -171,6 +197,13 @@ export async function verifyCode(
       }
 
       email = userResult.userData.email
+      userId = userResult.userData.id
+    } else {
+      // It's an email, get the user ID
+      const userResult = await checkUserExists(identifier)
+      if (userResult.success && userResult.userData) {
+        userId = userResult.userData.id
+      }
     }
 
     // Verify code
@@ -187,71 +220,24 @@ export async function verifyCode(
 
     if (type === "login") {
       // For login, create session
-      // Get user from Remonline
-      const userResponse = await remonline.getClientByEmail(email)
-      if (!userResponse.success || !userResponse.exists || !userResponse.client) {
-        console.error("User not found in Remonline after verification")
-        return {
-          success: false,
-          message: "User not found",
-        }
-      }
-
-      console.log("User found in Remonline:", userResponse.client)
-
-      // Create or get user in Supabase
       const supabase = createClient()
 
-      // Check if user exists in Supabase
-      const { data: existingUser } = await supabase
-        .from("users")
-        .select("id, role")
-        .eq("email", email.toLowerCase())
-        .maybeSingle()
-
-      let userId
-      let userRole = "user"
-
-      if (existingUser) {
-        console.log("User exists in Supabase:", existingUser)
-        userId = existingUser.id
-        userRole = existingUser.role
-      } else {
-        console.log("Creating new user in Supabase")
-        // Create user in Supabase
-        const { data: newUser, error: createError } = await supabase
+      // If we don't have a userId yet, get it from the database
+      if (!userId) {
+        const { data: userData } = await supabase
           .from("users")
-          .insert({
-            email: email.toLowerCase(),
-            role: "user",
-            name: `${userResponse.client.first_name || ""} ${userResponse.client.last_name || ""}`.trim(),
-            remonline_id: userResponse.client.id,
-          })
           .select("id")
-          .single()
+          .eq("email", email.toLowerCase())
+          .maybeSingle()
 
-        if (createError) {
-          console.error("Failed to create user in Supabase:", createError)
+        if (!userData) {
           return {
             success: false,
-            message: "Failed to create user account",
+            message: "User not found",
           }
         }
 
-        userId = newUser.id
-
-        // Create profile
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: userId,
-          name: `${userResponse.client.first_name || ""} ${userResponse.client.last_name || ""}`.trim(),
-          phone: userResponse.client.phone?.[0] || null,
-          email: email.toLowerCase(),
-        })
-
-        if (profileError) {
-          console.error("Failed to create profile in Supabase:", profileError)
-          // Continue anyway, not critical
-        }
+        userId = userData.id
       }
 
       // Create session
@@ -295,7 +281,7 @@ export async function verifyCode(
   }
 }
 
-// Create user in Remonline API
+// Create user in our database and sync with RemOnline in the background
 export async function createUser(userData: {
   first_name: string
   last_name: string
@@ -304,31 +290,8 @@ export async function createUser(userData: {
   address?: string
 }): Promise<{ success: boolean; message?: string }> {
   try {
-    console.log("Creating user in Remonline:", userData)
+    console.log("Creating user in database:", userData)
 
-    // First authenticate with Remonline API
-    const authResult = await remonline.auth(process.env.REMONLINE_API_TOKEN)
-    if (!authResult.success) {
-      console.error("Failed to authenticate with Remonline API:", authResult.message)
-      return {
-        success: false,
-        message: "Failed to connect to the service. Please try again later.",
-      }
-    }
-
-    // Create user in Remonline
-    const response = await remonline.createClient(userData)
-    if (!response.success) {
-      console.error("Failed to create client in Remonline:", response.message)
-      return {
-        success: false,
-        message: response.message || "Failed to create user",
-      }
-    }
-
-    console.log("User created in Remonline:", response.client)
-
-    // Create user in Supabase
     const supabase = createClient()
 
     // Check if user already exists
@@ -339,10 +302,7 @@ export async function createUser(userData: {
       .maybeSingle()
 
     if (existingUser) {
-      console.log("User already exists in Supabase:", existingUser)
-
-      // Update the user with Remonline ID
-      await supabase.from("users").update({ remonline_id: response.client.id }).eq("id", existingUser.id)
+      console.log("User already exists in database:", existingUser)
 
       // Create session
       const { data: session, error: sessionError } = await supabase
@@ -372,8 +332,23 @@ export async function createUser(userData: {
         path: "/",
       })
 
+      // Sync with RemOnline in the background
+      syncClientToRemonline(userData)
+        .then((result) => {
+          if (result.success && result.remonlineId) {
+            updateRemonlineIdForUser(existingUser.id, result.remonlineId)
+          }
+        })
+        .catch((error) => {
+          console.error("Error syncing with RemOnline:", error)
+        })
+
       return { success: true }
     }
+
+    // Generate a random password (user will use passwordless login anyway)
+    const randomPassword = Math.random().toString(36).slice(-10)
+    const passwordHash = await hash(randomPassword)
 
     // Create new user
     const { data: newUser, error } = await supabase
@@ -382,13 +357,14 @@ export async function createUser(userData: {
         email: userData.email.toLowerCase(),
         role: "user",
         name: `${userData.first_name} ${userData.last_name}`.trim(),
-        remonline_id: response.client.id,
+        password_hash: passwordHash,
+        email_verified: true, // Since we verified with code
       })
       .select("id")
       .single()
 
     if (error) {
-      console.error("Failed to create user in Supabase:", error)
+      console.error("Failed to create user in database:", error)
       return {
         success: false,
         message: "Failed to create user account",
@@ -401,10 +377,11 @@ export async function createUser(userData: {
       name: `${userData.first_name} ${userData.last_name}`.trim(),
       phone: userData.phone[0] || null,
       email: userData.email.toLowerCase(),
+      address: userData.address || null,
     })
 
     if (profileError) {
-      console.error("Failed to create profile in Supabase:", profileError)
+      console.error("Failed to create profile in database:", profileError)
       // Continue anyway, not critical
     }
 
@@ -435,6 +412,17 @@ export async function createUser(userData: {
       maxAge: 30 * 24 * 60 * 60, // 30 days
       path: "/",
     })
+
+    // Sync with RemOnline in the background
+    syncClientToRemonline(userData)
+      .then((result) => {
+        if (result.success && result.remonlineId) {
+          updateRemonlineIdForUser(newUser.id, result.remonlineId)
+        }
+      })
+      .catch((error) => {
+        console.error("Error syncing with RemOnline:", error)
+      })
 
     return { success: true }
   } catch (error) {
