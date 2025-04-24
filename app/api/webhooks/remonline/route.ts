@@ -88,6 +88,12 @@ export async function POST(request: Request) {
         )
       }
 
+      // Check if clientDetails.client exists before parsing
+      if (!clientDetails.client) {
+        console.error("Client details are undefined, skipping processing")
+        return NextResponse.json({ success: true, message: "Client details are undefined, skipping processing" })
+      }
+
       // Validate client data against the schema
       const clientData = remonlineClientSchema.safeParse(clientDetails.client)
 
