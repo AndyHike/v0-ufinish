@@ -14,7 +14,7 @@ class RemonlineClient {
         this.token = token
 
         // Validate the token by making a simple API call
-        const testResponse = await fetch(`${this.baseUrl}/clients?token=${this.token}&limit=1`, {
+        const testResponse = await fetch(`${this.baseUrl}/clients/?token=${this.token}`, {
           method: "GET",
           headers: {
             accept: "application/json",
@@ -48,7 +48,7 @@ class RemonlineClient {
       this.token = envToken
 
       // Validate the token
-      const testResponse = await fetch(`${this.baseUrl}/clients?token=${this.token}&limit=1`, {
+      const testResponse = await fetch(`${this.baseUrl}/clients/?token=${this.token}`, {
         method: "GET",
         headers: {
           accept: "application/json",
@@ -95,7 +95,7 @@ class RemonlineClient {
         queryParams.append(key, String(value))
       })
 
-      let url = `${this.baseUrl}/clients?token=${this.token}`
+      let url = `${this.baseUrl}/clients/?token=${this.token}`
       if (queryParams.toString()) {
         url += `&${queryParams.toString()}`
       }
@@ -239,7 +239,7 @@ class RemonlineClient {
 
       console.log("Creating client with data:", clientData)
 
-      const response = await fetch(`${this.baseUrl}/clients?token=${this.token}`, {
+      const response = await fetch(`${this.baseUrl}/clients/?token=${this.token}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
