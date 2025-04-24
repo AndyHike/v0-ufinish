@@ -82,7 +82,7 @@ export function CustomCountrySelect({ value, onChange, labels, disabled }: Count
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0" style={{ width: Math.max(triggerWidth, 250) }}>
+      <PopoverContent className="p-0 absolute overflow-hidden" style={{ width: Math.max(triggerWidth, 250) }}>
         <Command>
           <CommandInput
             placeholder="Search country..."
