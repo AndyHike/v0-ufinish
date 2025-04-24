@@ -109,12 +109,19 @@ export async function POST(request: NextRequest) {
 
         // Start with users table
         if (data.email) {
-          const { error: userError } = await supabase.from("users").insert({
-            id: userId,
-            email: data.email.toLowerCase(),
-            role: "customer",
-            remonline_id: data.id,
-          })
+          // Змінюємо функцію для створення нового користувача, щоб додавати email в обидві таблиці
+          // Create new user
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .insert([
+              {
+                email: data.email.toLowerCase(),
+                role: "customer",
+                remonline_id: data.id,
+              },
+            ])
+            .select("id")
+            .single()
 
           if (userError) {
             console.error("Error creating user:", userError)
@@ -126,6 +133,38 @@ export async function POST(request: NextRequest) {
               { status: 500 },
             )
           }
+
+          // Then create profile
+          const { error: profileError } = await supabase.from("profiles").insert({
+            id: userData.id,
+            name: data.name || "Customer",
+            phone: formattedPhone,
+            email: data.email.toLowerCase(), // Додаємо email в profiles
+            address: data.address,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+
+          if (profileError) {
+            console.error("Error creating profile:", profileError)
+
+            // Rollback user creation if profile creation fails
+            await supabase.from("users").delete().eq("id", userData.id)
+
+            return NextResponse.json(
+              {
+                error: "Failed to create user profile",
+                details: profileError.message,
+              },
+              { status: 500 },
+            )
+          }
+
+          return NextResponse.json({
+            success: true,
+            message: "User created successfully",
+            userId: userData.id,
+          })
         } else {
           // If no email, create a dummy email based on phone
           const dummyEmail = `${formattedPhone?.replace(/\D/g, "")}@placeholder.com`

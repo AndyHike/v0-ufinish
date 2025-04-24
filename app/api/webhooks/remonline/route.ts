@@ -161,30 +161,7 @@ async function fetchClientDetailsFromRemonline(clientId: number) {
   }
 }
 
-async function handleClientEvent(clientData: any) {
-  if (!clientData || !clientData.id) {
-    console.error("Invalid client data received from webhook")
-    return
-  }
-
-  const supabase = createClient()
-
-  // Check if the client already exists in our database
-  const { data: existingUser } = await supabase
-    .from("users")
-    .select("id")
-    .eq("remonline_id", clientData.id)
-    .maybeSingle()
-
-  if (existingUser) {
-    // Update existing user
-    await updateExistingUser(supabase, existingUser.id, clientData)
-  } else {
-    // Create new user
-    await createNewUser(supabase, clientData)
-  }
-}
-
+// Змінюємо функцію createNewUser, щоб додавати email в обидві таблиці
 async function createNewUser(supabase: any, clientData: any) {
   try {
     // Extract client data
@@ -233,31 +210,16 @@ async function createNewUser(supabase: any, clientData: any) {
 
     console.log("Supabase insert user result:", newUser)
 
-    // Check if the profiles table has the address column
-    const { data: profileColumns, error: columnsError } = await supabase.from("profiles").select("*").limit(1)
-
-    if (columnsError) {
-      console.error("Error checking profile columns:", columnsError)
+    // Create profile with email and address
+    const profileData = {
+      id: newUser.id,
+      name: `${firstName} ${lastName}`.trim(),
+      phone,
+      email, // Обов'язково додаємо email в profiles
+      address, // Додаємо address в profiles
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     }
-
-    // Determine if we should include address in the profile
-    const hasAddressColumn = profileColumns && Object.keys(profileColumns[0] || {}).includes("address")
-
-    // Create profile with or without address based on schema
-    const profileData = hasAddressColumn
-      ? {
-          id: newUser.id,
-          name: `${firstName} ${lastName}`.trim(),
-          phone,
-          email,
-          address,
-        }
-      : {
-          id: newUser.id,
-          name: `${firstName} ${lastName}`.trim(),
-          phone,
-          email,
-        }
 
     const { error: profileError } = await supabase.from("profiles").insert([profileData])
 
@@ -265,6 +227,10 @@ async function createNewUser(supabase: any, clientData: any) {
 
     if (profileError) {
       console.error("Error creating profile:", profileError)
+      // Якщо не вдалося створити профіль, видаляємо користувача для збереження цілісності даних
+      await supabase.from("users").delete().eq("id", newUser.id)
+      console.error("Deleted user due to profile creation failure")
+      return
     }
 
     console.log(`User created from RemOnline webhook: ${newUser.id}`)
@@ -273,6 +239,7 @@ async function createNewUser(supabase: any, clientData: any) {
   }
 }
 
+// Змінюємо функцію updateExistingUser, щоб оновлювати email в обох таблицях
 async function updateExistingUser(supabase: any, userId: string, clientData: any) {
   try {
     // Extract client data
@@ -280,7 +247,7 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
     const firstName = clientData.first_name || ""
     const lastName = clientData.last_name || ""
     const phone = clientData.phone && clientData.phone.length > 0 ? clientData.phone[0] : null
-    const address = clientData.address || ""
+    const address = clientData.address || null
 
     if (!email) {
       console.error("Client from RemOnline has no email, cannot update user")
@@ -291,7 +258,7 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
     const { error: userError } = await supabase
       .from("users")
       .update({
-        email,
+        email, // Оновлюємо email в users
         name: `${firstName} ${lastName}`.trim(),
       })
       .eq("id", userId)
@@ -312,8 +279,9 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
       .update({
         name: `${firstName} ${lastName}`.trim(),
         phone,
-        email,
-        address,
+        email, // Обов'язково оновлюємо email в profiles
+        address, // Оновлюємо address в profiles
+        updated_at: new Date().toISOString(),
       })
       .eq("id", userId)
 
@@ -331,5 +299,38 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
     console.log(`User updated from RemOnline webhook: ${userId}`)
   } catch (error) {
     console.error("Error in updateExistingUser:", error)
+  }
+}
+
+async function handleClientEvent(clientData: any) {
+  const supabase = createClient()
+
+  if (!clientData.email) {
+    console.error("Client from RemOnline has no email, cannot create or update user")
+    return
+  }
+
+  try {
+    // Check if user exists
+    const { data: existingUser, error: selectError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", clientData.email.toLowerCase())
+      .single()
+
+    if (selectError && selectError.code !== "PGRST116") {
+      console.error("Error checking existing user:", selectError)
+      return
+    }
+
+    if (existingUser) {
+      // Update existing user
+      await updateExistingUser(supabase, existingUser.id, clientData)
+    } else {
+      // Create new user
+      await createNewUser(supabase, clientData)
+    }
+  } catch (error) {
+    console.error("Error in handleClientEvent:", error)
   }
 }

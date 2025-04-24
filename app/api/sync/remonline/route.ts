@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/utils/supabase/server"
 import { z } from "zod"
-import { v4 as uuidv4 } from "uuid"
 import { formatPhone } from "@/utils/format-phone"
 
 // Schema for client search
@@ -137,53 +136,48 @@ export async function POST(request: NextRequest) {
         await supabase.from("profiles").update(profileUpdate).eq("id", userId)
       } else {
         // Create new user with transaction to ensure both tables are updated
-        const userId = uuidv4()
-
-        // Start with users table
-        if (client.email) {
-          const { error: userError } = await supabase.from("users").insert({
-            id: userId,
-            email: client.email.toLowerCase(),
-            role: "customer",
-            remonline_id: client.id,
-          })
-
-          if (userError) {
-            console.error("Error creating user:", userError)
-            continue // Skip to next client
-          }
-        } else {
-          // If no email, create a dummy email based on phone
-          const dummyEmail = `${formattedPhone?.replace(/\D/g, "")}@placeholder.com`
-
-          const { error: userError } = await supabase.from("users").insert({
-            id: userId,
-            email: dummyEmail,
-            role: "customer",
-            remonline_id: client.id,
-          })
-
-          if (userError) {
-            console.error("Error creating user with dummy email:", userError)
-            continue // Skip to next client
-          }
-        }
-
-        // Then create profile
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: userId,
+        // Змінюємо функцію для створення нового користувача, щоб додавати email в обидві таблиці
+        // Create new user
+        const userData = {
+          email: client.email || `${formattedPhone?.replace(/\D/g, "")}@placeholder.com`,
           name: client.name || "Customer",
           phone: formattedPhone,
           address: client.address,
+          id: client.id,
+        }
+
+        const { data: newUser, error: userError } = await supabase
+          .from("users")
+          .insert({
+            email: userData.email.toLowerCase(),
+            role: "customer",
+            remonline_id: userData.id,
+          })
+          .select("id")
+          .single()
+
+        if (userError) {
+          console.error(`Failed to create user "${userData.email}": ${userError.message}`)
+          continue
+        }
+
+        // Create profile with email
+        const { error: profileError } = await supabase.from("profiles").insert({
+          id: newUser.id,
+          name: userData.name,
+          phone: userData.phone,
+          email: userData.email.toLowerCase(), // Додаємо email в profiles
+          address: userData.address || null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
 
         if (profileError) {
-          console.error("Error creating profile:", profileError)
-
-          // Rollback user creation if profile creation fails
-          await supabase.from("users").delete().eq("id", userId)
+          console.error("Failed to create profile:", profileError)
+          // Видаляємо користувача, якщо не вдалося створити профіль
+          await supabase.from("users").delete().eq("id", newUser.id)
+          console.error(`Failed to create profile for "${userData.email}": ${profileError.message}`)
+          continue
         }
       }
     }

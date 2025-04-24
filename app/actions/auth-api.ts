@@ -371,18 +371,25 @@ export async function createUser(userData: {
       }
     }
 
-    // Create profile
+    // Create profile with email
     const { error: profileError } = await supabase.from("profiles").insert({
       id: newUser.id,
       name: `${userData.first_name} ${userData.last_name}`.trim(),
       phone: userData.phone[0] || null,
-      email: userData.email.toLowerCase(),
+      email: userData.email.toLowerCase(), // Додаємо email в profiles
       address: userData.address || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     })
 
     if (profileError) {
       console.error("Failed to create profile in database:", profileError)
-      // Continue anyway, not critical
+      // Видаляємо користувача, якщо не вдалося створити профіль
+      await supabase.from("users").delete().eq("id", newUser.id)
+      return {
+        success: false,
+        message: "Failed to create user profile",
+      }
     }
 
     // Create session
