@@ -38,7 +38,7 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
     try {
       console.log(`Submitting login with ${loginMethod}: ${identifier}`)
 
-      // Check if user exists in Remonline API
+      // Check if user exists in our database
       const userExists = await checkUserExists(identifier)
 
       if (!userExists.success) {
@@ -89,7 +89,7 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
       }
 
       // Redirect to appropriate page after successful login
-      router.push(`/${locale}`)
+      router.push(`/${locale}/profile`)
     } catch (error) {
       console.error("Verification error:", error)
       setError(t("somethingWentWrong"))

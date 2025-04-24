@@ -11,11 +11,11 @@ class RemonlineClient {
   }
 
   private async initializeToken() {
-    if (this.staticApiKey) {
-      await this.refreshToken()
-    } else {
+    if (!this.staticApiKey) {
       console.error("REMONLINE_API_TOKEN environment variable is not set")
+      return
     }
+    await this.refreshToken()
   }
 
   private async refreshToken() {
@@ -31,17 +31,22 @@ class RemonlineClient {
       const response = await fetch(`${this.baseUrl}/token/new`, options)
 
       if (!response.ok) {
-        const errorText = await response.text()
-        console.error(`Failed to refresh token with status ${response.status}: ${errorText}`)
+        const errorText = await response.json()
+        console.error(`Failed to refresh token with status ${response.status}: ${JSON.stringify(errorText)}`)
         throw new Error(`Failed to refresh token: ${response.status}`)
       }
 
       const data = await response.json()
 
-      this.token = data.token
-      // Set token expiration to 1 hour from now
-      this.tokenExpiration = new Date(Date.now() + 60 * 60 * 1000)
-      console.log("Remonline API token refreshed successfully. Expires at:", this.tokenExpiration)
+      if (data && data.token) {
+        this.token = data.token
+        // Set token expiration to 1 hour from now
+        this.tokenExpiration = new Date(Date.now() + 60 * 60 * 1000)
+        console.log("Remonline API token refreshed successfully. Expires at:", this.tokenExpiration)
+      } else {
+        console.error("Token refresh failed: Token not found in response")
+        throw new Error("Token refresh failed: Token not found in response")
+      }
     } catch (error) {
       console.error("Error refreshing Remonline API token:", error)
       throw error
