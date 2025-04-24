@@ -32,43 +32,23 @@ class RemonlineClient {
       console.log("Requesting new token using API key")
       console.log("API key length:", trimmedApiKey.length)
       console.log("API key first 5 chars:", trimmedApiKey.substring(0, 5) + "...")
-      console.log("API key last 5 chars:", "..." + trimmedApiKey.substring(trimmedApiKey.length - 5))
 
-      // Check if the API key looks valid (basic validation)
-      if (trimmedApiKey.length < 10) {
-        console.warn("API key seems too short, might be invalid")
-      }
-
-      if (/\s/.test(trimmedApiKey)) {
-        console.warn("API key contains whitespace, might cause issues")
-      }
-
-      // Request a new token
-      console.log("Making API request to:", `${this.baseUrl}/token/new`)
-
-      const requestBody = JSON.stringify({ api_key: trimmedApiKey })
-      console.log("Request body length:", requestBody.length)
-
+      // Request a new token - using the format that we know works from testing
       const response = await fetch(`${this.baseUrl}/token/new`, {
         method: "POST",
         headers: {
           accept: "application/json",
           "content-type": "application/json",
         },
-        body: requestBody,
+        body: JSON.stringify({ api_key: trimmedApiKey }),
       })
 
-      console.log(`Response status: ${response.status}`)
-      console.log(`Response headers:`, Object.fromEntries(response.headers.entries()))
-
       const responseText = await response.text()
-      console.log("Response text length:", responseText.length)
-      console.log("Response text preview:", responseText.substring(0, 100))
 
       let data
       try {
         data = JSON.parse(responseText)
-        console.log("Response data:", data)
+        console.log("Response data:", { ...data, token: data.token ? `${data.token.substring(0, 10)}...` : undefined })
       } catch (e) {
         console.error("Failed to parse response as JSON:", responseText)
         return {
@@ -79,27 +59,6 @@ class RemonlineClient {
 
       if (!response.ok) {
         console.error(`Token request failed with status ${response.status}:`, data)
-
-        // Try to provide more specific error information
-        if (response.status === 401) {
-          console.error("Authentication failed. This usually means the API key is invalid or expired.")
-
-          // Check if we can get more details from the error message
-          const errorMessage = data.message || "Unknown error"
-          console.error("Error message:", errorMessage)
-
-          return {
-            success: false,
-            message: `Authentication failed: ${errorMessage}`,
-            details: data,
-            suggestions: [
-              "Verify that the API key is correct and not expired",
-              "Check if the RemOnline API has changed its authentication method",
-              "Try generating a new API key in the RemOnline dashboard",
-            ],
-          }
-        }
-
         return {
           success: false,
           message: `Failed to get token: ${response.status}`,
