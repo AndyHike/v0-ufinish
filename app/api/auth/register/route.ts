@@ -3,7 +3,6 @@ import { createClient } from "@/utils/supabase/server"
 import { hashPassword } from "@/lib/auth/utils"
 import { generateEmailVerificationToken } from "@/lib/auth/token"
 import { sendVerificationEmail } from "@/lib/email/send-email"
-import remonline from "@/lib/api/remonline"
 
 export async function POST(request: Request) {
   try {
@@ -33,14 +32,12 @@ export async function POST(request: Request) {
     // Insert user
     const { data: user, error } = await supabase
       .from("users")
-      .insert([
-        {
-          email: email.toLowerCase(),
-          password_hash: hashedPassword,
-          role: "user",
-          email_verified: false,
-        },
-      ])
+      .insert({
+        email: email.toLowerCase(),
+        password_hash: hashedPassword,
+        role: "user",
+        email_verified: false,
+      })
       .select("id")
       .single()
 
@@ -75,34 +72,6 @@ export async function POST(request: Request) {
         console.error("Error sending verification email:", emailError)
         // Continue with registration even if email fails
       }
-    }
-
-    // Sync with RemOnline in the background
-    try {
-      const authResult = await remonline.auth()
-      if (!authResult.success) {
-        console.error("Failed to authenticate with RemOnline API:", authResult.message)
-      } else {
-        // Create client in RemOnline
-        const remonlineClientData = {
-          first_name: name.split(" ")[0] || "",
-          last_name: name.split(" ").slice(1).join(" ") || "",
-          email: email,
-          phone: [phone],
-          address: "",
-        }
-
-        const remonlineResult = await remonline.createClient(remonlineClientData)
-
-        if (!remonlineResult.success) {
-          console.error("Failed to create client in RemOnline:", remonlineResult.message)
-        } else {
-          // Update RemOnline ID for user
-          await supabase.from("users").update({ remonline_id: remonlineResult.client.id }).eq("id", user.id)
-        }
-      }
-    } catch (remonlineError) {
-      console.error("Error syncing with RemOnline:", remonlineError)
     }
 
     return NextResponse.json({ success: true, userId: user.id })

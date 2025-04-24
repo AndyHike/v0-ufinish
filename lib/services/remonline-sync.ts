@@ -11,7 +11,7 @@ export async function syncClientToRemonline(userData: {
     console.log("Syncing client to RemOnline in background:", userData)
 
     // First authenticate with RemOnline API
-    const authResult = await remonline.auth()
+    const authResult = await remonline.auth(process.env.REMONLINE_API_TOKEN)
     if (!authResult.success) {
       console.error("Failed to authenticate with RemOnline API:", authResult.message)
       return {
