@@ -2,70 +2,69 @@
 class RemonlineClient {
   private token: string | null = null
   private baseUrl = "https://api.remonline.app"
+  private tokenExpiry: number | null = null
 
-  // Authenticate with the Remonline API using the token directly
-  async auth(token?: string) {
+  // Authenticate with the Remonline API using the API key
+  async auth() {
     try {
       console.log("Authenticating with Remonline API...")
 
-      // If token is provided, use it directly
-      if (token) {
-        console.log("Using provided token")
-        this.token = token
-
-        // Validate the token by making a simple API call
-        const testResponse = await fetch(`${this.baseUrl}/clients/?token=${this.token}`, {
-          method: "GET",
-          headers: {
-            accept: "application/json",
-          },
-        })
-
-        if (!testResponse.ok) {
-          const errorText = await testResponse.text()
-          console.error(`Token validation failed with status ${testResponse.status}: ${errorText}`)
-          return {
-            success: false,
-            message: `Invalid token: ${testResponse.status}`,
-            details: errorText,
-          }
-        }
-
-        return { success: true, token }
+      // Check if we have a valid token that hasn't expired
+      if (this.token && this.tokenExpiry && Date.now() < this.tokenExpiry) {
+        console.log("Using existing valid token")
+        return { success: true, token: this.token }
       }
 
-      // Otherwise, use the token from environment variable
-      const envToken = process.env.REMONLINE_API_TOKEN
-      if (!envToken) {
-        console.error("No token provided and REMONLINE_API_TOKEN environment variable is not set")
+      // Get API key from environment variable
+      const apiKey = process.env.REMONLINE_API_TOKEN
+      if (!apiKey) {
+        console.error("REMONLINE_API_TOKEN environment variable is not set")
         return {
           success: false,
-          message: "No token provided and REMONLINE_API_TOKEN environment variable is not set",
+          message: "REMONLINE_API_TOKEN environment variable is not set",
         }
       }
 
-      console.log("Using token from environment variable")
-      this.token = envToken
+      console.log("Requesting new token using API key")
 
-      // Validate the token
-      const testResponse = await fetch(`${this.baseUrl}/clients/?token=${this.token}`, {
-        method: "GET",
+      // Request a new token
+      const response = await fetch(`${this.baseUrl}/token/new`, {
+        method: "POST",
         headers: {
           accept: "application/json",
+          "content-type": "application/json",
         },
+        body: JSON.stringify({ api_key: apiKey }),
       })
 
-      if (!testResponse.ok) {
-        const errorText = await testResponse.text()
-        console.error(`Token validation failed with status ${testResponse.status}: ${errorText}`)
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`Token request failed with status ${response.status}: ${errorText}`)
         return {
           success: false,
-          message: `Invalid token: ${testResponse.status}`,
+          message: `Failed to get token: ${response.status}`,
           details: errorText,
         }
       }
 
-      return { success: true, token: envToken }
+      const data = await response.json()
+
+      if (!data.success || !data.token) {
+        console.error("Failed to get token from response:", data)
+        return {
+          success: false,
+          message: "Invalid response from token endpoint",
+          details: data,
+        }
+      }
+
+      console.log("Successfully obtained new token")
+      this.token = data.token
+
+      // Set token expiry (tokens typically last 24 hours, but we'll set it to 23 hours to be safe)
+      this.tokenExpiry = Date.now() + 23 * 60 * 60 * 1000
+
+      return { success: true, token: this.token }
     } catch (error) {
       console.error("Remonline auth error:", error)
       return {
@@ -79,13 +78,13 @@ class RemonlineClient {
   // Get clients with optional query parameters
   async getClients(params = {}) {
     try {
-      if (!this.token) {
-        const authResult = await this.auth()
-        if (!authResult.success) {
-          return {
-            success: false,
-            message: "Not authenticated. Please call auth() first.",
-          }
+      // Ensure we have a valid token
+      const authResult = await this.auth()
+      if (!authResult.success) {
+        return {
+          success: false,
+          message: "Authentication failed",
+          details: authResult,
         }
       }
 
@@ -227,13 +226,13 @@ class RemonlineClient {
     address?: string
   }) {
     try {
-      if (!this.token) {
-        const authResult = await this.auth()
-        if (!authResult.success) {
-          return {
-            success: false,
-            message: "Not authenticated. Please call auth() first.",
-          }
+      // Ensure we have a valid token
+      const authResult = await this.auth()
+      if (!authResult.success) {
+        return {
+          success: false,
+          message: "Authentication failed",
+          details: authResult,
         }
       }
 
