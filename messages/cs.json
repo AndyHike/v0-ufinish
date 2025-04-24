@@ -214,7 +214,10 @@
     "invalidVerificationCode": "Neplatný ověřovací kód",
     "verificationCodeSent": "Ověřovací kód byl odeslán",
     "verificationCodeExpired": "Ověřovací kód vypršel",
-    "resendCode": "Znovu odeslat kód"
+    "resendCode": "Znovu odeslat kód",
+    "registrationSuccessful": "Registrace úspěšná!",
+    "accountCreatedSuccessfully": "Váš účet byl úspěšně vytvořen. Nyní jste přihlášeni.",
+    "goToHomePage": "Přejít na domovskou stránku"
   },
   "Admin": {
     "adminPanel": "Administrátorský panel",

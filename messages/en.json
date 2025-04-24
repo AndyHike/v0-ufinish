@@ -225,7 +225,10 @@
     "verifyAndLogin": "Verify and Login",
     "backToLogin": "Back to Login",
     "sentToEmail": "Code sent to your email",
-    "noEmailForVerification": "No email found for verification"
+    "noEmailForVerification": "No email found for verification",
+    "registrationSuccessful": "Registration Successful!",
+    "accountCreatedSuccessfully": "Your account has been successfully created. You are now logged in.",
+    "goToHomePage": "Go to Home Page"
   },
   "Admin": {
     "adminPanel": "Admin Panel",

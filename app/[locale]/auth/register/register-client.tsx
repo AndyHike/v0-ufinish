@@ -38,7 +38,7 @@ export default function RegisterClient() {
   const params = useParams()
   const locale = params.locale as string
 
-  const [step, setStep] = useState<"initial" | "verification" | "registration">("initial")
+  const [step, setStep] = useState<"initial" | "verification" | "registration" | "success">("initial")
   const [identifier, setIdentifier] = useState({ email: "", phone: "", firstName: "", lastName: "" })
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -121,8 +121,27 @@ export default function RegisterClient() {
         return
       }
 
-      // Move to registration step
-      setStep("registration")
+      // Automatically create user after verification
+      console.log("Creating user with data:", { ...identifier })
+
+      const createResult = await createUser({
+        first_name: identifier.firstName,
+        last_name: identifier.lastName,
+        email: identifier.email,
+        phone: [identifier.phone],
+        address: "",
+      })
+
+      console.log("Create user result:", createResult)
+
+      if (!createResult.success) {
+        setError(createResult.message || t("registrationFailed"))
+        setIsLoading(false)
+        return
+      }
+
+      // Move to success step
+      setStep("success")
     } catch (error) {
       console.error("Verification error:", error)
       setError(t("unexpectedError"))
@@ -308,10 +327,16 @@ export default function RegisterClient() {
           </div>
         )}
 
-        {step === "registration" && (
-          <Button type="submit" className="w-full" disabled={isLoading} onClick={handleRegistrationSubmit}>
-            {isLoading ? t("processing") : t("register")}
-          </Button>
+        {step === "success" && (
+          <div className="space-y-4 text-center">
+            <div className="mb-4">
+              <h3 className="text-xl font-semibold text-green-600">{t("registrationSuccessful")}</h3>
+              <p className="mt-2">{t("accountCreatedSuccessfully")}</p>
+            </div>
+            <Button type="button" className="w-full" onClick={() => router.push(`/${locale}`)}>
+              {t("goToHomePage")}
+            </Button>
+          </div>
         )}
       </CardContent>
       <CardFooter>
