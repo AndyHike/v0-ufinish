@@ -149,7 +149,7 @@ async function fetchClientDetailsFromRemonline(clientId: number) {
     const data = await response.json()
     console.log("Client details response:", data)
 
-    return { success: true, client: data.data }
+    return { success: true, client: data }
   } catch (error) {
     console.error("Error fetching client details from RemOnline:", error)
     return {
@@ -206,7 +206,7 @@ async function createNewUser(supabase: any, clientData: any) {
     const { data: userData, error: userError } = await supabase
       .from("users")
       .insert({
-        email,
+        email: email,
         name: `${firstName} ${lastName}`.trim(),
         password_hash: passwordHash,
         role: "user",
