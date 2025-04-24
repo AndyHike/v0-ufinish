@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import type { CountryCode } from "libphonenumber-js"
-import { getCountries } from "react-phone-number-input/input"
+import { getCountries, getCountryCallingCode } from "react-phone-number-input/input"
 import en from "react-phone-number-input/locale/en.json"
 import { Check, ChevronDown, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -70,7 +70,16 @@ export function CustomCountrySelect({ value, onChange, labels, disabled }: Count
           className="flex justify-between w-full px-3 font-normal"
           disabled={disabled}
         >
-          <div className="flex items-center">{value ? <>{getFlag(value)}</> : "Select country"}</div>
+          <div className="flex items-center">
+            {value ? (
+              <>
+                {getFlag(value)}
+                <span>+{getCountryCallingCode(value)}</span>
+              </>
+            ) : (
+              "Select country"
+            )}
+          </div>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -99,7 +108,9 @@ export function CustomCountrySelect({ value, onChange, labels, disabled }: Count
                     >
                       <div className="flex items-center">
                         {getFlag(country)}
-                        <span>{labels[country] || en[country]}</span>
+                        <span>
+                          {labels[country] || en[country]} (+{getCountryCallingCode(country)})
+                        </span>
                       </div>
                       {value === country && <Check className="ml-auto h-4 w-4" />}
                     </CommandItem>
@@ -118,7 +129,9 @@ export function CustomCountrySelect({ value, onChange, labels, disabled }: Count
                   >
                     <div className="flex items-center">
                       {getFlag(country)}
-                      <span>{labels[country] || en[country]}</span>
+                      <span>
+                        {labels[country] || en[country]} (+{getCountryCallingCode(country)})
+                      </span>
                     </div>
                     {value === country && <Check className="ml-auto h-4 w-4" />}
                   </CommandItem>
