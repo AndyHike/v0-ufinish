@@ -1,8 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/server"
 import { z } from "zod"
 import { formatPhone } from "@/utils/format-phone"
-import remonline from "@/lib/api/remonline"
 
 // Schema for client search
 const SearchSchema = z.object({
@@ -15,28 +14,38 @@ const SearchSchema = z.object({
 
 const REMONLINE_API_URL = "https://api.remonline.app"
 
+// Function to get authentication token
+async function getRemonlineToken() {
+  const response = await fetch(`${REMONLINE_API_URL}/token/new`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      api_key: process.env.REMONLINE_API_TOKEN,
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to get token: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return data.token
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient()
     const body = await request.json()
     const searchParams = SearchSchema.parse(body)
 
-    // Authenticate with Remonline API
-    const authResult = await remonline.auth()
-    if (!authResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Failed to authenticate with Remonline API",
-          details: authResult,
-        },
-        { status: 401 },
-      )
-    }
+    // Get token
+    const token = await getRemonlineToken()
 
     // Build search query
     const searchQuery = new URLSearchParams()
-    searchQuery.append("token", authResult.token)
+    searchQuery.append("token", token)
 
     if (searchParams.term) {
       searchQuery.append("query", searchParams.term)
@@ -183,7 +192,6 @@ export async function POST(request: NextRequest) {
     console.error("Sync error:", error)
     return NextResponse.json(
       {
-        success: false,
         error: "Failed to sync with Remonline",
         details: error instanceof Error ? error.message : "Unknown error",
       },

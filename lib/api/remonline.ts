@@ -1,79 +1,71 @@
 // This is a wrapper for the Remonline API
 class RemonlineClient {
-  private staticApiKey: string | null = process.env.REMONLINE_API_TOKEN || null
   private token: string | null = null
-  private tokenExpiration: Date | null = null
   private baseUrl = "https://api.remonline.app"
-
-  constructor() {
-    // Initialize the token when the client is created
-    this.initializeToken()
-  }
-
-  private async initializeToken() {
-    if (!this.staticApiKey) {
-      console.error("REMONLINE_API_TOKEN environment variable is not set")
-      return
-    }
-    await this.refreshToken()
-  }
-
-  private async refreshToken() {
-    try {
-      console.log("Refreshing Remonline API token...")
-
-      const options = {
-        method: "POST",
-        headers: { accept: "application/json", "content-type": "application/json" },
-        body: JSON.stringify({ api_key: this.staticApiKey }),
-      }
-
-      const response = await fetch(`${this.baseUrl}/token/new`, options)
-
-      if (!response.ok) {
-        const errorText = await response.json()
-        console.error(`Failed to refresh token with status ${response.status}: ${JSON.stringify(errorText)}`)
-        throw new Error(`Failed to refresh token: ${response.status}`)
-      }
-
-      const data = await response.json()
-
-      if (data && data.token) {
-        this.token = data.token
-        // Set token expiration to 1 hour from now
-        this.tokenExpiration = new Date(Date.now() + 60 * 60 * 1000)
-        console.log("Remonline API token refreshed successfully. Expires at:", this.tokenExpiration)
-      } else {
-        console.error("Token refresh failed: Token not found in response")
-        throw new Error("Token refresh failed: Token not found in response")
-      }
-    } catch (error) {
-      console.error("Error refreshing Remonline API token:", error)
-      throw error
-    }
-  }
-
-  private async ensureToken() {
-    if (!this.token || !this.tokenExpiration || this.tokenExpiration <= new Date()) {
-      console.log("API token is expired or missing, refreshing...")
-      await this.refreshToken()
-    }
-  }
 
   // Authenticate with the Remonline API using the token directly
   async auth(token?: string) {
     try {
-      await this.ensureToken()
+      console.log("Authenticating with Remonline API...")
 
-      if (!this.token) {
-        console.error("No token available")
+      // If token is provided, use it directly
+      if (token) {
+        console.log("Using provided token")
+        this.token = token
+
+        // Validate the token by making a simple API call
+        const testResponse = await fetch(`${this.baseUrl}/clients/?token=${this.token}`, {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+          },
+        })
+
+        if (!testResponse.ok) {
+          const errorText = await testResponse.text()
+          console.error(`Token validation failed with status ${testResponse.status}: ${errorText}`)
+          return {
+            success: false,
+            message: `Invalid token: ${testResponse.status}`,
+            details: errorText,
+          }
+        }
+
+        return { success: true, token }
+      }
+
+      // Otherwise, use the token from environment variable
+      const envToken = process.env.REMONLINE_API_TOKEN
+      if (!envToken) {
+        console.error("No token provided and REMONLINE_API_TOKEN environment variable is not set")
         return {
           success: false,
-          message: "No token available",
+          message: "No token provided and REMONLINE_API_TOKEN environment variable is not set",
         }
       }
 
-      return { success: true, token: this.token }
+      console.log("Using token from environment variable")
+      this.token = envToken
+
+      // Validate the token
+      const testResponse = await fetch(`${this.baseUrl}/clients/?token=${this.token}`, {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+        },
+      })
+
+      if (!testResponse.ok) {
+        const errorText = await testResponse.text()
+        console.error(`Token validation failed with status ${testResponse.status}: ${errorText}`)
+        return {
+          success: false,
+          message: `Invalid token: ${testResponse.status}`,
+          details: errorText,
+        }
+      }
+
+      return { success: true, token: envToken }
     } catch (error) {
       console.error("Remonline auth error:", error)
       return {
@@ -87,12 +79,13 @@ class RemonlineClient {
   // Get clients with optional query parameters
   async getClients(params = {}) {
     try {
-      await this.ensureToken()
-
       if (!this.token) {
-        return {
-          success: false,
-          message: "Not authenticated. Please call auth() first.",
+        const authResult = await this.auth()
+        if (!authResult.success) {
+          return {
+            success: false,
+            message: "Not authenticated. Please call auth() first.",
+          }
         }
       }
 
@@ -143,8 +136,6 @@ class RemonlineClient {
   // Find a client by email
   async getClientByEmail(email: string) {
     try {
-      await this.ensureToken()
-
       console.log(`Looking for client with email: ${email}`)
 
       // Use the query parameter to search for the client
@@ -183,8 +174,6 @@ class RemonlineClient {
   // Find a client by phone number
   async getClientByPhone(phone: string) {
     try {
-      await this.ensureToken()
-
       console.log(`Looking for client with phone: ${phone}`)
 
       // Normalize phone number by removing non-digit characters
@@ -238,33 +227,39 @@ class RemonlineClient {
     address?: string
   }) {
     try {
-      await this.ensureToken()
+      if (!this.token) {
+        const authResult = await this.auth()
+        if (!authResult.success) {
+          return {
+            success: false,
+            message: "Not authenticated. Please call auth() first.",
+          }
+        }
+      }
 
       console.log("Creating client with data:", clientData)
 
-      const options = {
+      const response = await fetch(`${this.baseUrl}/clients/?token=${this.token}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           accept: "application/json",
         },
         body: JSON.stringify(clientData),
-      }
-
-      const response = await fetch(`${this.baseUrl}/clients/?token=${this.token}`, options)
-      const data = await response.json()
-
-      console.log("Remonline createClient response:", data)
+      })
 
       if (!response.ok) {
-        const errorText = await response.json()
-        console.error(`Failed to create client with status ${response.status}: ${JSON.stringify(errorText)}`)
+        const errorText = await response.text()
+        console.error(`Failed to create client with status ${response.status}: ${errorText}`)
         return {
           success: false,
           message: `Failed to create client with status ${response.status}`,
           details: errorText,
         }
       }
+
+      const data = await response.json()
+      console.log("Create client response:", data)
 
       if (data.success) {
         return { success: true, client: data.data }
