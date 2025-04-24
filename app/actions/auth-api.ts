@@ -39,7 +39,8 @@ export async function checkUserExists(identifier: string): Promise<{
         .select(`
           id, 
           email, 
-          name,
+          first_name,
+          last_name,
           profiles!inner(phone)
         `)
         .eq("email", identifier.toLowerCase())
@@ -62,8 +63,9 @@ export async function checkUserExists(identifier: string): Promise<{
           id,
           phone,
           email,
-          name,
-          users!inner(id, email, name)
+          first_name,
+          last_name,
+          users!inner(id, email, first_name, last_name)
         `)
         .eq("phone", identifier)
         .maybeSingle()
@@ -80,7 +82,8 @@ export async function checkUserExists(identifier: string): Promise<{
         userData = {
           id: data.users.id,
           email: data.users.email,
-          name: data.users.name,
+          first_name: data.users.first_name,
+          last_name: data.users.last_name,
           phone: data.phone,
         }
       }
@@ -92,7 +95,7 @@ export async function checkUserExists(identifier: string): Promise<{
         userData: {
           id: userData.id,
           email: userData.email,
-          name: userData.name,
+          name: `${userData.first_name} ${userData.last_name}`.trim(),
           phone: isEmail ? userData.profiles?.phone : userData.phone,
         },
       }
@@ -356,7 +359,8 @@ export async function createUser(userData: {
       .insert({
         email: userData.email.toLowerCase(),
         role: "user",
-        name: `${userData.first_name} ${userData.last_name}`.trim(),
+        first_name: userData.first_name,
+        last_name: userData.last_name,
         password_hash: passwordHash,
         email_verified: true, // Since we verified with code
       })
@@ -374,7 +378,8 @@ export async function createUser(userData: {
     // Create profile with email
     const { error: profileError } = await supabase.from("profiles").insert({
       id: newUser.id,
-      name: `${userData.first_name} ${userData.last_name}`.trim(),
+      first_name: userData.first_name,
+      last_name: userData.last_name,
       phone: userData.phone[0] || null,
       email: userData.email.toLowerCase(), // Додаємо email в profiles
       address: userData.address || null,
@@ -421,7 +426,13 @@ export async function createUser(userData: {
     })
 
     // Sync with RemOnline in the background
-    syncClientToRemonline(userData)
+    syncClientToRemonline({
+      first_name: userData.first_name,
+      last_name: userData.last_name,
+      email: userData.email,
+      phone: userData.phone,
+      address: userData.address,
+    })
       .then((result) => {
         if (result.success && result.remonlineId) {
           updateRemonlineIdForUser(newUser.id, result.remonlineId)

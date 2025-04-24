@@ -309,24 +309,9 @@ export default function RegisterClient() {
         )}
 
         {step === "registration" && (
-          <form onSubmit={registrationForm.handleSubmit(handleRegistrationSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="address">{t("address")}</Label>
-              <Input
-                id="address"
-                type="text"
-                placeholder={t("addressPlaceholder")}
-                {...registrationForm.register("address")}
-                disabled={isLoading}
-              />
-              {registrationForm.formState.errors.address && (
-                <p className="text-sm text-destructive">{registrationForm.formState.errors.address.message}</p>
-              )}
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? t("processing") : t("register")}
-            </Button>
-          </form>
+          <Button type="submit" className="w-full" disabled={isLoading} onClick={handleRegistrationSubmit}>
+            {isLoading ? t("processing") : t("register")}
+          </Button>
         )}
       </CardContent>
       <CardFooter>
