@@ -29,13 +29,14 @@ class RemonlineClient {
       }
 
       const response = await fetch(`${this.baseUrl}/token/new`, options)
-      const data = await response.json()
 
       if (!response.ok) {
         const errorText = await response.text()
         console.error(`Failed to refresh token with status ${response.status}: ${errorText}`)
         throw new Error(`Failed to refresh token: ${response.status}`)
       }
+
+      const data = await response.json()
 
       this.token = data.token
       // Set token expiration to 1 hour from now
@@ -246,8 +247,8 @@ class RemonlineClient {
       console.log("Remonline createClient response:", data)
 
       if (!response.ok) {
-        const errorText = await response.text()
-        console.error(`Failed to create client with status ${response.status}: ${errorText}`)
+        const errorText = await response.json()
+        console.error(`Failed to create client with status ${response.status}: ${JSON.stringify(errorText)}`)
         return {
           success: false,
           message: `Failed to create client with status ${response.status}`,
