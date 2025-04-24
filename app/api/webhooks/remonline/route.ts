@@ -244,7 +244,6 @@ async function createNewUser(supabase: any, clientData: any) {
       id: newUser.id,
       first_name: firstName,
       last_name: lastName,
-      name: `${firstName} ${lastName}`.trim(),
       phone,
       email, // Обов'язково додаємо email в profiles
       address, // Додаємо address в profiles
@@ -310,7 +309,8 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
     const { error: profileError } = await supabase
       .from("profiles")
       .update({
-        name: `${firstName} ${lastName}`.trim(),
+        first_name: firstName,
+        last_name: lastName,
         phone,
         email, // Обов'язково оновлюємо email в profiles
         address, // Оновлюємо address в profiles
