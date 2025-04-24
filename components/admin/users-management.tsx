@@ -44,6 +44,7 @@ type User = {
   phone?: string | null
   role: string
   created_at: string
+  remonline_id?: number | null
 }
 
 export function UsersManagement() {

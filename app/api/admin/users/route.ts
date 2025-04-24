@@ -14,6 +14,7 @@ export async function GET() {
         name, 
         role, 
         created_at,
+        remonline_id,
         profiles!inner(phone)
       `)
       .order("created_at", { ascending: false })
@@ -38,6 +39,7 @@ export async function GET() {
       name: user.name,
       role: user.role,
       created_at: user.created_at,
+      remonline_id: user.remonline_id,
       phone: user.profiles?.phone || null,
     }))
 
