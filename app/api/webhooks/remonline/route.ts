@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
 import { hash } from "@/lib/auth/utils"
 import { z } from "zod"
@@ -41,7 +41,7 @@ const remonlineWebhookSchema = z.object({
 })
 
 // Додайте логування для кращого відстеження
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     // Зберегти оригінальний запит для логування
     const clonedRequest = request.clone()
@@ -194,7 +194,7 @@ async function handleClientEvent(clientData: any) {
   }
 }
 
-// Змінюємо функцію createNewUser, щоб додавати email в обидві таблиці
+// Змінюємо функцію createNewUser, щоб додавати first_name та last_name в обидві таблиці
 async function createNewUser(supabase: any, clientData: any) {
   try {
     // Extract client data
@@ -218,7 +218,8 @@ async function createNewUser(supabase: any, clientData: any) {
       .from("users")
       .insert({
         email: email,
-        name: `${firstName} ${lastName}`.trim(),
+        first_name: firstName,
+        last_name: lastName,
         password_hash: passwordHash,
         role: "user",
         remonline_id: clientData.id,
@@ -229,7 +230,8 @@ async function createNewUser(supabase: any, clientData: any) {
 
     console.log("Supabase insert user data:", {
       email: email,
-      name: `${firstName} ${lastName}`.trim(),
+      first_name: firstName,
+      last_name: lastName,
       password_hash: passwordHash,
       role: "user",
       remonline_id: clientData.id,
@@ -246,7 +248,8 @@ async function createNewUser(supabase: any, clientData: any) {
     // Create profile with email and address
     const profileData = {
       id: newUser.id,
-      name: `${firstName} ${lastName}`.trim(),
+      first_name: firstName,
+      last_name: lastName,
       phone,
       email, // Обов'язково додаємо email в profiles
       address, // Додаємо address в profiles
@@ -272,7 +275,7 @@ async function createNewUser(supabase: any, clientData: any) {
   }
 }
 
-// Змінюємо функцію updateExistingUser, щоб оновлювати email в обох таблицях
+// Змінюємо функцію updateExistingUser, щоб оновлювати first_name та last_name в обох таблицях
 async function updateExistingUser(supabase: any, userId: string, clientData: any) {
   try {
     // Extract client data
@@ -280,7 +283,7 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
     const firstName = clientData.first_name || ""
     const lastName = clientData.last_name || ""
     const phone = clientData.phone && clientData.phone.length > 0 ? clientData.phone[0] : null
-    const address = clientData.address || ""
+    const address = clientData.address || null
 
     if (!email) {
       console.error("Client from RemOnline has no email, cannot update user")
@@ -292,13 +295,15 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
       .from("users")
       .update({
         email, // Оновлюємо email в users
-        name: `${firstName} ${lastName}`.trim(),
+        first_name: firstName,
+        last_name: lastName,
       })
       .eq("id", userId)
 
     console.log("Supabase update user data:", {
       email,
-      name: `${firstName} ${lastName}`.trim(),
+      first_name: firstName,
+      last_name: lastName,
     })
 
     if (userError) {
@@ -310,7 +315,8 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
     const { error: profileError } = await supabase
       .from("profiles")
       .update({
-        name: `${firstName} ${lastName}`.trim(),
+        first_name: firstName,
+        last_name: lastName,
         phone,
         email, // Обов'язково оновлюємо email в profiles
         address, // Оновлюємо address в profiles
@@ -319,7 +325,8 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
       .eq("id", userId)
 
     console.log("Supabase update profile data:", {
-      name: `${firstName} ${lastName}`.trim(),
+      first_name: firstName,
+      last_name: lastName,
       phone,
       email,
       address,

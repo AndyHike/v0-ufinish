@@ -23,49 +23,54 @@ export function UsersList() {
   const users = [
     {
       id: "1",
-      name: "Олександр Петренко",
+      firstName: "Олександр",
+      lastName: "Петренко",
       email: "alex@example.com",
       role: "Користувач",
       status: "Активний",
-      avatar: "/placeholder.svg?height=40&width=40&query=user",
+      avatar: "/placeholder.svg?key=aax1y",
     },
     {
       id: "2",
-      name: "Марія Ковальчук",
+      firstName: "Марія",
+      lastName: "Ковальчук",
       email: "maria@example.com",
       role: "Адміністратор",
       status: "Активний",
-      avatar: "/placeholder.svg?height=40&width=40&query=user",
+      avatar: "/placeholder.svg?key=qwq56",
     },
     {
       id: "3",
-      name: "Іван Сидоренко",
+      firstName: "Іван",
+      lastName: "Сидоренко",
       email: "ivan@example.com",
       role: "Користувач",
       status: "Неактивний",
-      avatar: "/placeholder.svg?height=40&width=40&query=user",
+      avatar: "/placeholder.svg?key=ekg2a",
     },
     {
       id: "4",
-      name: "Наталія Василенко",
+      firstName: "Наталія",
+      lastName: "Василенко",
       email: "natalia@example.com",
       role: "Користувач",
       status: "Активний",
-      avatar: "/placeholder.svg?height=40&width=40&query=user",
+      avatar: "/placeholder.svg?key=wojjf",
     },
     {
       id: "5",
-      name: "Сергій Мельник",
+      firstName: "Сергій",
+      lastName: "Мельник",
       email: "sergey@example.com",
       role: "Користувач",
       status: "Активний",
-      avatar: "/placeholder.svg?height=40&width=40&query=user",
+      avatar: "/placeholder.svg?key=ox3zs",
     },
   ]
 
   const filteredUsers = users.filter(
     (user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
@@ -99,16 +104,16 @@ export function UsersList() {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={`${user.firstName} ${user.lastName}`} />
                       <AvatarFallback>
-                        {user.name
+                        {user.firstName
                           .split(" ")
                           .map((n) => n[0])
                           .join("")}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium">{user.name}</p>
+                      <p className="font-medium">{`${user.firstName} ${user.lastName}`}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                   </div>

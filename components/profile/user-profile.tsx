@@ -8,7 +8,8 @@ import { CalendarDays, Mail, Phone, UserIcon } from "lucide-react"
 interface UserProfileProps {
   user: {
     id?: string
-    name?: string | null
+    first_name?: string | null
+    last_name?: string | null
     email?: string | null
     image?: string | null
     avatar_url?: string | null
@@ -34,18 +35,22 @@ export function UserProfile({ user }: UserProfileProps) {
   const avatarUrl =
     user?.avatar_url ||
     user?.image ||
-    `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(user?.name || "User")}`
+    `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(user?.first_name || "User")}`
 
   return (
     <Card className="w-full">
       <CardHeader>
         <div className="flex flex-col items-center space-y-3 sm:flex-row sm:space-y-0 sm:space-x-4">
           <Avatar className="h-20 w-20">
-            <AvatarImage src={avatarUrl || "/placeholder.svg"} alt={user?.name || "User"} />
-            <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
+            <AvatarImage src={avatarUrl || "/placeholder.svg"} alt={user?.first_name || "User"} />
+            <AvatarFallback>{user?.first_name?.charAt(0) || "U"}</AvatarFallback>
           </Avatar>
           <div className="space-y-1 text-center sm:text-left">
-            <CardTitle className="text-2xl">{user?.name || "Не вказано"}</CardTitle>
+            <CardTitle className="text-2xl">
+              {user?.first_name && user?.last_name
+                ? `${user.first_name} ${user.last_name}`
+                : user?.first_name || user?.last_name || "Не вказано"}
+            </CardTitle>
             <CardDescription className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
               <span className="flex items-center justify-center sm:justify-start">
                 <Mail className="mr-1 h-4 w-4" />
@@ -67,7 +72,14 @@ export function UserProfile({ user }: UserProfileProps) {
               <h3 className="text-sm font-medium text-muted-foreground">Ім'я</h3>
               <div className="flex items-center space-x-2">
                 <UserIcon className="h-4 w-4 text-muted-foreground" />
-                <div className="rounded-md border px-3 py-2 w-full">{user?.name || "Не вказано"}</div>
+                <div className="rounded-md border px-3 py-2 w-full">{user?.first_name || "Не вказано"}</div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Прізвище</h3>
+              <div className="flex items-center space-x-2">
+                <UserIcon className="h-4 w-4 text-muted-foreground" />
+                <div className="rounded-md border px-3 py-2 w-full">{user?.last_name || "Не вказано"}</div>
               </div>
             </div>
             <div className="space-y-2">

@@ -1,5 +1,11 @@
 "use client"
 
+import { AvatarFallback } from "@/components/ui/avatar"
+
+import { AvatarImage } from "@/components/ui/avatar"
+
+import { Avatar } from "@/components/ui/avatar"
+
 import type React from "react"
 
 import { useState, useEffect } from "react"
@@ -40,7 +46,8 @@ import { format } from "date-fns"
 type User = {
   id: string
   email: string
-  name?: string | null
+  first_name?: string | null
+  last_name?: string | null
   phone?: string | null
   role: string
   created_at: string
@@ -98,8 +105,8 @@ export function UsersManagement() {
   const filteredUsers = users.filter(
     (user) =>
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.name && user.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (user.phone && user.phone.toLowerCase().includes(searchQuery.toLowerCase())),
+      (user.first_name && user.first_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (user.last_name && user.last_name.toLowerCase().includes(searchQuery.toLowerCase())),
   )
 
   const handleEditUser = (user: User) => {
@@ -127,7 +134,8 @@ export function UsersManagement() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: editingUser.name,
+          firstName: editingUser.first_name,
+          lastName: editingUser.last_name,
           email: editingUser.email,
           phone: editingUser.phone,
           role: editingUser.role,
@@ -216,7 +224,26 @@ export function UsersManagement() {
             ) : (
               filteredUsers.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name || t("notSpecified")}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage
+                          src={user.avatar || "/placeholder.svg"}
+                          alt={`${user.first_name} ${user.last_name}`}
+                        />
+                        <AvatarFallback>
+                          {user.first_name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{`${user.first_name} ${user.last_name}`}</p>
+                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                      </div>
+                    </div>
+                  </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.phone || t("notSpecified")}</TableCell>
                   <TableCell>{user.role}</TableCell>
@@ -226,17 +253,18 @@ export function UsersManagement() {
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">{t("openMenu")}</span>
+                        <Button variant="ghost" size="icon">
                           <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">{t("openMenu")}</span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleViewUser(user)}>{t("viewProfile")}</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEditUser(user)}>{t("edit")}</DropdownMenuItem>
+                        <DropdownMenuItem>Змінити роль</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteUser(user)}>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteUser(user)}>
                           {t("delete")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -259,13 +287,24 @@ export function UsersManagement() {
           {editingUser && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  {t("name")}
+                <Label htmlFor="firstName" className="text-right">
+                  {t("firstName")}
                 </Label>
                 <Input
-                  id="name"
-                  value={editingUser.name || ""}
-                  onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                  id="firstName"
+                  value={editingUser.first_name || ""}
+                  onChange={(e) => setEditingUser({ ...editingUser, first_name: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="lastName" className="text-right">
+                  {t("lastName")}
+                </Label>
+                <Input
+                  id="lastName"
+                  value={editingUser.last_name || ""}
+                  onChange={(e) => setEditingUser({ ...editingUser, last_name: e.target.value })}
                   className="col-span-3"
                 />
               </div>
@@ -327,7 +366,9 @@ export function UsersManagement() {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right font-medium">{t("name")}:</Label>
-                <div className="col-span-3">{viewingUser.name || t("notSpecified")}</div>
+                <div className="col-span-3">
+                  {viewingUser.first_name || t("notSpecified")} {viewingUser.last_name || t("notSpecified")}
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right font-medium">{t("email")}:</Label>
