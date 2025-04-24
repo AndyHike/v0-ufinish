@@ -16,38 +16,96 @@ class RemonlineClient {
       }
 
       // Get API key from environment variable
-      const apiKey = process.env.REMONLINE_API_TOKEN
+      // Try both possible environment variable names
+      const apiKey = process.env.REMONLINE_API_KEY || process.env.REMONLINE_API_TOKEN
       if (!apiKey) {
-        console.error("REMONLINE_API_TOKEN environment variable is not set")
+        console.error("Neither REMONLINE_API_KEY nor REMONLINE_API_TOKEN environment variables are set")
         return {
           success: false,
-          message: "REMONLINE_API_TOKEN environment variable is not set",
+          message: "API key environment variables are not set",
         }
       }
 
+      // Trim the API key to remove any whitespace
+      const trimmedApiKey = apiKey.trim()
+
       console.log("Requesting new token using API key")
+      console.log("API key length:", trimmedApiKey.length)
+      console.log("API key first 5 chars:", trimmedApiKey.substring(0, 5) + "...")
+      console.log("API key last 5 chars:", "..." + trimmedApiKey.substring(trimmedApiKey.length - 5))
+
+      // Check if the API key looks valid (basic validation)
+      if (trimmedApiKey.length < 10) {
+        console.warn("API key seems too short, might be invalid")
+      }
+
+      if (/\s/.test(trimmedApiKey)) {
+        console.warn("API key contains whitespace, might cause issues")
+      }
 
       // Request a new token
+      console.log("Making API request to:", `${this.baseUrl}/token/new`)
+
+      const requestBody = JSON.stringify({ api_key: trimmedApiKey })
+      console.log("Request body length:", requestBody.length)
+
       const response = await fetch(`${this.baseUrl}/token/new`, {
         method: "POST",
         headers: {
           accept: "application/json",
           "content-type": "application/json",
         },
-        body: JSON.stringify({ api_key: apiKey }),
+        body: requestBody,
       })
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error(`Token request failed with status ${response.status}: ${errorText}`)
+      console.log(`Response status: ${response.status}`)
+      console.log(`Response headers:`, Object.fromEntries(response.headers.entries()))
+
+      const responseText = await response.text()
+      console.log("Response text length:", responseText.length)
+      console.log("Response text preview:", responseText.substring(0, 100))
+
+      let data
+      try {
+        data = JSON.parse(responseText)
+        console.log("Response data:", data)
+      } catch (e) {
+        console.error("Failed to parse response as JSON:", responseText)
         return {
           success: false,
-          message: `Failed to get token: ${response.status}`,
-          details: errorText,
+          message: `Failed to parse response: ${responseText}`,
         }
       }
 
-      const data = await response.json()
+      if (!response.ok) {
+        console.error(`Token request failed with status ${response.status}:`, data)
+
+        // Try to provide more specific error information
+        if (response.status === 401) {
+          console.error("Authentication failed. This usually means the API key is invalid or expired.")
+
+          // Check if we can get more details from the error message
+          const errorMessage = data.message || "Unknown error"
+          console.error("Error message:", errorMessage)
+
+          return {
+            success: false,
+            message: `Authentication failed: ${errorMessage}`,
+            details: data,
+            suggestions: [
+              "Verify that the API key is correct and not expired",
+              "Check if the RemOnline API has changed its authentication method",
+              "Try generating a new API key in the RemOnline dashboard",
+            ],
+          }
+        }
+
+        return {
+          success: false,
+          message: `Failed to get token: ${response.status}`,
+          details: data,
+        }
+      }
 
       if (!data.success || !data.token) {
         console.error("Failed to get token from response:", data)
