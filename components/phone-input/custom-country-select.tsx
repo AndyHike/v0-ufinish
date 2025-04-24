@@ -73,8 +73,7 @@ export function CustomCountrySelect({ value, onChange, labels, disabled }: Count
           <div className="flex items-center">
             {value ? (
               <>
-                {getFlag(value)}
-                <span>+{getCountryCallingCode(value)}</span>
+                {getFlag(value)}&nbsp;+{getCountryCallingCode(value)}
               </>
             ) : (
               "Select country"
