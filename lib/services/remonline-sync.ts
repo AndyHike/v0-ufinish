@@ -33,7 +33,9 @@ export async function syncClientToRemonline(userData: {
     }
 
     // Create client in RemOnline
+    console.log("Creating client in RemOnline with data:", userData)
     const response = await remonline.createClient(userData)
+    console.log("Remonline createClient response:", response)
 
     if (!response.success) {
       console.error("Failed to create client in RemOnline:", response.message)
