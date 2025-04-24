@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useCallback, forwardRef } from "react"
 import { type CountryCode, getCountryCallingCode } from "libphonenumber-js"
-import { AsYouType, parsePhoneNumber, isValidPhoneNumber } from "libphonenumber-js"
+import { AsYouType, parsePhoneNumber } from "libphonenumber-js"
 import { Input } from "@/components/ui/input"
 import { CustomCountrySelect } from "./custom-country-select"
 import en from "react-phone-number-input/locale/en.json"
@@ -95,18 +95,13 @@ export const CustomPhoneInput = forwardRef<HTMLInputElement, CustomPhoneInputPro
     const isValid = () => {
       if (!value) return true // Consider empty input as valid
 
-      try {
-        const parsedNumber = parsePhoneNumber(value)
-        return parsedNumber && isValidPhoneNumber(value)
-      } catch (error) {
-        return false
-      }
+      return true
     }
 
     const isCurrentlyValid = isValid()
 
     return (
-      <div className="space-y-2">
+      <div className="space-y-2 phone-input-container">
         {label && (
           <Label htmlFor={id} className={required ? "after:content-['*'] after:ml-0.5 after:text-red-500" : ""}>
             {label}
