@@ -5,11 +5,9 @@ import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { z } from "zod"
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import PhoneInput from "react-phone-number-input"
-import { isValidPhoneNumber } from "react-phone-number-input"
-import flags from "react-phone-number-input/flags"
+import { isValidPhoneNumber } from "libphonenumber-js"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,15 +15,15 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DevEmailNotification } from "@/components/dev-email-notification"
+import { CustomPhoneInput } from "@/components/phone-input/custom-phone-input"
 
 import { checkUserExists, sendVerificationCode, verifyCode, createUser } from "@/app/actions/auth-api"
-import "react-phone-number-input/style.css"
 
 const initialSchema = z.object({
   email: z.string().email(),
   phone: z
     .string()
-    .min(9, { message: "Phone number is too short" })
+    .min(1, { message: "Phone number is required" })
     .refine((val) => isValidPhoneNumber(val), {
       message: "Invalid phone number",
     }),
@@ -272,24 +270,22 @@ export default function RegisterClient() {
                 <p className="text-sm text-destructive">{initialForm.formState.errors.email.message}</p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">{t("phone")}</Label>
-              <div className="phone-input-container">
-                <PhoneInput
-                  international
-                  defaultCountry="CZ"
-                  flags={flags}
-                  value={initialForm.watch("phone")}
-                  onChange={(value) => initialForm.setValue("phone", value || "", { shouldValidate: true })}
+            <Controller
+              name="phone"
+              control={initialForm.control}
+              render={({ field }) => (
+                <CustomPhoneInput
+                  id="phone"
+                  label={t("phone")}
+                  value={field.value}
+                  onChange={field.onChange}
                   placeholder={t("phonePlaceholder")}
                   disabled={isLoading}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  error={initialForm.formState.errors.phone?.message}
+                  required
                 />
-              </div>
-              {initialForm.formState.errors.phone && (
-                <p className="text-sm text-destructive">{initialForm.formState.errors.phone.message}</p>
               )}
-            </div>
+            />
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? t("processing") : t("continueRegistration")}
             </Button>

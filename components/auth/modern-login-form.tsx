@@ -6,9 +6,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import PhoneInput from "react-phone-number-input"
-import { isValidPhoneNumber } from "react-phone-number-input"
-import flags from "react-phone-number-input/flags"
+import { isValidPhoneNumber } from "libphonenumber-js"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,7 +16,7 @@ import { Smartphone, Mail, ArrowLeft } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { checkUserExists, sendVerificationCode, verifyCode } from "@/app/actions/auth-api"
-import "react-phone-number-input/style.css"
+import { CustomPhoneInput } from "@/components/phone-input/custom-phone-input"
 
 interface ModernLoginFormProps {
   locale: string
@@ -44,6 +42,12 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
     try {
       const currentIdentifier = loginMethod === "email" ? identifier : phoneNumber
       console.log(`Submitting login with ${loginMethod}: ${currentIdentifier}`)
+
+      if (loginMethod === "phone" && !isValidPhoneNumber(phoneNumber)) {
+        setError(t("invalidPhoneNumber"))
+        setIsLoading(false)
+        return
+      }
 
       // Check if user exists in Remonline API
       const userExists = await checkUserExists(currentIdentifier)
@@ -176,24 +180,15 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
               </TabsContent>
               <TabsContent value="phone">
                 <form onSubmit={handleInitialSubmit} className="space-y-4 mt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">{t("phone")}</Label>
-                    <div className="phone-input-container">
-                      <PhoneInput
-                        international
-                        defaultCountry="CZ"
-                        flags={flags}
-                        value={phoneNumber}
-                        onChange={setPhoneNumber}
-                        placeholder={t("phonePlaceholder")}
-                        disabled={isLoading}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      />
-                    </div>
-                    {phoneNumber && !isValidPhoneNumber(phoneNumber) && (
-                      <p className="text-sm text-destructive">{t("invalidPhoneNumber")}</p>
-                    )}
-                  </div>
+                  <CustomPhoneInput
+                    id="phone"
+                    label={t("phone")}
+                    value={phoneNumber}
+                    onChange={setPhoneNumber}
+                    placeholder={t("phonePlaceholder")}
+                    disabled={isLoading}
+                    required
+                  />
                   <Button
                     type="submit"
                     className="w-full"
