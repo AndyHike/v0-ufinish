@@ -255,34 +255,69 @@ class RemonlineClient {
 
       console.log("Creating client with data:", clientData)
 
+      // Ensure phone is an array
+      const dataToSend = {
+        ...clientData,
+        phone: Array.isArray(clientData.phone) ? clientData.phone : clientData.phone ? [clientData.phone] : [],
+      }
+
+      // Log the exact request we're sending
+      console.log("POST URL:", `${this.baseUrl}/clients/?token=${this.token}`)
+      console.log("Request headers:", {
+        accept: "application/json",
+        "content-type": "application/json",
+      })
+      console.log("Request body:", JSON.stringify(dataToSend))
+
       const response = await fetch(`${this.baseUrl}/clients/?token=${this.token}`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           accept: "application/json",
+          "content-type": "application/json",
         },
-        body: JSON.stringify(clientData),
+        body: JSON.stringify(dataToSend),
       })
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error(`Failed to create client with status ${response.status}: ${errorText}`)
+      // Log the response status
+      console.log("Response status:", response.status)
+      console.log("Response headers:", Object.fromEntries(response.headers.entries()))
+
+      const responseText = await response.text()
+      console.log("Response text:", responseText)
+
+      let data
+      try {
+        data = JSON.parse(responseText)
+        console.log("Parsed response data:", data)
+      } catch (e) {
+        console.error("Failed to parse response as JSON:", responseText)
         return {
           success: false,
-          message: `Failed to create client with status ${response.status}`,
-          details: errorText,
+          message: `Failed to parse response: ${responseText}`,
+          details: e instanceof Error ? e.message : String(e),
         }
       }
 
-      const data = await response.json()
-      console.log("Create client response:", data)
-
-      if (data.success) {
-        return { success: true, client: data.data }
-      } else {
-        console.error("Failed to create client:", data)
-        return { success: false, message: data.message || "Failed to create client", details: data }
+      if (!response.ok) {
+        console.error(`Failed to create client with status ${response.status}:`, data)
+        return {
+          success: false,
+          message: `Failed to create client with status ${response.status}`,
+          details: data,
+        }
       }
+
+      if (!data.success) {
+        console.error("Failed to create client:", data)
+        return {
+          success: false,
+          message: data.message || "Failed to create client",
+          details: data,
+        }
+      }
+
+      console.log("Client created successfully:", data.data)
+      return { success: true, client: data.data }
     } catch (error) {
       console.error("Remonline createClient error:", error)
       return {

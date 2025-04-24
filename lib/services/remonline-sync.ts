@@ -10,6 +10,12 @@ export async function syncClientToRemonline(userData: {
   try {
     console.log("Syncing client to RemOnline in background:", userData)
 
+    // Ensure phone is in the correct format (array of strings)
+    const formattedUserData = {
+      ...userData,
+      phone: Array.isArray(userData.phone) ? userData.phone : userData.phone ? [userData.phone] : [],
+    }
+
     // Authenticate with RemOnline API
     const authResult = await remonline.auth()
     if (!authResult.success) {
@@ -33,8 +39,8 @@ export async function syncClientToRemonline(userData: {
     }
 
     // Create client in RemOnline
-    console.log("Creating client in RemOnline with data:", userData)
-    const response = await remonline.createClient(userData)
+    console.log("Creating client in RemOnline with data:", formattedUserData)
+    const response = await remonline.createClient(formattedUserData)
     console.log("Remonline createClient response:", response)
 
     if (!response.success) {
