@@ -99,6 +99,7 @@ export async function POST(request: Request) {
 
       if (!clientData.success) {
         console.error("Invalid client data:", clientData.error)
+        console.error("Client Data that failed validation:", clientDetails.client)
         return NextResponse.json({ error: "Invalid client data", details: clientData.error.errors }, { status: 400 })
       }
 
@@ -203,7 +204,7 @@ async function createNewUser(supabase: any, clientData: any) {
     const passwordHash = await hash(randomPassword)
 
     // Create user in our database
-    const { data: userData, error: userError } = await supabase
+    const { data: newUser, error: userError } = await supabase
       .from("users")
       .insert({
         email: email,
@@ -216,21 +217,44 @@ async function createNewUser(supabase: any, clientData: any) {
       .select("id")
       .single()
 
+    console.log("Supabase insert user data:", {
+      email: email,
+      name: `${firstName} ${lastName}`.trim(),
+      password_hash: passwordHash,
+      role: "user",
+      remonline_id: clientData.id,
+      email_verified: true,
+    })
+
     if (userError) {
       console.error("Error creating user from RemOnline webhook:", userError)
       return
     }
 
+    console.log("Supabase insert user result:", newUser)
+
     // Create profile
-    await supabase.from("profiles").insert({
-      id: userData.id,
+    const { error: profileError } = await supabase.from("profiles").insert({
+      id: newUser.id,
       name: `${firstName} ${lastName}`.trim(),
       phone,
       email,
       address,
     })
 
-    console.log(`User created from RemOnline webhook: ${userData.id}`)
+    console.log("Supabase insert profile data:", {
+      id: newUser.id,
+      name: `${firstName} ${lastName}`.trim(),
+      phone,
+      email,
+      address,
+    })
+
+    if (profileError) {
+      console.error("Error creating profile:", profileError)
+    }
+
+    console.log(`User created from RemOnline webhook: ${newUser.id}`)
   } catch (error) {
     console.error("Error in createNewUser:", error)
   }
@@ -251,7 +275,7 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
     }
 
     // Update user
-    await supabase
+    const { error: userError } = await supabase
       .from("users")
       .update({
         email,
@@ -259,8 +283,18 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
       })
       .eq("id", userId)
 
+    console.log("Supabase update user data:", {
+      email,
+      name: `${firstName} ${lastName}`.trim(),
+    })
+
+    if (userError) {
+      console.error("Error updating user from RemOnline webhook:", userError)
+      return
+    }
+
     // Update profile
-    await supabase
+    const { error: profileError } = await supabase
       .from("profiles")
       .update({
         name: `${firstName} ${lastName}`.trim(),
@@ -269,6 +303,17 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
         address,
       })
       .eq("id", userId)
+
+    console.log("Supabase update profile data:", {
+      name: `${firstName} ${lastName}`.trim(),
+      phone,
+      email,
+      address,
+    })
+
+    if (profileError) {
+      console.error("Error updating profile from RemOnline webhook:", profileError)
+    }
 
     console.log(`User updated from RemOnline webhook: ${userId}`)
   } catch (error) {

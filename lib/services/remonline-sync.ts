@@ -63,9 +63,14 @@ export async function updateRemonlineIdForUser(userId: string, remonlineId: numb
     const { createClient } = await import("@/lib/supabase")
     const supabase = createClient()
 
-    await supabase.from("users").update({ remonline_id: remonlineId }).eq("id", userId)
+    const { data, error } = await supabase.from("users").update({ remonline_id: remonlineId }).eq("id", userId).select() // Select the updated record to log it
 
-    console.log(`Updated RemOnline ID for user ${userId}: ${remonlineId}`)
+    if (error) {
+      console.error("Error updating RemOnline ID for user:", error)
+      return false
+    }
+
+    console.log(`Updated RemOnline ID for user ${userId}: ${remonlineId}`, data) // Log the updated record
     return true
   } catch (error) {
     console.error("Error updating RemOnline ID for user:", error)
