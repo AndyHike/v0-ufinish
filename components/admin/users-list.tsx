@@ -23,8 +23,7 @@ export function UsersList() {
   const users = [
     {
       id: "1",
-      firstName: "Олександр",
-      lastName: "Петренко",
+      name: "Олександр Петренко",
       email: "alex@example.com",
       role: "Користувач",
       status: "Активний",
@@ -32,8 +31,7 @@ export function UsersList() {
     },
     {
       id: "2",
-      firstName: "Марія",
-      lastName: "Ковальчук",
+      name: "Марія Ковальчук",
       email: "maria@example.com",
       role: "Адміністратор",
       status: "Активний",
@@ -41,8 +39,7 @@ export function UsersList() {
     },
     {
       id: "3",
-      firstName: "Іван",
-      lastName: "Сидоренко",
+      name: "Іван Сидоренко",
       email: "ivan@example.com",
       role: "Користувач",
       status: "Неактивний",
@@ -50,8 +47,7 @@ export function UsersList() {
     },
     {
       id: "4",
-      firstName: "Наталія",
-      lastName: "Василенко",
+      name: "Наталія Василенко",
       email: "natalia@example.com",
       role: "Користувач",
       status: "Активний",
@@ -59,8 +55,7 @@ export function UsersList() {
     },
     {
       id: "5",
-      firstName: "Сергій",
-      lastName: "Мельник",
+      name: "Сергій Мельник",
       email: "sergey@example.com",
       role: "Користувач",
       status: "Активний",
@@ -70,7 +65,7 @@ export function UsersList() {
 
   const filteredUsers = users.filter(
     (user) =>
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
@@ -104,16 +99,16 @@ export function UsersList() {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={`${user.firstName} ${user.lastName}`} />
+                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
                       <AvatarFallback>
-                        {user.firstName
+                        {user.name
                           .split(" ")
                           .map((n) => n[0])
                           .join("")}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium">{`${user.firstName} ${user.lastName}`}</p>
+                      <p className="font-medium">{user.name}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
