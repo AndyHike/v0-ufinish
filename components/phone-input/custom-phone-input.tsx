@@ -108,7 +108,7 @@ export const CustomPhoneInput = forwardRef<HTMLInputElement, CustomPhoneInputPro
           </Label>
         )}
         <div className="flex space-x-2">
-          <div className="w-[60px] flex-shrink-0">
+          <div className="w-[80px] flex-shrink-0">
             <CustomCountrySelect value={country} onChange={handleCountryChange} labels={en} disabled={disabled} />
           </div>
           <div className="flex-grow">

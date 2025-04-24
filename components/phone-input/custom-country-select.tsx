@@ -70,13 +70,14 @@ export function CustomCountrySelect({ value, onChange, labels, disabled }: Count
           className="flex justify-between w-full px-3 font-normal"
           disabled={disabled}
         >
-          <div className="flex items-center">
+          <div className="flex items-center overflow-hidden">
             {value ? (
-              <>
-                {getFlag(value)}&nbsp;+{getCountryCallingCode(value)}
-              </>
+              <span className="flex items-center truncate">
+                {getFlag(value)}
+                <span className="ml-1">+{getCountryCallingCode(value)}</span>
+              </span>
             ) : (
-              "Select country"
+              "Select"
             )}
           </div>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
