@@ -22,6 +22,8 @@ interface UserNavProps {
     email: string
     role: string
     name?: string
+    first_name?: string | null
+    last_name?: string | null
     avatar_url?: string
   } | null
 }
@@ -42,20 +44,27 @@ export function UserNav({ user }: UserNavProps) {
     )
   }
 
-  const initials = user.name
-    ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-    : user.email[0].toUpperCase()
+  // Get display name from first_name and last_name, or fallback to name or email
+  const displayName = user.name || [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email
+
+  // Get initials from first_name and last_name if available
+  const initials =
+    user.first_name && user.last_name
+      ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+      : user.name
+        ? user.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+        : user.email[0].toUpperCase()
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.avatar_url || ""} alt={user.name || user.email} />
+            <AvatarImage src={user.avatar_url || ""} alt={displayName} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
         </Button>
@@ -63,7 +72,7 @@ export function UserNav({ user }: UserNavProps) {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name || user.email}</p>
+            <p className="text-sm font-medium leading-none">{displayName}</p>
             <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
           </div>
         </DropdownMenuLabel>

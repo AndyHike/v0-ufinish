@@ -3,18 +3,12 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useTranslations } from "next-intl"
+import { useRouter } from "next/navigation"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,352 +18,607 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { MoreHorizontal, Search } from "lucide-react"
-import { format } from "date-fns"
+import { Loader2, MoreHorizontal, Search, Trash2, UserPlus } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
+import { formatPhoneNumber } from "@/utils/format-phone"
 
-type User = {
+interface User {
   id: string
   email: string
-  name?: string | null
-  phone?: string | null
+  first_name: string | null
+  last_name: string | null
+  full_name: string | null
   role: string
+  phone: string | null
+  avatar_url: string | null
   created_at: string
 }
 
 export function UsersManagement() {
-  const t = useTranslations("Admin")
+  const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [editingUser, setEditingUser] = useState<User | null>(null)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [roleFilter, setRoleFilter] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [userToDelete, setUserToDelete] = useState<User | null>(null)
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
-  const [viewingUser, setViewingUser] = useState<User | null>(null)
-
-  useEffect(() => {
-    fetchUsers()
-  }, [])
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [formData, setFormData] = useState({
+    email: "",
+    first_name: "",
+    last_name: "",
+    role: "user",
+    phone: "",
+    password: "",
+  })
+  const [formErrors, setFormErrors] = useState({
+    email: "",
+    password: "",
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const fetchUsers = async () => {
+    setLoading(true)
     try {
-      setLoading(true)
-      const response = await fetch("/api/admin/users")
+      const queryParams = new URLSearchParams()
+      if (searchQuery) queryParams.set("query", searchQuery)
+      if (roleFilter) queryParams.set("role", roleFilter)
+      queryParams.set("page", page.toString())
+      queryParams.set("limit", "10")
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`)
-      }
+      const response = await fetch(`/api/admin/users?${queryParams.toString()}`)
+      if (!response.ok) throw new Error("Failed to fetch users")
 
-      const userData = await response.json()
-      console.log("Fetched users data:", userData) // Debug log
-      console.log("Response Status:", response.status) // Debug log
-      console.log("Response OK:", response.ok) // Debug log
-
-      if (Array.isArray(userData)) {
-        setUsers(userData)
-      } else {
-        console.error("Unexpected API response format:", userData)
-        setUsers([])
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch users")
-      console.error("Error fetching users:", err)
+      const data = await response.json()
+      setUsers(data.users)
+      setTotalPages(data.totalPages)
+    } catch (error) {
+      console.error("Error fetching users:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load users. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value)
-  }
+  useEffect(() => {
+    fetchUsers()
+  }, [searchQuery, roleFilter, page])
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.name && user.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (user.phone && user.phone.toLowerCase().includes(searchQuery.toLowerCase())),
-  )
-
-  const handleEditUser = (user: User) => {
-    setEditingUser({ ...user })
-    setIsEditDialogOpen(true)
-  }
-
-  const handleViewUser = (user: User) => {
-    setViewingUser({ ...user })
-    setIsViewDialogOpen(true)
-  }
-
-  const handleDeleteUser = (user: User) => {
-    setUserToDelete(user)
-    setIsDeleteDialogOpen(true)
-  }
-
-  const saveUserChanges = async () => {
-    if (!editingUser) return
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setFormErrors({ email: "", password: "" })
 
     try {
-      const response = await fetch(`/api/admin/users/${editingUser.id}`, {
+      const response = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        if (data.details?.includes("email")) {
+          setFormErrors((prev) => ({ ...prev, email: "Email already exists or is invalid" }))
+        }
+        if (data.details?.includes("password")) {
+          setFormErrors((prev) => ({
+            ...prev,
+            password: "Password must be at least 6 characters",
+          }))
+        }
+        throw new Error(data.error || "Failed to create user")
+      }
+
+      toast({
+        title: "Success",
+        description: "User created successfully",
+      })
+      setIsCreateDialogOpen(false)
+      setFormData({
+        email: "",
+        first_name: "",
+        last_name: "",
+        role: "user",
+        phone: "",
+        password: "",
+      })
+      fetchUsers()
+    } catch (error) {
+      console.error("Error creating user:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create user",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedUser) return
+
+    setIsSubmitting(true)
+    try {
+      const response = await fetch(`/api/admin/users/${selectedUser.id}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: editingUser.name,
-          email: editingUser.email,
-          phone: editingUser.phone,
-          role: editingUser.role,
+          email: formData.email,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          role: formData.role,
+          phone: formData.phone,
         }),
       })
 
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`)
+        const data = await response.json()
+        throw new Error(data.error || "Failed to update user")
       }
 
-      // Update the user in the local state
-      setUsers(users.map((user) => (user.id === editingUser.id ? editingUser : user)))
+      toast({
+        title: "Success",
+        description: "User updated successfully",
+      })
       setIsEditDialogOpen(false)
-    } catch (err) {
-      console.error("Error updating user:", err)
-      setError(err instanceof Error ? err.message : "Failed to update user")
+      fetchUsers()
+    } catch (error) {
+      console.error("Error updating user:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update user",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
-  const confirmDeleteUser = async () => {
-    if (!userToDelete) return
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return
 
+    setIsSubmitting(true)
     try {
-      const response = await fetch(`/api/admin/users/${userToDelete.id}`, {
+      const response = await fetch(`/api/admin/users/${selectedUser.id}`, {
         method: "DELETE",
       })
 
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`)
+        const data = await response.json()
+        throw new Error(data.error || "Failed to delete user")
       }
 
-      // Remove the user from the local state
-      setUsers(users.filter((user) => user.id !== userToDelete.id))
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+      })
       setIsDeleteDialogOpen(false)
-    } catch (err) {
-      console.error("Error deleting user:", err)
-      setError(err instanceof Error ? err.message : "Failed to delete user")
+      fetchUsers()
+    } catch (error) {
+      console.error("Error deleting user:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete user",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
-  if (loading) {
-    return <div>{t("loading")}</div>
+  const openEditDialog = (user: User) => {
+    setSelectedUser(user)
+    setFormData({
+      email: user.email,
+      first_name: user.first_name || "",
+      last_name: user.last_name || "",
+      role: user.role,
+      phone: user.phone || "",
+      password: "", // Not needed for edit
+    })
+    setIsEditDialogOpen(true)
   }
 
-  if (error) {
-    return (
-      <div className="text-red-500">
-        {t("errorFetchingUsers")}: {error}
-      </div>
-    )
+  const openDeleteDialog = (user: User) => {
+    setSelectedUser(user)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("uk-UA", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
   }
 
   return (
-    <div>
-      <div className="flex items-center py-4">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder={t("searchUsers")}
-            className="w-full pl-8"
-            value={searchQuery}
-            onChange={handleSearch}
-          />
-        </div>
-      </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("user")}</TableHead>
-              <TableHead>{t("email")}</TableHead>
-              <TableHead>{t("phone")}</TableHead>
-              <TableHead>{t("role")}</TableHead>
-              <TableHead>{t("registrationDate")}</TableHead>
-              <TableHead className="text-right">{t("actions")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredUsers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  {t("noUsersFound")}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name || t("notSpecified")}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.phone || t("notSpecified")}</TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>
-                    {user.created_at ? format(new Date(user.created_at), "dd.MM.yyyy") : t("notSpecified")}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">{t("openMenu")}</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleViewUser(user)}>{t("viewProfile")}</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditUser(user)}>{t("edit")}</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteUser(user)}>
-                          {t("delete")}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-xl font-bold">Користувачі</CardTitle>
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Додати користувача
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4 flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-x-2 md:space-y-0">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Пошук користувачів..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setPage(1)
+                }}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Select
+                value={roleFilter || ""}
+                onValueChange={(value) => {
+                  setRoleFilter(value || null)
+                  setPage(1)
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Всі ролі" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Всі ролі</SelectItem>
+                  <SelectItem value="admin">Адміністратор</SelectItem>
+                  <SelectItem value="user">Користувач</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="flex h-40 items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Користувач</TableHead>
+                      <TableHead>Роль</TableHead>
+                      <TableHead className="hidden md:table-cell">Телефон</TableHead>
+                      <TableHead className="hidden md:table-cell">Дата реєстрації</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-24 text-center">
+                          Користувачів не знайдено
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage
+                                  src={
+                                    user.avatar_url ||
+                                    `/placeholder.svg?height=32&width=32&query=${encodeURIComponent(
+                                      user.full_name || user.email,
+                                    )}`
+                                  }
+                                  alt={user.full_name || user.email}
+                                />
+                                <AvatarFallback>
+                                  {user.first_name && user.last_name
+                                    ? `${user.first_name[0]}${user.last_name[0]}`
+                                    : user.email[0].toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium">{user.full_name || "Не вказано"}</p>
+                                <p className="text-xs text-muted-foreground">{user.email}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                user.role === "admin" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800"
+                              }`}
+                            >
+                              {user.role === "admin" ? "Адміністратор" : "Користувач"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {user.phone ? formatPhoneNumber(user.phone) : "Не вказано"}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">{formatDate(user.created_at)}</TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Меню</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Дії</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => openEditDialog(user)}>Редагувати</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={() => openDeleteDialog(user)}>
+                                  Видалити
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="mt-4 flex items-center justify-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                    disabled={page === 1}
+                  >
+                    Попередня
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Сторінка {page} з {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                    disabled={page === totalPages}
+                  >
+                    Наступна
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Create User Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Додати нового користувача</DialogTitle>
+            <DialogDescription>
+              Створіть новий обліковий запис користувача. Користувач отримає електронний лист із підтвердженням.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateUser}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="first_name">Ім'я</Label>
+                  <Input
+                    id="first_name"
+                    value={formData.first_name}
+                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="last_name">Прізвище</Label>
+                  <Input
+                    id="last_name"
+                    value={formData.last_name}
+                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+                {formErrors.email && <p className="text-sm text-destructive">{formErrors.email}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Телефон</Label>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+380XXXXXXXXX"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="role">Роль</Label>
+                <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Виберіть роль" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Користувач</SelectItem>
+                    <SelectItem value="admin">Адміністратор</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Пароль</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                />
+                {formErrors.password && <p className="text-sm text-destructive">{formErrors.password}</p>}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                Скасувати
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Створити
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{t("editUser")}</DialogTitle>
-            <DialogDescription>{t("editUserDescription")}</DialogDescription>
+            <DialogTitle>Редагувати користувача</DialogTitle>
+            <DialogDescription>Оновіть інформацію про користувача. Зміни будуть застосовані негайно.</DialogDescription>
           </DialogHeader>
-          {editingUser && (
+          <form onSubmit={handleEditUser}>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  {t("name")}
-                </Label>
-                <Input
-                  id="name"
-                  value={editingUser.name || ""}
-                  onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">
-                  {t("email")}
-                </Label>
-                <Input
-                  id="email"
-                  value={editingUser.email}
-                  onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="phone" className="text-right">
-                  {t("phone")}
-                </Label>
-                <Input
-                  id="phone"
-                  value={editingUser.phone || ""}
-                  onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="role" className="text-right">
-                  {t("role")}
-                </Label>
-                <select
-                  id="role"
-                  value={editingUser.role}
-                  onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
-                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="user">{t("roleUser")}</option>
-                  <option value="admin">{t("roleAdmin")}</option>
-                </select>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              {t("cancel")}
-            </Button>
-            <Button onClick={saveUserChanges}>{t("save")}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* View User Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{t("userProfile")}</DialogTitle>
-            <DialogDescription>{t("userProfileDescription")}</DialogDescription>
-          </DialogHeader>
-          {viewingUser && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right font-medium">{t("name")}:</Label>
-                <div className="col-span-3">{viewingUser.name || t("notSpecified")}</div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right font-medium">{t("email")}:</Label>
-                <div className="col-span-3">{viewingUser.email}</div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right font-medium">{t("phone")}:</Label>
-                <div className="col-span-3">{viewingUser.phone || t("notSpecified")}</div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right font-medium">{t("role")}:</Label>
-                <div className="col-span-3">{viewingUser.role}</div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right font-medium">{t("registrationDate")}:</Label>
-                <div className="col-span-3">
-                  {viewingUser.created_at ? format(new Date(viewingUser.created_at), "dd.MM.yyyy") : t("notSpecified")}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit_first_name">Ім'я</Label>
+                  <Input
+                    id="edit_first_name"
+                    value={formData.first_name}
+                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_last_name">Прізвище</Label>
+                  <Input
+                    id="edit_last_name"
+                    value={formData.last_name}
+                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_email">Email</Label>
+                <Input
+                  id="edit_email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_phone">Телефон</Label>
+                <Input
+                  id="edit_phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+380XXXXXXXXX"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_role">Роль</Label>
+                <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+                  <SelectTrigger id="edit_role">
+                    <SelectValue placeholder="Виберіть роль" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Користувач</SelectItem>
+                    <SelectItem value="admin">Адміністратор</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          )}
-          <DialogFooter>
-            <Button onClick={() => setIsViewDialogOpen(false)}>{t("close")}</Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Скасувати
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Зберегти
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
-      {/* Delete User Confirmation */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("confirmDeletion")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("deleteUserConfirmation")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteUser} className="bg-red-600 hover:bg-red-700">
-              {t("delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete User Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Видалити користувача</DialogTitle>
+            <DialogDescription>
+              Ви впевнені, що хочете видалити цього користувача? Ця дія не може бути скасована.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {selectedUser && (
+              <div className="flex items-center space-x-3">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage
+                    src={
+                      selectedUser.avatar_url ||
+                      `/placeholder.svg?height=40&width=40&query=${encodeURIComponent(
+                        selectedUser.full_name || selectedUser.email,
+                      )}`
+                    }
+                    alt={selectedUser.full_name || selectedUser.email}
+                  />
+                  <AvatarFallback>
+                    {selectedUser.first_name && selectedUser.last_name
+                      ? `${selectedUser.first_name[0]}${selectedUser.last_name[0]}`
+                      : selectedUser.email[0].toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">{selectedUser.full_name || "Не вказано"}</p>
+                  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Скасувати
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteUser} disabled={isSubmitting} className="gap-2">
+              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              <Trash2 className="h-4 w-4" />
+              Видалити
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

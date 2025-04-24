@@ -26,7 +26,7 @@ export async function getCurrentUser() {
   // Get user
   const { data: userData, error: userError } = await supabase
     .from("users")
-    .select("id, email, role, name")
+    .select("id, email, role, first_name, last_name")
     .eq("id", sessionData.user_id)
     .single()
 
@@ -36,10 +36,10 @@ export async function getCurrentUser() {
     return null
   }
 
-  // Get profile with phone number and name
+  // Get profile with phone number
   const { data: profileData } = await supabase
     .from("profiles")
-    .select("phone, avatar_url, name")
+    .select("phone, avatar_url, first_name, last_name")
     .eq("id", userData.id)
     .single()
 
@@ -47,12 +47,18 @@ export async function getCurrentUser() {
   console.log("User data:", userData)
   console.log("Profile data in session:", profileData)
 
+  // Combine first_name and last_name for full name
+  const fullName = [profileData?.first_name || userData.first_name, profileData?.last_name || userData.last_name]
+    .filter(Boolean)
+    .join(" ")
+
   return {
     id: userData.id,
     email: userData.email,
     role: userData.role,
-    // Use name from profile if available, otherwise from user table, or null as fallback
-    name: profileData?.name || userData.name || null,
+    name: fullName, // For backward compatibility
+    first_name: profileData?.first_name || userData.first_name || null,
+    last_name: profileData?.last_name || userData.last_name || null,
     phone: profileData?.phone || null,
     avatar_url: profileData?.avatar_url || null,
   }

@@ -3,7 +3,7 @@
  * @param phone Phone number to format
  * @returns Formatted phone number
  */
-export function formatPhone(phone: string): string {
+export function formatPhoneNumber(phone: string): string {
   // Remove all non-numeric characters
   const digitsOnly = phone.replace(/\D/g, "")
 
@@ -14,7 +14,7 @@ export function formatPhone(phone: string): string {
   if (!digitsOnly.startsWith("380") && !digitsOnly.startsWith("38") && !digitsOnly.startsWith("1")) {
     // If it starts with 0, replace that 0 with 380
     if (digitsOnly.startsWith("0")) {
-      formattedPhone = `38${digitsOnly}`
+      formattedPhone = `38${digitsOnly.slice(1)}`
     } else {
       formattedPhone = `380${digitsOnly}`
     }
@@ -27,3 +27,5 @@ export function formatPhone(phone: string): string {
 
   return formattedPhone
 }
+
+export const formatPhone = formatPhoneNumber

@@ -13,7 +13,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
       .select(`
         id, 
         email, 
-        name, 
+        first_name, 
+        last_name, 
         role, 
         created_at,
         profiles!inner(phone)
@@ -39,7 +40,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const transformedUser = {
       id: user.id,
       email: user.email,
-      name: user.name,
+      first_name: user.first_name,
+      last_name: user.last_name,
       role: user.role,
       created_at: user.created_at,
       phone: user.profiles?.phone || null,
@@ -56,7 +58,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   try {
     const id = params.id
     const body = await request.json()
-    const { name, email, role, phone } = body
+    const { first_name, last_name, email, role, phone } = body
 
     const supabase = createClient()
 
@@ -64,7 +66,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const { data: user, error } = await supabase
       .from("users")
       .update({
-        name,
+        first_name,
+        last_name,
         email,
         role,
         updated_at: new Date().toISOString(),
@@ -89,6 +92,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         .from("profiles")
         .update({
           phone,
+          first_name,
+          last_name,
           updated_at: new Date().toISOString(),
         })
         .eq("id", id)
@@ -118,7 +123,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       .select(`
         id, 
         email, 
-        name, 
+        first_name, 
+        last_name, 
         role, 
         created_at,
         profiles!inner(phone)
@@ -129,7 +135,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const transformedUser = {
       id: updatedUser.id,
       email: updatedUser.email,
-      name: updatedUser.name,
+      first_name: updatedUser.first_name,
+      last_name: updatedUser.last_name,
       role: updatedUser.role,
       created_at: updatedUser.created_at,
       phone: updatedUser.profiles?.phone || null,
@@ -148,7 +155,11 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     const supabase = createClient()
 
     // Get user email before deletion for activity log
-    const { data: user, error: fetchError } = await supabase.from("users").select("email").eq("id", id).single()
+    const { data: user, error: fetchError } = await supabase
+      .from("users")
+      .select("email, first_name, last_name")
+      .eq("id", id)
+      .single()
 
     if (fetchError) {
       return NextResponse.json(
@@ -174,11 +185,14 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     }
 
     // Log activity
+    const userName = user ? `${user.first_name || ""} ${user.last_name || ""}`.trim() : ""
+    const userIdentifier = userName || user?.email || id
+
     await logActivity({
       action: "delete",
       entity: "user",
       entityId: id,
-      details: `Deleted user: ${user?.email || id}`,
+      details: `Deleted user: ${userIdentifier}`,
     })
 
     return NextResponse.json({ success: true })

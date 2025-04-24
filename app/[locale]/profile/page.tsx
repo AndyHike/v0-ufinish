@@ -21,7 +21,7 @@ export default async function ProfilePage() {
   const supabase = createClient()
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("name, phone, address, created_at")
+    .select("first_name, last_name, phone, address, created_at")
     .eq("id", session.user.id)
     .single()
 
@@ -31,7 +31,8 @@ export default async function ProfilePage() {
   // If profile data is missing, get from users table
   const userData = {
     ...session.user,
-    name: session.user.name || profile?.name || null,
+    first_name: profile?.first_name || session.user.first_name || null,
+    last_name: profile?.last_name || session.user.last_name || null,
     phone: profile?.phone || session.user.phone || null,
     address: profile?.address || null,
     created_at: profile?.created_at || new Date().toISOString(),

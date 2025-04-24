@@ -23,51 +23,55 @@ export function UsersList() {
   const users = [
     {
       id: "1",
-      name: "Олександр Петренко",
+      first_name: "Олександр",
+      last_name: "Петренко",
       email: "alex@example.com",
       role: "Користувач",
       status: "Активний",
-      avatar: "/placeholder.svg?height=40&width=40&query=user",
+      avatar: "/vibrant-street-market.png",
     },
     {
       id: "2",
-      name: "Марія Ковальчук",
+      first_name: "Марія",
+      last_name: "Ковальчук",
       email: "maria@example.com",
       role: "Адміністратор",
       status: "Активний",
-      avatar: "/placeholder.svg?height=40&width=40&query=user",
+      avatar: "/vibrant-street-market.png",
     },
     {
       id: "3",
-      name: "Іван Сидоренко",
+      first_name: "Іван",
+      last_name: "Сидоренко",
       email: "ivan@example.com",
       role: "Користувач",
       status: "Неактивний",
-      avatar: "/placeholder.svg?height=40&width=40&query=user",
+      avatar: "/vibrant-street-market.png",
     },
     {
       id: "4",
-      name: "Наталія Василенко",
+      first_name: "Наталія",
+      last_name: "Василенко",
       email: "natalia@example.com",
       role: "Користувач",
       status: "Активний",
-      avatar: "/placeholder.svg?height=40&width=40&query=user",
+      avatar: "/vibrant-street-market.png",
     },
     {
       id: "5",
-      name: "Сергій Мельник",
+      first_name: "Сергій",
+      last_name: "Мельник",
       email: "sergey@example.com",
       role: "Користувач",
       status: "Активний",
-      avatar: "/placeholder.svg?height=40&width=40&query=user",
+      avatar: "/vibrant-street-market.png",
     },
   ]
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  const filteredUsers = users.filter((user) => {
+    const fullName = `${user.first_name} ${user.last_name}`.toLowerCase()
+    return fullName.includes(searchQuery.toLowerCase()) || user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  })
 
   return (
     <Card>
@@ -99,16 +103,19 @@ export function UsersList() {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                      <AvatarImage
+                        src={user.avatar || "/placeholder.svg"}
+                        alt={`${user.first_name} ${user.last_name}`}
+                      />
                       <AvatarFallback>
-                        {user.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
+                        {user.first_name.charAt(0)}
+                        {user.last_name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium">{user.name}</p>
+                      <p className="font-medium">
+                        {user.first_name} {user.last_name}
+                      </p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
