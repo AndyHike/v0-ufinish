@@ -1,26 +1,30 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
-import { useTranslation } from "i18next"
+import { ArrowLeft, Smartphone } from "lucide-react"
 
 interface ModernLoginFormProps {
-  onSuccess: () => void
+  locale: string
+  onSuccess?: () => void
 }
 
-const ModernLoginForm: React.FC<ModernLoginFormProps> = ({ onSuccess }) => {
+export function ModernLoginForm({ locale, onSuccess }: ModernLoginFormProps) {
+  const t = useTranslations("Auth")
+  const router = useRouter()
   const [step, setStep] = useState<"initial" | "verification">("initial")
   const [identifier, setIdentifier] = useState("")
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [verificationCode, setVerificationCode] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { t } = useTranslation()
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,7 +34,7 @@ const ModernLoginForm: React.FC<ModernLoginFormProps> = ({ onSuccess }) => {
     // Simulate API call for login and sending verification code
     setTimeout(() => {
       // Assuming the API returns success and user email
-      setUserEmail("test@example.com") // Replace with actual email from API
+      setUserEmail(identifier) // Use the entered identifier as the email
       setStep("verification")
       setIsLoading(false)
     }, 1500)
@@ -44,7 +48,12 @@ const ModernLoginForm: React.FC<ModernLoginFormProps> = ({ onSuccess }) => {
     // Simulate API call for verification
     setTimeout(() => {
       // Assuming the API returns success
-      onSuccess()
+      if (verificationCode === "123456") {
+        // Redirect to home page or dashboard
+        router.push(`/${locale}`)
+      } else {
+        setError("invalidVerificationCode")
+      }
       setIsLoading(false)
     }, 1500)
   }
@@ -54,32 +63,37 @@ const ModernLoginForm: React.FC<ModernLoginFormProps> = ({ onSuccess }) => {
     // Simulate resending the code
     setTimeout(() => {
       setIsLoading(false)
+      // Show a toast or message
       alert("Verification code resent!")
     }, 1000)
   }
 
   return (
-    <Card className="w-[350px]">
+    <Card className="w-full">
       <CardHeader className="space-y-1">
-        <CardTitle>{t("login")}</CardTitle>
-        <CardDescription>{t("enterYourCredentials")}</CardDescription>
+        <div className="flex flex-col items-center space-y-2">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <Smartphone className="h-6 w-6 text-primary" />
+          </div>
+          <CardTitle>{t("signInToAccount")}</CardTitle>
+        </div>
       </CardHeader>
       <CardContent className="grid gap-4">
         {step === "initial" && (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">{t("emailOrUsername")}</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                placeholder={t("emailOrUsernamePlaceholder")}
-                type="text"
+                placeholder="Enter your email"
+                type="email"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? t("processing") : t("login")}
+              {isLoading ? "Processing..." : "Continue"}
             </Button>
           </form>
         )}
@@ -97,7 +111,7 @@ const ModernLoginForm: React.FC<ModernLoginFormProps> = ({ onSuccess }) => {
             </Button>
 
             <div className="text-center mb-4">
-              <p>{t("verificationCodeSent")}</p>
+              <p>A verification code has been sent to your email</p>
               <p className="text-sm text-muted-foreground mt-1">{userEmail || identifier}</p>
             </div>
 
@@ -113,10 +127,10 @@ const ModernLoginForm: React.FC<ModernLoginFormProps> = ({ onSuccess }) => {
                   maxLength={6}
                   required
                 />
-                {error && <p className="text-sm text-destructive">{t(error) || error}</p>}
+                {error && <p className="text-sm text-destructive">{t(error)}</p>}
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? t("processing") : t("verifyAndLogin")}
+                {isLoading ? "Verifying..." : "Verify and Login"}
               </Button>
               <Button
                 type="button"
@@ -125,7 +139,7 @@ const ModernLoginForm: React.FC<ModernLoginFormProps> = ({ onSuccess }) => {
                 onClick={handleResendCode}
                 disabled={isLoading}
               >
-                {t("resendCode")}
+                Resend Code
               </Button>
             </form>
           </div>
@@ -135,5 +149,5 @@ const ModernLoginForm: React.FC<ModernLoginFormProps> = ({ onSuccess }) => {
   )
 }
 
-export { ModernLoginForm }
+// Add named export to fix deployment error
 export default ModernLoginForm
