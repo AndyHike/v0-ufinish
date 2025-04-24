@@ -90,7 +90,20 @@ export const CustomPhoneInput = forwardRef<HTMLInputElement, CustomPhoneInputPro
     }
 
     const displayNumber = formatNationalNumber(nationalNumber, country)
-    const isValid = value ? isValidPhoneNumber(value) : true
+
+    // Validate phone number
+    const isValid = () => {
+      if (!value) return true // Consider empty input as valid
+
+      try {
+        const parsedNumber = parsePhoneNumber(value)
+        return parsedNumber && isValidPhoneNumber(value)
+      } catch (error) {
+        return false
+      }
+    }
+
+    const isCurrentlyValid = isValid()
 
     return (
       <div className="space-y-2">
@@ -100,7 +113,7 @@ export const CustomPhoneInput = forwardRef<HTMLInputElement, CustomPhoneInputPro
           </Label>
         )}
         <div className="flex space-x-2">
-          <div className="w-[180px] flex-shrink-0">
+          <div className="w-[60px] flex-shrink-0">
             <CustomCountrySelect value={country} onChange={handleCountryChange} labels={en} disabled={disabled} />
           </div>
           <div className="flex-grow">
@@ -112,11 +125,13 @@ export const CustomPhoneInput = forwardRef<HTMLInputElement, CustomPhoneInputPro
               onChange={handleNumberChange}
               placeholder={placeholder}
               disabled={disabled}
-              className={error || !isValid ? "border-destructive" : ""}
+              className={error || !isCurrentlyValid ? "border-destructive" : ""}
             />
           </div>
         </div>
-        {(error || !isValid) && value && <p className="text-sm text-destructive">{error || "Invalid phone number"}</p>}
+        {(error || !isCurrentlyValid) && value && (
+          <p className="text-sm text-destructive">{error || "Invalid phone number"}</p>
+        )}
       </div>
     )
   },

@@ -70,16 +70,7 @@ export function CustomCountrySelect({ value, onChange, labels, disabled }: Count
           className="flex justify-between w-full px-3 font-normal"
           disabled={disabled}
         >
-          <div className="flex items-center">
-            {value ? (
-              <>
-                {getFlag(value)}
-                <span>{labels[value] || en[value]}</span>
-              </>
-            ) : (
-              "Select country"
-            )}
-          </div>
+          <div className="flex items-center">{value ? <>{getFlag(value)}</> : "Select country"}</div>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
