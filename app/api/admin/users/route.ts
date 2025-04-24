@@ -29,6 +29,8 @@ export async function GET() {
       )
     }
 
+    console.log("Fetched users from Supabase:", users) // Debug log
+
     // Transform the data to flatten the structure
     const transformedUsers = users.map((user) => ({
       id: user.id,

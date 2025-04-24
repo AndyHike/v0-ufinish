@@ -74,6 +74,8 @@ export function UsersManagement() {
 
       const userData = await response.json()
       console.log("Fetched users data:", userData) // Debug log
+      console.log("Response Status:", response.status) // Debug log
+      console.log("Response OK:", response.ok) // Debug log
 
       if (Array.isArray(userData)) {
         setUsers(userData)
