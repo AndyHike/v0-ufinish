@@ -215,6 +215,7 @@ async function createNewUser(supabase: any, clientData: any) {
         first_name: firstName,
         last_name: lastName,
         name: `${firstName} ${lastName}`.trim(),
+        password_hash: passwordHash,
         role: "user",
         remonline_id: clientData.id,
         email_verified: true, // Since it's coming from RemOnline, we can trust it
