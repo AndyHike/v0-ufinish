@@ -69,7 +69,8 @@
     "@formatjs/intl-localematcher": "latest",
     "negotiator": "latest",
     "papaparse": "latest",
-    "react-csv": "latest"
+    "react-csv": "latest",
+    "i18next": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
