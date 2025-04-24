@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase"
 import { hash } from "@/lib/auth/utils"
 import { z } from "zod"
 import remonline from "@/lib/api/remonline"
-import { syncClientToRemonline, updateRemonlineIdForUser } from "@/lib/api/remonline"
 
 // This is the secret key that RemOnline will use to authenticate the webhook
 // You should set this in your environment variables and configure it in RemOnline
@@ -204,7 +203,7 @@ async function createNewUser(supabase: any, clientData: any) {
     const passwordHash = await hash(randomPassword)
 
     // Create user in our database
-    const { data: newUser, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from("users")
       .insert({
         email: email,
@@ -224,33 +223,14 @@ async function createNewUser(supabase: any, clientData: any) {
 
     // Create profile
     await supabase.from("profiles").insert({
-      id: newUser.id,
+      id: userData.id,
       name: `${firstName} ${lastName}`.trim(),
       phone,
       email,
       address,
     })
 
-    console.log(`User created from RemOnline webhook: ${newUser.id}`)
-
-    // Sync with RemOnline in the background and update remonline_id
-    syncClientToRemonline({
-      first_name: firstName,
-      last_name: lastName,
-      email: email,
-      phone: clientData.phone || [],
-      address: address,
-    })
-      .then(async (result) => {
-        if (result.success && result.remonlineId) {
-          // Await the updateRemonlineIdForUser function
-          await updateRemonlineIdForUser(newUser.id, result.remonlineId)
-          console.log(`Successfully synced RemOnline ID for user ${newUser.id}: ${result.remonlineId}`)
-        }
-      })
-      .catch((error) => {
-        console.error("Error syncing with RemOnline:", error)
-      })
+    console.log(`User created from RemOnline webhook: ${userData.id}`)
   } catch (error) {
     console.error("Error in createNewUser:", error)
   }
