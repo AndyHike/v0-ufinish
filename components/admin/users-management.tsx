@@ -235,7 +235,6 @@ export function UsersManagement() {
                         <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleViewUser(user)}>{t("viewProfile")}</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEditUser(user)}>{t("edit")}</DropdownMenuItem>
-                        <DropdownMenuItem>Змінити роль</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteUser(user)}>
                           {t("delete")}

@@ -27,7 +27,7 @@ export function UsersList() {
       email: "alex@example.com",
       role: "Користувач",
       status: "Активний",
-      avatar: "/placeholder.svg?key=aax1y",
+      avatar: "/placeholder.svg?height=40&width=40&query=user",
     },
     {
       id: "2",
@@ -35,7 +35,7 @@ export function UsersList() {
       email: "maria@example.com",
       role: "Адміністратор",
       status: "Активний",
-      avatar: "/placeholder.svg?key=qwq56",
+      avatar: "/placeholder.svg?height=40&width=40&query=user",
     },
     {
       id: "3",
@@ -43,7 +43,7 @@ export function UsersList() {
       email: "ivan@example.com",
       role: "Користувач",
       status: "Неактивний",
-      avatar: "/placeholder.svg?key=ekg2a",
+      avatar: "/placeholder.svg?height=40&width=40&query=user",
     },
     {
       id: "4",
@@ -51,7 +51,7 @@ export function UsersList() {
       email: "natalia@example.com",
       role: "Користувач",
       status: "Активний",
-      avatar: "/placeholder.svg?key=wojjf",
+      avatar: "/placeholder.svg?height=40&width=40&query=user",
     },
     {
       id: "5",
@@ -59,7 +59,7 @@ export function UsersList() {
       email: "sergey@example.com",
       role: "Користувач",
       status: "Активний",
-      avatar: "/placeholder.svg?key=ox3zs",
+      avatar: "/placeholder.svg?height=40&width=40&query=user",
     },
   ]
 
