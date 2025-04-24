@@ -27,12 +27,6 @@ const remonlineWebhookSchema = z.object({
     object_id: z.number(),
     object_type: z.string(),
   }),
-  metadata: z.object({
-    client: z.object({
-      id: z.number(),
-      name: z.string(),
-    }),
-  }),
   employee: z.object({
     id: z.number(),
     full_name: z.string(),
@@ -218,8 +212,9 @@ async function createNewUser(supabase: any, clientData: any) {
       .from("users")
       .insert({
         email: email,
+        first_name: firstName,
+        last_name: lastName,
         name: `${firstName} ${lastName}`.trim(),
-        password_hash: passwordHash,
         role: "user",
         remonline_id: clientData.id,
         email_verified: true, // Since it's coming from RemOnline, we can trust it
@@ -246,6 +241,8 @@ async function createNewUser(supabase: any, clientData: any) {
     // Create profile with email and address
     const profileData = {
       id: newUser.id,
+      first_name: firstName,
+      last_name: lastName,
       name: `${firstName} ${lastName}`.trim(),
       phone,
       email, // Обов'язково додаємо email в profiles
@@ -292,6 +289,8 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
       .from("users")
       .update({
         email, // Оновлюємо email в users
+        first_name: firstName,
+        last_name: lastName,
         name: `${firstName} ${lastName}`.trim(),
       })
       .eq("id", userId)
