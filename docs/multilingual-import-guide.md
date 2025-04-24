@@ -20,7 +20,7 @@ CSV-файл для імпорту послуг повинен містити н
 
 ### Приклад CSV-файлу
 
-```csv
+\`\`\`csv
 brand,model,service_uk,description_uk,service_en,description_en,service_cs,description_cs,price
 Apple,iPhone 13,Заміна екрану,Професійна заміна розбитого або пошкодженого екрану,Screen Replacement,Professional replacement of broken or damaged screens,Výměna displeje,Profesionální výměna rozbitého nebo poškozeného displeje,2500
 Samsung,Galaxy S21,Заміна батареї,Відновлення тривалості роботи вашого телефону з новою батареєю,Battery Replacement,Restore your phone's battery life with a new battery,Výměna baterie,Obnovení výdrže vašeho telefonu s novou baterií,1200

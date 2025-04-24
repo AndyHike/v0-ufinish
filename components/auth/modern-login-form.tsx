@@ -3,74 +3,122 @@
 import type React from "react"
 
 import { useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Smartphone } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Smartphone, Mail, ArrowLeft } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { checkUserExists, sendVerificationCode, verifyCode } from "@/app/actions/auth-api"
 
 interface ModernLoginFormProps {
   locale: string
-  onSuccess?: () => void
 }
 
-export function ModernLoginForm({ locale, onSuccess }: ModernLoginFormProps) {
+export function ModernLoginForm({ locale }: ModernLoginFormProps) {
   const t = useTranslations("Auth")
   const router = useRouter()
-  const [step, setStep] = useState<"initial" | "verification">("initial")
-  const [identifier, setIdentifier] = useState("")
-  const [userEmail, setUserEmail] = useState<string | null>(null)
-  const [verificationCode, setVerificationCode] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [identifier, setIdentifier] = useState("")
+  const [error, setError] = useState("")
+  const [step, setStep] = useState<"initial" | "verification">("initial")
+  const [verificationCode, setVerificationCode] = useState("")
+  const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email")
+  const [userEmail, setUserEmail] = useState("")
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
+  const handleInitialSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setError(null)
+    setError("")
 
-    // Simulate API call for login and sending verification code
-    setTimeout(() => {
-      // Assuming the API returns success and user email
-      setUserEmail(identifier) // Use the entered identifier as the email
+    try {
+      console.log(`Submitting login with ${loginMethod}: ${identifier}`)
+
+      // Check if user exists in Remonline API
+      const userExists = await checkUserExists(identifier)
+
+      if (!userExists.success) {
+        setError(userExists.message || t("userNotFound"))
+        setIsLoading(false)
+        return
+      }
+
+      console.log("User exists:", userExists)
+
+      // Send verification code
+      const result = await sendVerificationCode(identifier, "login")
+
+      if (!result.success) {
+        setError(result.message || t("somethingWentWrong"))
+        setIsLoading(false)
+        return
+      }
+
+      // If the verification code was sent to a different email (in case of phone login)
+      if (result.email) {
+        setUserEmail(result.email)
+      }
+
+      // Move to verification step
       setStep("verification")
+    } catch (error) {
+      console.error("Login error:", error)
+      setError(t("somethingWentWrong"))
+    } finally {
       setIsLoading(false)
-    }, 1500)
+    }
   }
 
   const handleVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setError(null)
+    setError("")
 
-    // Simulate API call for verification
-    setTimeout(() => {
-      // Assuming the API returns success
-      if (verificationCode === "123456") {
-        // Redirect to home page or dashboard
-        router.push(`/${locale}`)
-      } else {
-        setError("invalidVerificationCode")
+    try {
+      // Verify the code
+      const result = await verifyCode(identifier, verificationCode, "login")
+
+      if (!result.success) {
+        setError(result.message || t("invalidVerificationCode"))
+        setIsLoading(false)
+        return
       }
+
+      // Redirect to appropriate page after successful login
+      router.push(`/${locale}`)
+    } catch (error) {
+      console.error("Verification error:", error)
+      setError(t("somethingWentWrong"))
+    } finally {
       setIsLoading(false)
-    }, 1500)
+    }
   }
 
-  const handleResendCode = () => {
+  const handleResendCode = async () => {
     setIsLoading(true)
-    // Simulate resending the code
-    setTimeout(() => {
+    setError("")
+
+    try {
+      const result = await sendVerificationCode(identifier, "login")
+
+      if (!result.success) {
+        setError(result.message || t("somethingWentWrong"))
+      }
+    } catch (error) {
+      console.error("Resend code error:", error)
+      setError(t("somethingWentWrong"))
+    } finally {
       setIsLoading(false)
-      // Show a toast or message
-      alert("Verification code resent!")
-    }, 1000)
+    }
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader className="space-y-1">
+    <Card>
+      <CardHeader>
         <div className="flex flex-col items-center space-y-2">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <Smartphone className="h-6 w-6 text-primary" />
@@ -78,24 +126,71 @@ export function ModernLoginForm({ locale, onSuccess }: ModernLoginFormProps) {
           <CardTitle>{t("signInToAccount")}</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="grid gap-4">
+      <CardContent>
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         {step === "initial" && (
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                placeholder="Enter your email"
-                type="email"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                required
-              />
+          <>
+            <Tabs defaultValue="email" onValueChange={(value) => setLoginMethod(value as "email" | "phone")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="email">
+                  <Mail className="mr-2 h-4 w-4" />
+                  {t("emailLogin")}
+                </TabsTrigger>
+                <TabsTrigger value="phone">
+                  <Smartphone className="mr-2 h-4 w-4" />
+                  {t("phoneLogin")}
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="email">
+                <form onSubmit={handleInitialSubmit} className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">{t("email")}</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      placeholder={t("emailPlaceholder")}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? t("processing") : t("continueLogin")}
+                  </Button>
+                </form>
+              </TabsContent>
+              <TabsContent value="phone">
+                <form onSubmit={handleInitialSubmit} className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">{t("phone")}</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      placeholder={t("phonePlaceholder")}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? t("processing") : t("continueLogin")}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+
+            <div className="mt-4 text-center text-sm">
+              <span className="text-muted-foreground">{t("noAccount")}</span>{" "}
+              <Link href={`/${locale}/auth/register`} className="text-primary hover:underline">
+                {t("register")}
+              </Link>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Processing..." : "Continue"}
-            </Button>
-          </form>
+          </>
         )}
 
         {step === "verification" && (
@@ -111,7 +206,7 @@ export function ModernLoginForm({ locale, onSuccess }: ModernLoginFormProps) {
             </Button>
 
             <div className="text-center mb-4">
-              <p>A verification code has been sent to your email</p>
+              <p>{t("verificationCodeSent")}</p>
               <p className="text-sm text-muted-foreground mt-1">{userEmail || identifier}</p>
             </div>
 
@@ -127,10 +222,9 @@ export function ModernLoginForm({ locale, onSuccess }: ModernLoginFormProps) {
                   maxLength={6}
                   required
                 />
-                {error && <p className="text-sm text-destructive">{t(error)}</p>}
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Verifying..." : "Verify and Login"}
+                {isLoading ? t("processing") : t("verifyAndLogin")}
               </Button>
               <Button
                 type="button"
@@ -139,7 +233,7 @@ export function ModernLoginForm({ locale, onSuccess }: ModernLoginFormProps) {
                 onClick={handleResendCode}
                 disabled={isLoading}
               >
-                Resend Code
+                {t("resendCode")}
               </Button>
             </form>
           </div>
@@ -148,6 +242,3 @@ export function ModernLoginForm({ locale, onSuccess }: ModernLoginFormProps) {
     </Card>
   )
 }
-
-// Add named export to fix deployment error
-export default ModernLoginForm

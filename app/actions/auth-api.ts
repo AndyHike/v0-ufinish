@@ -1,117 +1,435 @@
 "use server"
-import { createClient } from "@/lib/supabase"
 
-// Check if a user with the given email already exists
-export async function checkUserExists(email: string) {
+import { cookies } from "next/headers"
+import { createClient } from "@/lib/supabase"
+import {
+  generateVerificationCode,
+  saveVerificationCode,
+  verifyCode as verifyCodeLib,
+} from "@/lib/auth/verification-code"
+import { sendVerificationCode as sendVerificationCodeEmail } from "@/lib/email/send-email"
+import { syncClientToRemonline, updateRemonlineIdForUser } from "@/lib/services/remonline-sync"
+import { hash } from "@/lib/auth/utils"
+
+// Check if user exists in our database
+export async function checkUserExists(identifier: string): Promise<{
+  success: boolean
+  message?: string
+  userData?: {
+    id: string
+    email: string
+    name: string
+    phone?: string
+  }
+}> {
   try {
-    console.log(`Checking if user exists with email: ${email}`)
+    console.log(`Checking if user exists with identifier: ${identifier}`)
+
     const supabase = createClient()
 
-    const { data, error } = await supabase.from("users").select("id").eq("email", email.toLowerCase()).maybeSingle()
+    // Determine if identifier is email or phone
+    const isEmail = identifier.includes("@")
 
-    if (error) {
-      console.error("Error checking if user exists:", error)
-      return { success: false, exists: false, message: "Error checking user" }
+    let userData
+
+    if (isEmail) {
+      // Search by email
+      const { data, error } = await supabase
+        .from("users")
+        .select(`
+          id, 
+          email, 
+          name,
+          profiles!inner(phone)
+        `)
+        .eq("email", identifier.toLowerCase())
+        .maybeSingle()
+
+      if (error) {
+        console.error("Error checking user by email:", error)
+        return {
+          success: false,
+          message: "Error checking user. Please try again later.",
+        }
+      }
+
+      userData = data
+    } else {
+      // Search by phone
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          phone,
+          email,
+          name,
+          users!inner(id, email, name)
+        `)
+        .eq("phone", identifier)
+        .maybeSingle()
+
+      if (error) {
+        console.error("Error checking user by phone:", error)
+        return {
+          success: false,
+          message: "Error checking user. Please try again later.",
+        }
+      }
+
+      if (data) {
+        userData = {
+          id: data.users.id,
+          email: data.users.email,
+          name: data.users.name,
+          phone: data.phone,
+        }
+      }
     }
 
-    return {
-      success: true,
-      exists: !!data,
-      userId: data?.id,
-    }
-  } catch (error) {
-    console.error("Error in checkUserExists:", error)
-    return { success: false, exists: false, message: "Unexpected error" }
-  }
-}
-
-// Send verification code for login or registration
-export async function sendVerificationCode(email: string, type: "login" | "registration") {
-  try {
-    console.log(`Sending verification code to ${email} for ${type}`)
-
-    // Generate a random 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString()
-
-    // In a real implementation, you would:
-    // 1. Save the code to the database with an expiration time
-    // 2. Send the code via email
-
-    // For now, we'll just log it and return success
-    console.log(`EMAIL WOULD BE SENT to ${email} with code: ${code}`)
-
-    return {
-      success: true,
-      message: "Verification code sent",
-    }
-  } catch (error) {
-    console.error(`Error sending verification code for ${type}:`, error)
-    return {
-      success: false,
-      message: "Failed to send verification code",
-    }
-  }
-}
-
-// Verify a code sent to the user
-export async function verifyCode(email: string, code: string, type: "login" | "registration") {
-  try {
-    console.log(`Verifying code for ${email}: ${code} (${type})`)
-
-    // In a real implementation, you would:
-    // 1. Check if the code exists and is valid for this email
-    // 2. Check if the code has expired
-
-    // For demo purposes, we'll accept code "123456"
-    if (code === "123456") {
+    if (userData) {
       return {
         success: true,
-        message: "Code verified successfully",
+        userData: {
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          phone: isEmail ? userData.profiles?.phone : userData.phone,
+        },
       }
     }
 
     return {
       success: false,
-      message: "Invalid verification code",
+      message: "User not found",
     }
   } catch (error) {
-    console.error(`Error verifying code for ${type}:`, error)
+    console.error("Check user error:", error)
     return {
       success: false,
-      message: "Failed to verify code",
+      message: "Failed to check if user exists. Please try again later.",
     }
   }
 }
 
-// Create a new user
+// Send verification code
+export async function sendVerificationCode(
+  identifier: string,
+  type: "login" | "registration",
+): Promise<{ success: boolean; message?: string; email?: string }> {
+  try {
+    console.log(`Sending verification code for ${type} to identifier: ${identifier}`)
+
+    // If identifier is an email, use it directly
+    // If it's a phone number, we need to find the associated email
+    let email = identifier
+
+    if (!identifier.includes("@")) {
+      // It's a phone number, find the associated email
+      const userResult = await checkUserExists(identifier)
+      if (!userResult.success || !userResult.userData) {
+        return {
+          success: false,
+          message: "Could not find a user with this phone number",
+        }
+      }
+
+      email = userResult.userData.email
+    }
+
+    console.log(`Will send verification code to email: ${email}`)
+
+    // Generate verification code
+    const code = generateVerificationCode()
+    console.log(`Generated code: ${code}`)
+
+    // Save code to database
+    const saved = await saveVerificationCode(email, code, type)
+    if (!saved) {
+      console.error("Failed to save verification code to database")
+      return {
+        success: false,
+        message: "Failed to generate verification code",
+      }
+    }
+
+    // Send email with code
+    try {
+      await sendVerificationCodeEmail(email, code, "uk", type === "login")
+      console.log(`Verification code sent to ${email}`)
+      return { success: true, email }
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError)
+      return {
+        success: false,
+        message: "Failed to send verification email",
+      }
+    }
+  } catch (error) {
+    console.error("Send verification code error:", error)
+    return {
+      success: false,
+      message: "Failed to send verification code. Please try again later.",
+    }
+  }
+}
+
+// Verify code and create session
+export async function verifyCode(
+  identifier: string,
+  code: string,
+  type: "login" | "registration",
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    console.log(`Verifying code for ${identifier}: ${code}`)
+
+    // If identifier is a phone number, we need to find the associated email
+    let email = identifier
+    let userId = null
+
+    if (!identifier.includes("@")) {
+      // It's a phone number, find the associated email
+      const userResult = await checkUserExists(identifier)
+      if (!userResult.success || !userResult.userData) {
+        return {
+          success: false,
+          message: "Could not find a user with this phone number",
+        }
+      }
+
+      email = userResult.userData.email
+      userId = userResult.userData.id
+    } else {
+      // It's an email, get the user ID
+      const userResult = await checkUserExists(identifier)
+      if (userResult.success && userResult.userData) {
+        userId = userResult.userData.id
+      }
+    }
+
+    // Verify code
+    const verification = await verifyCodeLib(email, code, type)
+    if (!verification.valid) {
+      console.error("Invalid verification code:", verification.message)
+      return {
+        success: false,
+        message: verification.message || "Invalid verification code",
+      }
+    }
+
+    console.log("Code verified successfully")
+
+    if (type === "login") {
+      // For login, create session
+      const supabase = createClient()
+
+      // If we don't have a userId yet, get it from the database
+      if (!userId) {
+        const { data: userData } = await supabase
+          .from("users")
+          .select("id")
+          .eq("email", email.toLowerCase())
+          .maybeSingle()
+
+        if (!userData) {
+          return {
+            success: false,
+            message: "User not found",
+          }
+        }
+
+        userId = userData.id
+      }
+
+      // Create session
+      const { data: session, error: sessionError } = await supabase
+        .from("sessions")
+        .insert([
+          {
+            user_id: userId,
+            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+          },
+        ])
+        .select("id")
+        .single()
+
+      if (sessionError) {
+        console.error("Failed to create session:", sessionError)
+        return {
+          success: false,
+          message: "Failed to create session",
+        }
+      }
+
+      console.log("Session created:", session)
+
+      // Set session cookie
+      cookies().set("session_id", session.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+        path: "/",
+      })
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("Verify code error:", error)
+    return {
+      success: false,
+      message: "Failed to verify code. Please try again later.",
+    }
+  }
+}
+
+// Create user in our database and sync with RemOnline in the background
 export async function createUser(userData: {
   first_name: string
   last_name: string
   email: string
   phone: string[]
   address?: string
-}) {
+}): Promise<{ success: boolean; message?: string }> {
   try {
-    console.log("Creating user with data:", userData)
+    console.log("Creating user in database:", userData)
 
-    // In a real implementation, you would:
-    // 1. Create the user in your database
-    // 2. Create a profile for the user
-    // 3. Set up any initial settings
+    const supabase = createClient()
 
-    // For now, we'll just log it and return success
-    console.log("User would be created with:", userData)
+    // Check if user already exists
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", userData.email.toLowerCase())
+      .maybeSingle()
 
-    return {
-      success: true,
-      message: "User created successfully",
-      userId: "user_" + Math.random().toString(36).substring(2, 15),
+    if (existingUser) {
+      console.log("User already exists in database:", existingUser)
+
+      // Create session
+      const { data: session, error: sessionError } = await supabase
+        .from("sessions")
+        .insert([
+          {
+            user_id: existingUser.id,
+            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+          },
+        ])
+        .select("id")
+        .single()
+
+      if (sessionError) {
+        console.error("Failed to create session:", sessionError)
+        return {
+          success: false,
+          message: "Failed to create session",
+        }
+      }
+
+      // Set session cookie
+      cookies().set("session_id", session.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+        path: "/",
+      })
+
+      // Sync with RemOnline in the background
+      syncClientToRemonline(userData)
+        .then((result) => {
+          if (result.success && result.remonlineId) {
+            updateRemonlineIdForUser(existingUser.id, result.remonlineId)
+          }
+        })
+        .catch((error) => {
+          console.error("Error syncing with RemOnline:", error)
+        })
+
+      return { success: true }
     }
+
+    // Generate a random password (user will use passwordless login anyway)
+    const randomPassword = Math.random().toString(36).slice(-10)
+    const passwordHash = await hash(randomPassword)
+
+    // Create new user
+    const { data: newUser, error } = await supabase
+      .from("users")
+      .insert({
+        email: userData.email.toLowerCase(),
+        role: "user",
+        name: `${userData.first_name} ${userData.last_name}`.trim(),
+        password_hash: passwordHash,
+        email_verified: true, // Since we verified with code
+      })
+      .select("id")
+      .single()
+
+    if (error) {
+      console.error("Failed to create user in database:", error)
+      return {
+        success: false,
+        message: "Failed to create user account",
+      }
+    }
+
+    // Create profile
+    const { error: profileError } = await supabase.from("profiles").insert({
+      id: newUser.id,
+      name: `${userData.first_name} ${userData.last_name}`.trim(),
+      phone: userData.phone[0] || null,
+      email: userData.email.toLowerCase(),
+      address: userData.address || null,
+    })
+
+    if (profileError) {
+      console.error("Failed to create profile in database:", profileError)
+      // Continue anyway, not critical
+    }
+
+    // Create session
+    const { data: session, error: sessionError } = await supabase
+      .from("sessions")
+      .insert([
+        {
+          user_id: newUser.id,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        },
+      ])
+      .select("id")
+      .single()
+
+    if (sessionError) {
+      console.error("Failed to create session:", sessionError)
+      return {
+        success: false,
+        message: "Failed to create session",
+      }
+    }
+
+    // Set session cookie
+    cookies().set("session_id", session.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: "/",
+    })
+
+    // Sync with RemOnline in the background
+    syncClientToRemonline(userData)
+      .then((result) => {
+        if (result.success && result.remonlineId) {
+          updateRemonlineIdForUser(newUser.id, result.remonlineId)
+        }
+      })
+      .catch((error) => {
+        console.error("Error syncing with RemOnline:", error)
+      })
+
+    return { success: true }
   } catch (error) {
-    console.error("Error creating user:", error)
+    console.error("Create user error:", error)
     return {
       success: false,
-      message: "Failed to create user",
+      message: "Failed to create user. Please try again later.",
     }
   }
 }
