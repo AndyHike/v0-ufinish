@@ -34,22 +34,40 @@ export async function syncClientToRemonline(userData: {
 
     // Create client in RemOnline
     console.log("Creating client in RemOnline with data:", userData)
-    const response = await remonline.createClient(userData)
-    console.log("Remonline createClient response:", response)
 
-    if (!response.success) {
-      console.error("Failed to create client in RemOnline:", response.message)
+    const options = {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        email: userData.email,
+        address: userData.address,
+        phone: userData.phone,
+      }),
+    }
+
+    const response = await fetch(`https://api.remonline.app/clients/?token=${process.env.REMONLINE_API_TOKEN}`, options)
+    const data = await response.json()
+
+    console.log("Remonline createClient response:", data)
+
+    if (!response.ok) {
+      console.error("Failed to create client in RemOnline:", response.statusText)
       return {
         success: false,
-        message: response.message || "Failed to create client in RemOnline",
+        message: `Failed to create client in RemOnline: ${response.statusText}`,
       }
     }
 
-    console.log("Client created in RemOnline:", response.client)
+    console.log("Client created in RemOnline:", data)
     return {
       success: true,
       message: "Client created in RemOnline",
-      remonlineId: response.client.id,
+      remonlineId: data.id,
     }
   } catch (error) {
     console.error("Error syncing client to RemOnline:", error)
