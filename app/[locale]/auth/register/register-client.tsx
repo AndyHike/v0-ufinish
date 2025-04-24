@@ -7,6 +7,9 @@ import { useParams, useRouter } from "next/navigation"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import PhoneInput from "react-phone-number-input"
+import { isValidPhoneNumber } from "react-phone-number-input"
+import flags from "react-phone-number-input/flags"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,10 +19,16 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DevEmailNotification } from "@/components/dev-email-notification"
 
 import { checkUserExists, sendVerificationCode, verifyCode, createUser } from "@/app/actions/auth-api"
+import "react-phone-number-input/style.css"
 
 const initialSchema = z.object({
   email: z.string().email(),
-  phone: z.string().min(9).max(15),
+  phone: z
+    .string()
+    .min(9, { message: "Phone number is too short" })
+    .refine((val) => isValidPhoneNumber(val), {
+      message: "Invalid phone number",
+    }),
   firstName: z.string().min(2),
   lastName: z.string().min(2),
 })
@@ -47,7 +56,7 @@ export default function RegisterClient() {
     resolver: zodResolver(initialSchema),
     defaultValues: {
       email: "",
-      phone: "",
+      phone: "+420", // Czech Republic code by default
       firstName: "",
       lastName: "",
     },
@@ -265,13 +274,18 @@ export default function RegisterClient() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">{t("phone")}</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder={t("phonePlaceholder")}
-                {...initialForm.register("phone")}
-                disabled={isLoading}
-              />
+              <div className="phone-input-container">
+                <PhoneInput
+                  international
+                  defaultCountry="CZ"
+                  flags={flags}
+                  value={initialForm.watch("phone")}
+                  onChange={(value) => initialForm.setValue("phone", value || "", { shouldValidate: true })}
+                  placeholder={t("phonePlaceholder")}
+                  disabled={isLoading}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
               {initialForm.formState.errors.phone && (
                 <p className="text-sm text-destructive">{initialForm.formState.errors.phone.message}</p>
               )}

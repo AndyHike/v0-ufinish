@@ -70,7 +70,8 @@
     "negotiator": "latest",
     "papaparse": "latest",
     "react-csv": "latest",
-    "uuid": "latest"
+    "uuid": "latest",
+    "react-phone-number-input": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

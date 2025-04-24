@@ -6,6 +6,10 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
+import PhoneInput from "react-phone-number-input"
+import { isValidPhoneNumber } from "react-phone-number-input"
+import flags from "react-phone-number-input/flags"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,6 +18,7 @@ import { Smartphone, Mail, ArrowLeft } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { checkUserExists, sendVerificationCode, verifyCode } from "@/app/actions/auth-api"
+import "react-phone-number-input/style.css"
 
 interface ModernLoginFormProps {
   locale: string
@@ -24,6 +29,7 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [identifier, setIdentifier] = useState("")
+  const [phoneNumber, setPhoneNumber] = useState("+420") // Czech Republic code by default
   const [error, setError] = useState("")
   const [step, setStep] = useState<"initial" | "verification">("initial")
   const [verificationCode, setVerificationCode] = useState("")
@@ -36,10 +42,11 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
     setError("")
 
     try {
-      console.log(`Submitting login with ${loginMethod}: ${identifier}`)
+      const currentIdentifier = loginMethod === "email" ? identifier : phoneNumber
+      console.log(`Submitting login with ${loginMethod}: ${currentIdentifier}`)
 
       // Check if user exists in Remonline API
-      const userExists = await checkUserExists(identifier)
+      const userExists = await checkUserExists(currentIdentifier)
 
       if (!userExists.success) {
         setError(userExists.message || t("userNotFound"))
@@ -50,7 +57,7 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
       console.log("User exists:", userExists)
 
       // Send verification code
-      const result = await sendVerificationCode(identifier, "login")
+      const result = await sendVerificationCode(currentIdentifier, "login")
 
       if (!result.success) {
         setError(result.message || t("somethingWentWrong"))
@@ -79,8 +86,10 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
     setError("")
 
     try {
+      const currentIdentifier = loginMethod === "email" ? identifier : phoneNumber
+
       // Verify the code
-      const result = await verifyCode(identifier, verificationCode, "login")
+      const result = await verifyCode(currentIdentifier, verificationCode, "login")
 
       if (!result.success) {
         setError(result.message || t("invalidVerificationCode"))
@@ -103,7 +112,8 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
     setError("")
 
     try {
-      const result = await sendVerificationCode(identifier, "login")
+      const currentIdentifier = loginMethod === "email" ? identifier : phoneNumber
+      const result = await sendVerificationCode(currentIdentifier, "login")
 
       if (!result.success) {
         setError(result.message || t("somethingWentWrong"))
@@ -168,16 +178,27 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
                 <form onSubmit={handleInitialSubmit} className="space-y-4 mt-4">
                   <div className="space-y-2">
                     <Label htmlFor="phone">{t("phone")}</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={identifier}
-                      onChange={(e) => setIdentifier(e.target.value)}
-                      placeholder={t("phonePlaceholder")}
-                      required
-                    />
+                    <div className="phone-input-container">
+                      <PhoneInput
+                        international
+                        defaultCountry="CZ"
+                        flags={flags}
+                        value={phoneNumber}
+                        onChange={setPhoneNumber}
+                        placeholder={t("phonePlaceholder")}
+                        disabled={isLoading}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </div>
+                    {phoneNumber && !isValidPhoneNumber(phoneNumber) && (
+                      <p className="text-sm text-destructive">{t("invalidPhoneNumber")}</p>
+                    )}
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isLoading || (phoneNumber && !isValidPhoneNumber(phoneNumber))}
+                  >
                     {isLoading ? t("processing") : t("continueLogin")}
                   </Button>
                 </form>
@@ -207,7 +228,9 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
 
             <div className="text-center mb-4">
               <p>{t("verificationCodeSent")}</p>
-              <p className="text-sm text-muted-foreground mt-1">{userEmail || identifier}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {userEmail || (loginMethod === "email" ? identifier : phoneNumber)}
+              </p>
             </div>
 
             <form onSubmit={handleVerificationSubmit} className="space-y-4">

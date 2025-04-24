@@ -4,19 +4,25 @@
  * @returns Formatted phone number
  */
 export function formatPhoneNumber(phone: string): string {
+  if (!phone) return phone
+
+  // If the phone number already has a plus sign, assume it's already in international format
+  if (phone.startsWith("+")) {
+    return phone
+  }
+
   // Remove all non-numeric characters
   const digitsOnly = phone.replace(/\D/g, "")
 
-  // If the number doesn't start with a country code, add +380 (Ukraine) by default
-  // This is an assumption - adjust according to your requirements
+  // If the number doesn't start with a country code, add +420 (Czech Republic) by default
   let formattedPhone = digitsOnly
 
-  if (!digitsOnly.startsWith("380") && !digitsOnly.startsWith("38") && !digitsOnly.startsWith("1")) {
-    // If it starts with 0, replace that 0 with 380
+  if (!digitsOnly.startsWith("420") && !digitsOnly.startsWith("42")) {
+    // If it starts with 0, replace that 0 with 420
     if (digitsOnly.startsWith("0")) {
-      formattedPhone = `38${digitsOnly.slice(1)}`
+      formattedPhone = `420${digitsOnly.slice(1)}`
     } else {
-      formattedPhone = `380${digitsOnly}`
+      formattedPhone = `420${digitsOnly}`
     }
   }
 
