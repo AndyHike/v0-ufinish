@@ -16,6 +16,11 @@ const intlMiddleware = createMiddleware({
 export default async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
+  // Додаємо виключення для API маршрутів
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next()
+  }
+
   // Special handling for root path
   if (pathname === "/") {
     // Redirect to the default locale

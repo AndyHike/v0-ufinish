@@ -6,8 +6,14 @@ import { hash } from "@/lib/auth/utils"
 // You should set this in your environment variables and configure it in RemOnline
 const WEBHOOK_SECRET = process.env.REMONLINE_WEBHOOK_SECRET || "your-webhook-secret"
 
+// Додайте логування для кращого відстеження
 export async function POST(request: Request) {
   try {
+    // Зберегти оригінальний запит для логування
+    const clonedRequest = request.clone()
+    const payload = await clonedRequest.json()
+    console.log("RemOnline webhook received:", payload)
+
     // Verify the webhook signature if RemOnline provides one
     const signature = request.headers.get("x-remonline-signature")
 
@@ -16,14 +22,15 @@ export async function POST(request: Request) {
     //   return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
     // }
 
-    const payload = await request.json()
-    console.log("RemOnline webhook received:", payload)
+    // Отримуємо оригінальні дані
+    const originalRequest = await request.json()
+    console.log("RemOnline webhook data:", originalRequest)
 
     // Check the event type
-    const eventType = payload.event || ""
+    const eventType = originalRequest.event || ""
 
     if (eventType === "client.created" || eventType === "client.updated") {
-      await handleClientEvent(payload.data)
+      await handleClientEvent(originalRequest.data)
       return NextResponse.json({ success: true })
     }
 
