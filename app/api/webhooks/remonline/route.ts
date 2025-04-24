@@ -34,7 +34,6 @@ const remonlineWebhookSchema = z.object({
   }),
 })
 
-// Додайте логування для кращого відстеження
 export async function POST(request: NextRequest) {
   try {
     // Зберегти оригінальний запит для логування
@@ -119,6 +118,7 @@ export async function POST(request: NextRequest) {
 
 async function fetchClientDetailsFromRemonline(clientId: number) {
   try {
+    // Authenticate with RemOnline API using our updated client
     const authResult = await remonline.auth()
     if (!authResult.success) {
       console.error("Failed to authenticate with RemOnline API:", authResult.message)
@@ -128,9 +128,19 @@ async function fetchClientDetailsFromRemonline(clientId: number) {
       }
     }
 
-    const options = { method: "GET", headers: { accept: "application/json" } }
+    console.log(`Fetching client details for ID: ${clientId}`)
 
-    const response = await fetch(`https://api.remonline.app/clients/${clientId}?token=${authResult.token}`, options)
+    // Use the token from our authenticated client
+    const url = `https://api.remonline.app/clients/${clientId}?token=${authResult.token}`
+    console.log("Request URL:", url)
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { accept: "application/json" },
+    })
+
+    console.log(`Response status: ${response.status}`)
+
     if (!response.ok) {
       const errorText = await response.text()
       console.error(`Failed to fetch client details with status ${response.status}: ${errorText}`)
@@ -141,8 +151,21 @@ async function fetchClientDetailsFromRemonline(clientId: number) {
       }
     }
 
-    const data = await response.json()
-    console.log("Client details response:", data)
+    const responseText = await response.text()
+    console.log("Response text length:", responseText.length)
+
+    let data
+    try {
+      data = JSON.parse(responseText)
+      console.log("Client details response:", data)
+    } catch (e) {
+      console.error("Failed to parse response as JSON:", responseText)
+      return {
+        success: false,
+        message: "Failed to parse client details response",
+        details: e instanceof Error ? e.message : String(e),
+      }
+    }
 
     return { success: true, client: data }
   } catch (error) {
@@ -292,12 +315,14 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
         first_name: firstName,
         last_name: lastName,
         name: `${firstName} ${lastName}`.trim(),
+        remonline_id: clientData.id, // Оновлюємо remonline_id
       })
       .eq("id", userId)
 
     console.log("Supabase update user data:", {
       email,
       name: `${firstName} ${lastName}`.trim(),
+      remonline_id: clientData.id,
     })
 
     if (userError) {
