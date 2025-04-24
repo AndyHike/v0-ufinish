@@ -37,12 +37,12 @@ export async function checkUserExists(identifier: string): Promise<{
       const { data, error } = await supabase
         .from("users")
         .select(`
-          id, 
-          email, 
-          first_name,
-          last_name,
-          profiles!inner(phone)
-        `)
+         id, 
+         email, 
+         first_name,
+         last_name,
+         profiles!inner(phone)
+       `)
         .eq("email", identifier.toLowerCase())
         .maybeSingle()
 
@@ -60,13 +60,13 @@ export async function checkUserExists(identifier: string): Promise<{
       const { data, error } = await supabase
         .from("profiles")
         .select(`
-          id,
-          phone,
-          email,
-          first_name,
-          last_name,
-          users!inner(id, email, first_name, last_name)
-        `)
+         id,
+         phone,
+         email,
+         first_name,
+         last_name,
+         users!inner(id, email, first_name, last_name)
+       `)
         .eq("phone", identifier)
         .maybeSingle()
 
