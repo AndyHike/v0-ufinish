@@ -192,7 +192,7 @@ async function createNewUser(supabase: any, clientData: any) {
     const firstName = clientData.first_name || ""
     const lastName = clientData.last_name || ""
     const phone = clientData.phone && clientData.phone.length > 0 ? clientData.phone[0] : null
-    const address = clientData.address || ""
+    const address = clientData.address || null
 
     if (!email) {
       console.error("Client from RemOnline has no email, cannot create user")
@@ -233,22 +233,35 @@ async function createNewUser(supabase: any, clientData: any) {
 
     console.log("Supabase insert user result:", newUser)
 
-    // Create profile
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: newUser.id,
-      name: `${firstName} ${lastName}`.trim(),
-      phone,
-      email,
-      address,
-    })
+    // Check if the profiles table has the address column
+    const { data: profileColumns, error: columnsError } = await supabase.from("profiles").select("*").limit(1)
 
-    console.log("Supabase insert profile data:", {
-      id: newUser.id,
-      name: `${firstName} ${lastName}`.trim(),
-      phone,
-      email,
-      address,
-    })
+    if (columnsError) {
+      console.error("Error checking profile columns:", columnsError)
+    }
+
+    // Determine if we should include address in the profile
+    const hasAddressColumn = profileColumns && Object.keys(profileColumns[0] || {}).includes("address")
+
+    // Create profile with or without address based on schema
+    const profileData = hasAddressColumn
+      ? {
+          id: newUser.id,
+          name: `${firstName} ${lastName}`.trim(),
+          phone,
+          email,
+          address,
+        }
+      : {
+          id: newUser.id,
+          name: `${firstName} ${lastName}`.trim(),
+          phone,
+          email,
+        }
+
+    const { error: profileError } = await supabase.from("profiles").insert([profileData])
+
+    console.log("Supabase insert profile data:", profileData)
 
     if (profileError) {
       console.error("Error creating profile:", profileError)
