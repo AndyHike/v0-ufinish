@@ -67,8 +67,9 @@ export function CustomCountrySelect({ value, onChange, labels, disabled }: Count
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="flex justify-between w-full px-3 font-normal"
+          className="flex justify-between w-full px-3 font-normal cursor-pointer"
           disabled={disabled}
+          onClick={() => setOpen(!open)}
         >
           <div className="flex items-center overflow-hidden">
             {value ? (
@@ -105,6 +106,7 @@ export function CustomCountrySelect({ value, onChange, labels, disabled }: Count
                         onChange(country)
                         setOpen(false)
                       }}
+                      className="cursor-pointer"
                     >
                       <div className="flex items-center">
                         {getFlag(country)}
@@ -126,6 +128,7 @@ export function CustomCountrySelect({ value, onChange, labels, disabled }: Count
                       onChange(country)
                       setOpen(false)
                     }}
+                    className="cursor-pointer"
                   >
                     <div className="flex items-center">
                       {getFlag(country)}
