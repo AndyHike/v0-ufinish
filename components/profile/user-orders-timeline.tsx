@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useTranslations, useLocale } from "next-intl"
-import { createServerSupabaseClient } from "@/lib/supabase"
 import { format } from "date-fns"
 import { uk } from "date-fns/locale"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -22,7 +21,6 @@ import {
   Search,
   ChevronRight,
 } from "lucide-react"
-import { getStatusByRemOnlineId } from "@/lib/order-status-utils"
 
 type OrderStatusHistory = {
   id: string
@@ -64,78 +62,20 @@ export function UserOrdersTimeline() {
     fetchOrders()
   }, [locale])
 
-  // Функція для отримання інформації про статус
-  async function getStatusInfo(statusCode: string, locale: string) {
-    const statusId = Number.parseInt(statusCode, 10)
-    if (!isNaN(statusId)) {
-      return await getStatusByRemOnlineId(statusId, locale)
-    }
-    return { name: statusCode, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" }
-  }
-
-  // Завантаження замовлень з перетвореними статусами
+  // Завантаження замовлень через API
   async function fetchOrders() {
     setLoading(true)
     setError(null)
 
     try {
-      const supabase = createServerSupabaseClient()
+      const response = await fetch(`/api/user/order-history?locale=${locale}`)
+      const data = await response.json()
 
-      // Fetch orders
-      const { data: ordersData, error: ordersError } = await supabase
-        .from("repair_orders")
-        .select("*")
-        .order("created_at", { ascending: false })
-
-      if (ordersError) throw ordersError
-
-      // For each order, fetch its status history
-      const ordersWithHistory = await Promise.all(
-        ordersData.map(async (order) => {
-          // Отримуємо інформацію про статус замовлення
-          const statusInfo = await getStatusInfo(order.status, locale)
-
-          // Отримуємо історію статусів
-          const { data: historyData, error: historyError } = await supabase
-            .from("order_status_history")
-            .select("*")
-            .eq("order_id", order.id)
-            .order("changed_at", { ascending: true })
-
-          if (historyError) {
-            console.error(`Error fetching history for order ${order.id}:`, historyError)
-            return {
-              ...order,
-              status_name: statusInfo.name,
-              status_color: statusInfo.color,
-              statusHistory: [],
-            }
-          }
-
-          // Перетворюємо статуси в історії
-          const historyWithNames = await Promise.all(
-            (historyData || []).map(async (history) => {
-              const oldStatusInfo = await getStatusInfo(history.old_status, locale)
-              const newStatusInfo = await getStatusInfo(history.new_status, locale)
-
-              return {
-                ...history,
-                old_status_name: oldStatusInfo.name,
-                new_status_name: newStatusInfo.name,
-              }
-            }),
-          )
-
-          return {
-            ...order,
-            status_name: statusInfo.name,
-            status_color: statusInfo.color,
-            statusHistory: historyWithNames,
-          }
-        }),
-      )
-
-      setOrders(ordersWithHistory)
+      if (data.success && data.orders) {
+        setOrders(data.orders)
+      } else {
+        setError(data.message || "Помилка завантаження замовлень")
+      }
     } catch (err) {
       console.error("Error fetching orders:", err)
       setError(err instanceof Error ? err.message : "Помилка завантаження замовлень")

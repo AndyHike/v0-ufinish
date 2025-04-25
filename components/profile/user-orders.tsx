@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getUserRepairOrdersWithStatusNames } from "@/app/actions/repair-orders"
 import { useTranslations, useLocale } from "next-intl"
 import { cn } from "@/lib/utils"
 import { ArrowRight, Clock, Search } from "lucide-react"
@@ -16,8 +15,8 @@ type RepairOrder = {
   device_model: string
   service_type: string
   status: string
-  statusName: string // Додаємо поле для назви статусу
-  statusColor: string // Додаємо поле для кольору статусу
+  statusName: string // Поле для назви статусу
+  statusColor: string // Поле для кольору статусу
   price: number | null
   created_at: string
 }
@@ -32,19 +31,21 @@ export function UserOrders() {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("all")
 
-  // Завантаження замовлень з перетвореними статусами
+  // Завантаження замовлень через API
   useEffect(() => {
     async function fetchOrders() {
       try {
         setLoading(true)
         setError(null)
-        const result = await getUserRepairOrdersWithStatusNames(locale)
 
-        if (result.success && result.orders) {
-          setOrders(result.orders)
-          setFilteredOrders(result.orders)
+        const response = await fetch(`/api/user/repair-orders?locale=${locale}`)
+        const data = await response.json()
+
+        if (data.success && data.orders) {
+          setOrders(data.orders)
+          setFilteredOrders(data.orders)
         } else {
-          setError(result.message || t("repairHistory.errorFetching"))
+          setError(data.message || t("repairHistory.errorFetching"))
         }
       } catch (err) {
         console.error("Error fetching repair orders:", err)
