@@ -571,7 +571,7 @@ export function OrderStatusesList() {
             <Button type="button" variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Скасувати
             </Button>
-            <Button type="button" variant="destructive" onClick={handleDeleteStatus} disabled={isSubmitting}>
+            <Button type="submit" variant="destructive" onClick={handleDeleteStatus} disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
