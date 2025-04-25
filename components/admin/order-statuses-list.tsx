@@ -173,6 +173,12 @@ export function OrderStatusesList() {
     try {
       setIsSubmitting(true)
 
+      console.log("Updating status with data:", {
+        ...formState,
+        remonline_status_id: Number.parseInt(formState.remonline_status_id, 10),
+        userId: session.user.id,
+      })
+
       const response = await fetch(`/api/admin/order-statuses/${selectedStatus.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
