@@ -22,7 +22,6 @@ import { toast } from "@/components/ui/use-toast"
 import { Loader2, Plus, Pencil, Trash, AlertCircle, ShieldAlert } from "lucide-react"
 import type { OrderStatus } from "@/lib/order-status-utils"
 import { clearStatusCache } from "@/lib/order-status-utils"
-import { getCurrentUser } from "@/lib/auth/session"
 
 // Color options for status badges
 const colorOptions = [
@@ -95,23 +94,7 @@ export function OrderStatusesList() {
           return
         }
 
-        // Якщо нічого не працює, спробуємо отримати користувача через серверну функцію
-        try {
-          const currentUser = await getCurrentUser()
-          if (currentUser) {
-            console.log("Користувач отриманий через серверну функцію:", currentUser)
-            setUserId(currentUser.id)
-            setIsAdmin(currentUser.role === "admin")
-            localStorage.setItem("userId", currentUser.id)
-            localStorage.setItem("userRole", currentUser.role || "")
-            setAuthChecked(true)
-            return
-          }
-        } catch (serverError) {
-          console.error("Помилка при отриманні користувача через серверну функцію:", serverError)
-        }
-
-        // Якщо всі спроби невдалі
+        // Якщо нічого не працює
         console.log("Користувач не автентифікований")
         setUserId(null)
         setIsAdmin(false)
