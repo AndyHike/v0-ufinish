@@ -64,7 +64,6 @@
     "next-auth": "latest",
     "next-intl": "latest",
     "crypto": "latest",
-    "@supabase/auth-helpers-nextjs": "latest",
     "@hello-pangea/dnd": "latest",
     "@formatjs/intl-localematcher": "latest",
     "negotiator": "latest",
@@ -72,7 +71,8 @@
     "react-csv": "latest",
     "uuid": "latest",
     "libphonenumber-js": "latest",
-    "react-phone-number-input": "latest"
+    "react-phone-number-input": "latest",
+    "@supabase/auth-helpers-nextjs": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

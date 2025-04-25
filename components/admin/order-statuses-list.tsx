@@ -216,7 +216,8 @@ export function OrderStatusesList() {
   }
 
   // Delete status
-  async function handleDeleteStatus() {
+  async function handleDeleteStatus(e: React.FormEvent) {
+    e.preventDefault()
     if (!session?.user?.id || !selectedStatus) return
 
     try {
@@ -571,7 +572,7 @@ export function OrderStatusesList() {
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Скасувати
             </Button>
-            <Button type="submit" variant="destructive" onClick={handleDeleteStatus} disabled={isSubmitting}>
+            <Button variant="destructive" onClick={(e) => handleDeleteStatus(e)} disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
