@@ -178,7 +178,8 @@ export function OrderStatusesList() {
 
     try {
       setIsSubmitting(true)
-      console.log("Updating status with data:", formData) // Log the form data
+      console.log("handleUpdateStatus called")
+      console.log("formData:", formData)
       const response = await fetch(`/api/admin/order-statuses/${currentStatus.id}`, {
         method: "PUT",
         headers: {
@@ -214,6 +215,7 @@ export function OrderStatusesList() {
       })
     } finally {
       setIsSubmitting(false)
+      setIsEditDialogOpen(false) // Add this line
     }
   }
 

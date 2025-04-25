@@ -4,9 +4,12 @@ import { logActivity } from "@/lib/admin/activity-logger"
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    console.log("PUT /api/admin/order-statuses/[id] - Received request")
     const supabase = createClient()
     const { id } = params
-    const { remonline_status_id, name_uk, name_en, name_cs, color, userId } = await request.json()
+    const body = await request.json()
+    console.log("PUT /api/admin/order-statuses/[id] - Request body:", body)
+    const { remonline_status_id, name_uk, name_en, name_cs, color, userId } = body
 
     // Verify admin permissions
     const { data: userData, error: userError } = await supabase.from("users").select("role").eq("id", userId).single()
