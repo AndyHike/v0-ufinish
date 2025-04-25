@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import Link from "next/link"
+import { useParams } from "next/navigation"
 
 export default function ErrorPage({
   error,
@@ -14,6 +15,9 @@ export default function ErrorPage({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const params = useParams()
+  const locale = (params.locale as string) || "uk"
+
   useEffect(() => {
     // Логуємо помилку для діагностики
     console.error("Application error:", error)
@@ -28,9 +32,8 @@ export default function ErrorPage({
       window.location.reload()
     } catch (e) {
       console.error("Failed to clear session:", e)
-      // Якщо API не працює, очищаємо cookie вручну через JavaScript
-      document.cookie = "session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-      window.location.reload()
+      // Якщо API не працює, перенаправляємо на сторінку очищення сесії
+      window.location.href = `/${locale}/clear-session`
     }
   }
 
@@ -61,7 +64,7 @@ export default function ErrorPage({
             Спробувати ще раз
           </Button>
           <Button className="w-full" asChild variant="ghost">
-            <Link href="/">На головну сторінку</Link>
+            <Link href={`/${locale}/clear-session`}>Перейти на сторінку очищення сесії</Link>
           </Button>
         </CardFooter>
       </Card>

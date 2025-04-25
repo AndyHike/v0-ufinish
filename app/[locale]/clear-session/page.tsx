@@ -1,76 +1,84 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, CheckCircle2 } from "lucide-react"
+import { AlertCircle, CheckCircle, Loader2 } from "lucide-react"
+import Link from "next/link"
 
 export default function ClearSessionPage() {
-  const router = useRouter()
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [message, setMessage] = useState("")
 
-  const clearSession = async () => {
-    try {
-      setStatus("loading")
-
-      // Спочатку спробуємо очистити через API
+  // Автоматично очищаємо сесію при завантаженні сторінки
+  useEffect(() => {
+    const clearSession = async () => {
       try {
-        const response = await fetch("/api/auth/clear-session")
-        const data = await response.json()
+        setStatus("loading")
+        setMessage("Очищення сесії...")
 
-        if (data.success) {
-          setStatus("success")
-          setMessage("Сесію успішно очищено. Ви можете повернутися на головну сторінку.")
-        } else {
-          throw new Error("API returned error")
+        // Спочатку спробуємо використати API
+        try {
+          const response = await fetch("/api/auth/clear-session")
+          const data = await response.json()
+
+          if (data.success) {
+            setStatus("success")
+            setMessage("Сесію успішно очищено. Ви будете перенаправлені на головну сторінку.")
+
+            // Перенаправляємо на головну сторінку через 2 секунди
+            setTimeout(() => {
+              window.location.href = "/"
+            }, 2000)
+            return
+          }
+        } catch (apiError) {
+          console.error("API error:", apiError)
+          // Продовжуємо виконання, якщо API не спрацював
         }
-      } catch (apiError) {
-        console.error("API error:", apiError)
 
         // Якщо API не спрацював, очищаємо cookie через JavaScript
         document.cookie = "session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+
         setStatus("success")
-        setMessage("Сесію очищено через fallback механізм. Ви можете повернутися на головну сторінку.")
+        setMessage("Сесію успішно очищено через JavaScript. Ви будете перенаправлені на головну сторінку.")
+
+        // Перенаправляємо на головну сторінку через 2 секунди
+        setTimeout(() => {
+          window.location.href = "/"
+        }, 2000)
+      } catch (error) {
+        console.error("Failed to clear session:", error)
+        setStatus("error")
+        setMessage("Не вдалося очистити сесію. Спробуйте очистити cookies вручну в налаштуваннях браузера.")
       }
-
-      // Перенаправляємо на головну сторінку через 3 секунди
-      setTimeout(() => {
-        router.push("/")
-      }, 3000)
-    } catch (error) {
-      setStatus("error")
-      setMessage("Сталася помилка при очищенні сесії. Спробуйте ще раз або зверніться до адміністратора.")
-      console.error("Error clearing session:", error)
     }
-  }
 
-  // Автоматично очищаємо сесію при завантаженні сторінки
-  useEffect(() => {
     clearSession()
   }, [])
 
   return (
-    <div className="container flex items-center justify-center min-h-screen py-12">
+    <div className="container flex items-center justify-center min-h-[70vh] py-12">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Очищення сесії</CardTitle>
-          <CardDescription>Відновлення доступу до сайту</CardDescription>
+          <CardDescription>Очищення сесії та cookies для відновлення доступу до сайту</CardDescription>
         </CardHeader>
         <CardContent>
           {status === "loading" && (
-            <div className="flex items-center justify-center p-6">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-            </div>
+            <Alert>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <AlertTitle>Очищення сесії</AlertTitle>
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
           )}
 
           {status === "success" && (
-            <Alert className="bg-green-50 border-green-200">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-green-800">Успішно!</AlertTitle>
-              <AlertDescription className="text-green-700">{message}</AlertDescription>
+            <Alert variant="success">
+              <CheckCircle className="h-4 w-4" />
+              <AlertTitle>Успішно</AlertTitle>
+              <AlertDescription>{message}</AlertDescription>
             </Alert>
           )}
 
@@ -83,12 +91,15 @@ export default function ClearSessionPage() {
           )}
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => router.push("/")} disabled={status === "loading"}>
-            На головну
+          <Button asChild variant="outline">
+            <Link href="/">На головну</Link>
           </Button>
-          <Button onClick={clearSession} disabled={status === "loading" || status === "success"}>
-            Спробувати ще раз
-          </Button>
+
+          {status === "error" && (
+            <Button onClick={() => window.location.reload()} variant="default">
+              Спробувати ще раз
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </div>

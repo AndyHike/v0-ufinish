@@ -27,7 +27,8 @@ export default function GlobalError({
       window.location.href = "/"
     } catch (e) {
       console.error("Failed to clear session:", e)
-      window.location.href = "/"
+      // Якщо не вдалося очистити сесію, перенаправляємо на спеціальну сторінку
+      window.location.href = "/uk/clear-session"
     }
   }
 
@@ -60,8 +61,8 @@ export default function GlobalError({
               <Button className="w-full" onClick={() => reset()} variant="outline">
                 Спробувати ще раз
               </Button>
-              <Button className="w-full" onClick={() => (window.location.href = "/")} variant="ghost">
-                На головну сторінку
+              <Button className="w-full" onClick={() => (window.location.href = "/uk/clear-session")} variant="ghost">
+                Перейти на сторінку очищення сесії
               </Button>
             </CardFooter>
           </Card>
