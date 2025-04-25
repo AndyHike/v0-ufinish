@@ -203,7 +203,7 @@ export function OrderStatusesList() {
       })
 
       resetForm()
-      setIsEditDialogOpen(false)
+      setIsEditDialogOpen(false) // Add this line
       fetchStatuses()
     } catch (err) {
       console.error("Error updating status:", err)
@@ -214,7 +214,6 @@ export function OrderStatusesList() {
       })
     } finally {
       setIsSubmitting(false)
-      setIsEditDialogOpen(false)
     }
   }
 
