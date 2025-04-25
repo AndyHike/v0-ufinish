@@ -30,36 +30,48 @@ export function UserOrders() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("all")
+  const [isClient, setIsClient] = useState(false)
 
-  // Завантаження замовлень через API
+  // Важливо: встановлюємо isClient в true тільки на клієнті
   useEffect(() => {
-    async function fetchOrders() {
-      try {
-        setLoading(true)
-        setError(null)
+    setIsClient(true)
+  }, [])
 
-        const response = await fetch(`/api/user/repair-orders?locale=${locale}`)
-        const data = await response.json()
-
-        if (data.success && data.orders) {
-          setOrders(data.orders)
-          setFilteredOrders(data.orders)
-        } else {
-          setError(data.message || t("repairHistory.errorFetching"))
-        }
-      } catch (err) {
-        console.error("Error fetching repair orders:", err)
-        setError(t("repairHistory.errorFetching"))
-      } finally {
-        setLoading(false)
-      }
+  // Завантаження замовлень через API тільки на клієнті
+  useEffect(() => {
+    if (isClient) {
+      fetchOrders()
     }
+  }, [t, locale, isClient])
 
-    fetchOrders()
-  }, [t, locale])
+  async function fetchOrders() {
+    if (!isClient) return
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      const response = await fetch(`/api/user/repair-orders?locale=${locale}`)
+      const data = await response.json()
+
+      if (data.success && data.orders) {
+        setOrders(data.orders)
+        setFilteredOrders(data.orders)
+      } else {
+        setError(data.message || t("repairHistory.errorFetching"))
+      }
+    } catch (err) {
+      console.error("Error fetching repair orders:", err)
+      setError(t("repairHistory.errorFetching"))
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Фільтрація замовлень
   useEffect(() => {
+    if (!isClient) return
+
     // Filter orders based on search query and active tab
     let filtered = orders
 
@@ -92,7 +104,7 @@ export function UserOrders() {
     }
 
     setFilteredOrders(filtered)
-  }, [orders, searchQuery, activeTab])
+  }, [orders, searchQuery, activeTab, isClient])
 
   function formatDate(dateString: string) {
     try {
@@ -105,6 +117,23 @@ export function UserOrders() {
     } catch (e) {
       return dateString
     }
+  }
+
+  // Якщо ми на сервері або ще не на клієнті, показуємо скелетон
+  if (!isClient) {
+    return (
+      <div className="space-y-2">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-center justify-between p-4 border-b">
+            <Skeleton className="h-5 w-[150px]" />
+            <Skeleton className="h-5 w-[80px]" />
+            <Skeleton className="h-5 w-[120px]" />
+            <Skeleton className="h-5 w-[80px]" />
+            <Skeleton className="h-5 w-[120px]" />
+          </div>
+        ))}
+      </div>
+    )
   }
 
   return (

@@ -57,18 +57,30 @@ export function UserOrdersTimeline() {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
+  const [isClient, setIsClient] = useState(false)
 
+  // Важливо: встановлюємо isClient в true тільки на клієнті
   useEffect(() => {
-    fetchOrders()
-  }, [locale])
+    setIsClient(true)
+  }, [])
 
-  // Завантаження замовлень через API
+  // Завантажуємо дані тільки на клієнті
+  useEffect(() => {
+    if (isClient) {
+      fetchOrders()
+    }
+  }, [locale, isClient])
+
+  // Функція для отримання замовлень
   async function fetchOrders() {
+    if (!isClient) return
+
     setLoading(true)
     setError(null)
 
     try {
-      const response = await fetch(`/api/user/order-history?locale=${locale}`)
+      // Використовуємо fetch для отримання даних
+      const response = await fetch(`/api/user/repair-orders?locale=${locale}`)
       const data = await response.json()
 
       if (data.success && data.orders) {
@@ -115,6 +127,16 @@ export function UserOrdersTimeline() {
     } catch (e) {
       return dateString
     }
+  }
+
+  // Якщо ми на сервері або ще не на клієнті, показуємо скелетон
+  if (!isClient) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    )
   }
 
   const filteredOrders = orders.filter((order) => {
@@ -241,7 +263,7 @@ export function UserOrdersTimeline() {
                     <div className="mt-4 pt-4 border-t">
                       <h4 className="text-sm font-medium mb-3">Історія статусів</h4>
                       <div className="space-y-3">
-                        {order.statusHistory.map((history, index) => (
+                        {order.statusHistory.map((history) => (
                           <div key={history.id} className="flex items-start">
                             <div className="mr-2 mt-0.5">{getStatusIcon(history.new_status)}</div>
                             <div className="flex-1">
