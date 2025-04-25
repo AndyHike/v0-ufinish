@@ -510,6 +510,8 @@
     "newStatusPlaceholderUk": "Новий",
     "newStatusPlaceholderEn": "New",
     "newStatusPlaceholderCs": "Nový",
+    "notAuthenticated": "Ви не авторизовані",
+    "noStatusSelected": "Статус не вибрано",
     "colors": {
       "blue": "Синій",
       "green": "Зелений",
