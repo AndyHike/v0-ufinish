@@ -227,13 +227,10 @@ async function processOrderFromWebhook(webhookData: any) {
 
     if (!user) {
       console.log(`No user found with remonline_id: ${clientId}. Skipping order creation.`)
-      return NextResponse.json({ success: false, message: "User not found" }, { status: 404 })
+      return { success: false, message: "User not found" }
     }
 
     console.log(`Found user with ID: ${user.id}`)
-
-    // Log the user object to inspect its properties
-    console.log(`User object: ${JSON.stringify(user, null, 2)}`)
 
     // Extract device brand and model from the device name
     let deviceBrand = "Unknown"
@@ -269,6 +266,7 @@ async function processOrderFromWebhook(webhookData: any) {
     }
 
     console.log(`Order Details: ${JSON.stringify(orderDetails, null, 2)}`)
+
     // Check if order already exists
     const { data: existingOrder, error: checkError } = await supabase
       .from("repair_orders")
@@ -310,12 +308,6 @@ async function processOrderFromWebhook(webhookData: any) {
 
       console.log(`Order created: ${orderId}, Inserted Data: ${JSON.stringify(insertedData)}`)
     }
-
-    // If we need more detailed information, we can fetch it from the RemOnline API
-    // This is optional and can be done asynchronously
-    /*fetchAndUpdateOrderDetails(orderId, orderDetails).catch((error) => {
-      console.error(`Error updating order details: ${error}`)
-    })*/
 
     return { success: true }
   } catch (error) {

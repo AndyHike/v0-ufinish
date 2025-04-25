@@ -5,10 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getUserRepairOrders } from "@/app/actions/repair-orders"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useTranslations } from "next-intl"
-import { formatCurrency } from "@/lib/format-currency"
-import { cn } from "@/lib/utils"
 
-type RepairOrder = {
+interface RepairOrder {
   id: string
   reference_number: string
   device_brand: string
@@ -20,128 +18,92 @@ type RepairOrder = {
 }
 
 export function UserOrders() {
-  const t = useTranslations("Profile")
   const [orders, setOrders] = useState<RepairOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations("Profile")
 
   useEffect(() => {
     async function fetchOrders() {
       try {
         setLoading(true)
-        setError(null)
         const result = await getUserRepairOrders()
 
         if (result.success && result.orders) {
           setOrders(result.orders)
         } else {
-          setError(result.message || t("repairHistory.errorFetching"))
+          setError(result.message || "Failed to load repair orders")
         }
       } catch (err) {
+        setError("An unexpected error occurred")
         console.error("Error fetching repair orders:", err)
-        setError(t("repairHistory.errorFetching"))
       } finally {
         setLoading(false)
       }
     }
 
     fetchOrders()
-  }, [t])
+  }, [])
 
-  function formatDate(dateString: string) {
+  // Format date to local format
+  const formatDate = (dateString: string) => {
     try {
-      const date = new Date(dateString)
-      return new Intl.DateTimeFormat("uk-UA", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(date)
+      return new Date(dateString).toLocaleDateString()
     } catch (e) {
       return dateString
-    }
-  }
-
-  function getStatusBadgeClass(status: string) {
-    switch (status) {
-      case "Новий":
-        return "bg-blue-100 text-blue-800"
-      case "В процесі":
-        return "bg-yellow-100 text-yellow-800"
-      case "Завершено":
-        return "bg-green-100 text-green-800"
-      case "Скасовано":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
     }
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("repairHistory.title")}</CardTitle>
-        <CardDescription>{t("repairHistory.description")}</CardDescription>
+        <CardTitle>{t("repairHistory")}</CardTitle>
+        <CardDescription>{t("repairHistoryDesc")}</CardDescription>
       </CardHeader>
       <CardContent>
         {loading ? (
-          // Loading state
+          // Loading skeleton
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-[250px]" />
-                    <Skeleton className="h-4 w-[200px]" />
-                  </div>
-                  <Skeleton className="h-6 w-24" />
-                </div>
-                <div className="mt-4 space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                </div>
+              <div key={i} className="flex flex-col space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-1/4" />
               </div>
             ))}
           </div>
         ) : error ? (
           // Error state
-          <div className="text-center py-6">
-            <p className="text-red-500 mb-2">{error}</p>
-            <button onClick={() => window.location.reload()} className="text-sm text-blue-600 hover:underline">
-              {t("repairHistory.tryAgain")}
-            </button>
-          </div>
+          <div className="text-center py-4 text-red-500">{error}</div>
         ) : orders.length === 0 ? (
           // Empty state
-          <div className="text-center py-10">
-            <p className="text-muted-foreground">{t("repairHistory.noOrders")}</p>
-          </div>
+          <div className="text-center py-4 text-muted-foreground">{t("noRepairHistory")}</div>
         ) : (
           // Orders list
           <div className="space-y-4">
             {orders.map((order) => (
-              <div key={order.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+              <div key={order.id} className="border rounded-lg p-4">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium">
                       {order.device_brand} {order.device_model}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {t("repairHistory.orderNumber")}: {order.reference_number}
+                      {t("orderNumber")}: {order.reference_number}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {t("serviceType")}: {order.service_type}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {t("createdAt")}: {formatDate(order.created_at)}
                     </p>
                   </div>
-                  <span
-                    className={cn("px-2.5 py-0.5 rounded-full text-xs font-medium", getStatusBadgeClass(order.status))}
-                  >
-                    {order.status}
-                  </span>
-                </div>
-                <div className="mt-2">
-                  <p className="text-sm">{order.service_type}</p>
-                  <div className="flex justify-between items-center mt-2 text-sm text-muted-foreground">
-                    <span>{formatDate(order.created_at)}</span>
-                    {order.price && <span className="font-medium text-foreground">{formatCurrency(order.price)}</span>}
+                  <div className="text-right">
+                    <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                      {order.status}
+                    </span>
+                    {order.price && <p className="mt-2 font-medium">{order.price.toLocaleString()} ₴</p>}
                   </div>
                 </div>
               </div>
