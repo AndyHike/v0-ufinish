@@ -1,111 +1,79 @@
+import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
-import { type NextRequest, NextResponse } from "next/server"
-import { logActivity } from "@/lib/admin/activity-logger"
-import { clearStatusCache } from "@/lib/order-status-utils"
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = createClient()
 
-    const { data, error } = await supabase
+    const { data: statuses, error } = await supabase
       .from("order_statuses")
       .select("*")
       .order("remonline_status_id", { ascending: true })
 
-    if (error) throw error
+    if (error) {
+      console.error("Error fetching order statuses:", error)
+      return NextResponse.json({ success: false, message: "Failed to fetch order statuses" }, { status: 500 })
+    }
 
-    return NextResponse.json({ success: true, statuses: data })
+    return NextResponse.json({ success: true, statuses })
   } catch (error) {
-    console.error("Error fetching order statuses:", error)
-    return NextResponse.json({ success: false, message: "Failed to fetch order statuses" }, { status: 500 })
+    console.error("Unexpected error in GET /api/admin/order-statuses:", error)
+    return NextResponse.json({ success: false, message: "An unexpected error occurred" }, { status: 500 })
   }
 }
 
-// Перевіримо та виправимо обробник POST-запиту
-
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const supabase = createClient()
     const body = await request.json()
-    console.log("Received POST request with body:", body)
+    const { remonline_status_id, name_uk, name_en, name_cs, color } = body
 
-    const { remonline_status_id, name_uk, name_en, name_cs, color, userId } = body
-
-    // Verify admin permissions
-    const { data: userData, error: userError } = await supabase.from("users").select("role").eq("id", userId).single()
-
-    console.log("User data:", userData, "User error:", userError)
-
-    if (userError) {
-      console.error("User verification error:", userError)
-      return NextResponse.json({ success: false, message: "User verification failed" }, { status: 403 })
-    }
-
-    if (!userData || userData.role !== "admin") {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 403 })
-    }
-
-    // Validate required fields
+    // Базова валідація
     if (!remonline_status_id || !name_uk || !name_en || !name_cs || !color) {
-      return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 })
+      return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 })
     }
 
-    // Check if remonline_id already exists
+    const supabase = createClient()
+
+    // Перевіряємо, чи існує вже статус з таким remonline_status_id
     const { data: existingStatus, error: checkError } = await supabase
       .from("order_statuses")
       .select("id")
       .eq("remonline_status_id", remonline_status_id)
       .maybeSingle()
 
-    console.log("Existing status check:", existingStatus, "Check error:", checkError)
-
     if (checkError) {
       console.error("Error checking existing status:", checkError)
+      return NextResponse.json({ success: false, message: "Failed to check existing status" }, { status: 500 })
     }
 
     if (existingStatus) {
       return NextResponse.json(
-        { success: false, message: "Status with this RemOnline ID already exists" },
+        { success: false, message: "Status with this Remonline ID already exists" },
         { status: 400 },
       )
     }
 
-    // Insert new status
-    console.log("Inserting new status:", { remonline_status_id, name_uk, name_en, name_cs, color })
-
+    // Додаємо новий статус
     const { data, error } = await supabase
       .from("order_statuses")
-      .insert([{ remonline_status_id, name_uk, name_en, name_cs, color }])
+      .insert({
+        remonline_status_id,
+        name_uk,
+        name_en,
+        name_cs,
+        color,
+      })
       .select()
       .single()
 
     if (error) {
-      console.error("Supabase insert error:", error)
-      throw error
-    }
-
-    console.log("Status created successfully:", data)
-
-    // Clear the status cache
-    clearStatusCache()
-
-    // Log activity
-    try {
-      await logActivity({
-        userId,
-        entityType: "order_status",
-        entityId: data.id,
-        actionType: "create",
-        details: { remonline_status_id, name_uk },
-      })
-    } catch (logError) {
-      console.error("Error logging activity:", logError)
-      // Continue even if logging fails
+      console.error("Error creating order status:", error)
+      return NextResponse.json({ success: false, message: "Failed to create order status" }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, status: data })
   } catch (error) {
-    console.error("Error creating order status:", error)
-    return NextResponse.json({ success: false, message: "Failed to create order status" }, { status: 500 })
+    console.error("Unexpected error in POST /api/admin/order-statuses:", error)
+    return NextResponse.json({ success: false, message: "An unexpected error occurred" }, { status: 500 })
   }
 }

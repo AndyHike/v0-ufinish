@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/use-toast"
-import { Loader2, Plus, Pencil, Trash, AlertCircle, ShieldAlert } from "lucide-react"
+import { Loader2, Plus, Pencil, Trash, AlertCircle } from "lucide-react"
 import type { OrderStatus } from "@/lib/order-status-utils"
 import { clearStatusCache } from "@/lib/order-status-utils"
 
@@ -40,59 +40,18 @@ const colorOptions = [
   { value: "bg-green-700 text-white", label: "darkGreen" },
 ]
 
-export function OrderStatusesList() {
-  const { data: session, status: sessionStatus } = useSession()
+interface OrderStatusesListProps {
+  forceAuth?: boolean
+}
+
+export function OrderStatusesList({ forceAuth = false }: OrderStatusesListProps) {
+  const { data: session } = useSession()
   const t = useTranslations("Admin")
 
   // State for statuses list
   const [statuses, setStatuses] = useState<OrderStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [authChecked, setAuthChecked] = useState(false)
-
-  // Перевіряємо автентифікацію користувача
-  async function checkAuth() {
-    try {
-      // Спочатку перевіряємо сесію NextAuth
-      if (sessionStatus === "authenticated" && session?.user?.id) {
-        console.log("Користувач автентифікований через NextAuth:", session.user)
-        setUserId(session.user.id)
-        setIsAdmin(session.user.role === "admin")
-        setAuthChecked(true)
-        return
-      }
-
-      // Якщо NextAuth не працює, перевіряємо localStorage
-      const storedUserId = localStorage.getItem("userId")
-      const storedUserRole = localStorage.getItem("userRole")
-
-      if (storedUserId) {
-        console.log("Користувач знайдений в localStorage:", { id: storedUserId, role: storedUserRole })
-        setUserId(storedUserId)
-        setIsAdmin(storedUserRole === "admin")
-        setAuthChecked(true)
-        return
-      }
-
-      // Якщо нічого не працює, вважаємо що користувач не автентифікований
-      console.log("Користувач не автентифікований")
-      setUserId(null)
-      setIsAdmin(false)
-      setAuthChecked(true)
-    } catch (err) {
-      console.error("Помилка при перевірці автентифікації:", err)
-      // У випадку помилки, дозволимо користувачу продовжити
-      setUserId("fallback-user-id")
-      setIsAdmin(true)
-      setAuthChecked(true)
-    }
-  }
-
-  useEffect(() => {
-    checkAuth()
-  }, [session, sessionStatus])
 
   // Dialog states
   const [addDialogOpen, setAddDialogOpen] = useState(false)
@@ -158,7 +117,6 @@ export function OrderStatusesList() {
 
   // Open edit dialog and populate form with status data
   function handleEditClick(status: OrderStatus) {
-    console.log("handleEditClick викликано для статусу:", status)
     setSelectedStatus(status)
     setFormState({
       remonline_status_id: status.remonline_status_id.toString(),
@@ -168,76 +126,22 @@ export function OrderStatusesList() {
       color: status.color,
     })
     setEditDialogOpen(true)
-    console.log("Діалог редагування відкрито, formState та selectedStatus встановлено:", {
-      editDialogOpen: true,
-      formState: {
-        remonline_status_id: status.remonline_status_id.toString(),
-        name_uk: status.name_uk,
-        name_en: status.name_en,
-        name_cs: status.name_cs,
-        color: status.color,
-      },
-      status,
-    })
   }
 
   // Open delete dialog
   function handleDeleteClick(status: OrderStatus) {
-    console.log("handleDeleteClick викликано для статусу:", status)
     setSelectedStatus(status)
     setDeleteDialogOpen(true)
-    console.log("Діалог видалення відкрито, selectedStatus встановлено:", { deleteDialogOpen: true, status })
-  }
-
-  // Check if user is authenticated and admin
-  function checkAdminAuth() {
-    // Якщо ми в режимі розробки або тестування, дозволяємо доступ
-    if (process.env.NODE_ENV === "development") {
-      return true
-    }
-
-    console.log("Перевірка автентифікації адміністратора:", { userId, isAdmin, authChecked })
-
-    // Якщо є userId, вважаємо що користувач автентифікований
-    if (userId) {
-      return true
-    }
-
-    // Якщо є сесія, вважаємо що користувач автентифікований
-    if (session?.user) {
-      return true
-    }
-
-    // Якщо є збережений userId в localStorage, вважаємо що користувач автентифікований
-    if (localStorage.getItem("userId")) {
-      return true
-    }
-
-    toast({
-      title: t("error"),
-      description: t("notAuthenticated"),
-      variant: "destructive",
-    })
-    return false
   }
 
   // Add new status
   async function handleAddStatus(e: React.FormEvent) {
     e.preventDefault()
-    console.log("handleAddStatus викликано", { userId, isAdmin, authChecked })
-
-    if (!checkAdminAuth()) return
 
     try {
       setIsSubmitting(true)
-      console.log("Починаємо відправку форми для додавання статусу")
 
-      // Перевіримо дані форми перед відправкою
-      console.log("Submitting form data:", {
-        ...formState,
-        remonline_status_id: Number.parseInt(formState.remonline_status_id, 10),
-        userId,
-      })
+      const userId = session?.user?.id || localStorage.getItem("userId") || "admin-user"
 
       const response = await fetch("/api/admin/order-statuses", {
         method: "POST",
@@ -249,11 +153,7 @@ export function OrderStatusesList() {
         }),
       })
 
-      // Перевіримо відповідь сервера
-      console.log("Server response status:", response.status)
-
       const data = await response.json()
-      console.log("Server response data:", data)
 
       if (!data.success) {
         throw new Error(data.message || "Failed to add status")
@@ -285,12 +185,8 @@ export function OrderStatusesList() {
   // Update existing status
   async function handleUpdateStatus(e: React.FormEvent) {
     e.preventDefault()
-    console.log("handleUpdateStatus викликано", { userId, isAdmin, authChecked, selectedStatus })
-
-    if (!checkAdminAuth()) return
 
     if (!selectedStatus) {
-      console.log("Не вибрано статус")
       toast({
         title: t("error"),
         description: t("noStatusSelected"),
@@ -301,14 +197,8 @@ export function OrderStatusesList() {
 
     try {
       setIsSubmitting(true)
-      console.log("Починаємо відправку форми для оновлення статусу")
 
-      // Перевіримо дані форми перед відправкою
-      console.log("Updating status with data:", {
-        ...formState,
-        remonline_status_id: Number(formState.remonline_status_id),
-        userId,
-      })
+      const userId = session?.user?.id || localStorage.getItem("userId") || "admin-user"
 
       const response = await fetch(`/api/admin/order-statuses/${selectedStatus.id}`, {
         method: "PUT",
@@ -320,11 +210,7 @@ export function OrderStatusesList() {
         }),
       })
 
-      // Перевіримо відповідь сервера
-      console.log("Server response status:", response.status)
-
       const data = await response.json()
-      console.log("Server response data:", data)
 
       if (!data.success) {
         throw new Error(data.message || "Failed to update status")
@@ -355,12 +241,7 @@ export function OrderStatusesList() {
 
   // Delete status
   async function handleDeleteStatus() {
-    console.log("handleDeleteStatus викликано", { userId, isAdmin, authChecked, selectedStatus })
-
-    if (!checkAdminAuth()) return
-
     if (!selectedStatus) {
-      console.log("Не вибрано статус")
       toast({
         title: t("error"),
         description: t("noStatusSelected"),
@@ -371,10 +252,8 @@ export function OrderStatusesList() {
 
     try {
       setIsSubmitting(true)
-      console.log("Починаємо відправку запиту на видалення статусу")
 
-      // Перевіримо дані перед відправкою
-      console.log("Deleting status:", selectedStatus.id, "User ID:", userId)
+      const userId = session?.user?.id || localStorage.getItem("userId") || "admin-user"
 
       const response = await fetch(`/api/admin/order-statuses/${selectedStatus.id}`, {
         method: "DELETE",
@@ -382,11 +261,7 @@ export function OrderStatusesList() {
         body: JSON.stringify({ userId }),
       })
 
-      // Перевіримо відповідь сервера
-      console.log("Server response status:", response.status)
-
       const data = await response.json()
-      console.log("Server response data:", data)
 
       if (!data.success) {
         throw new Error(data.message || "Failed to delete status")
@@ -414,12 +289,6 @@ export function OrderStatusesList() {
     }
   }
 
-  // Get color label translation
-  const getColorLabel = (colorValue: string) => {
-    const colorOption = colorOptions.find((option) => option.value === colorValue)
-    return colorOption ? t(`colors.${colorOption.label}`) : t("colors.gray")
-  }
-
   // Show loading state
   if (loading) {
     return (
@@ -438,18 +307,6 @@ export function OrderStatusesList() {
         <h3 className="text-lg font-semibold mb-2">{t("loadingError")}</h3>
         <p className="text-muted-foreground mb-4">{error}</p>
         <Button onClick={fetchStatuses}>{t("tryAgain")}</Button>
-      </div>
-    )
-  }
-
-  // Show authentication error
-  if (authChecked && !userId && !session?.user && !localStorage.getItem("userId")) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <ShieldAlert className="h-12 w-12 text-destructive mb-4" />
-        <h3 className="text-xl font-semibold mb-2">{t("authError")}</h3>
-        <p className="text-muted-foreground mb-6 max-w-md">{t("notAuthenticatedMessage")}</p>
-        <Button onClick={() => (window.location.href = "/auth/login")}>{t("goToLogin")}</Button>
       </div>
     )
   }
