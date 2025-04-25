@@ -80,7 +80,22 @@ export default async function middleware(request: NextRequest) {
       }
     } catch (error) {
       console.error("Error verifying session in middleware:", error)
-      // On error, we'll let the request through and let the page handle authentication
+
+      // При помилці перевірки сесії, перенаправляємо на сторінку входу
+      const locale = pathname.split("/")[1] || defaultLocale
+      const redirectUrl = new URL(`/${locale}/auth/login`, request.url)
+      redirectUrl.searchParams.set("redirect", pathname)
+      redirectUrl.searchParams.set("error", "session_verification_failed")
+
+      const response = NextResponse.redirect(redirectUrl)
+
+      // Видаляємо cookie для безпеки
+      response.cookies.set("session_id", "", {
+        expires: new Date(0),
+        path: "/",
+      })
+
+      return response
     }
   }
 
