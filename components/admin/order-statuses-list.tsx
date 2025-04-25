@@ -173,6 +173,7 @@ export function OrderStatusesList() {
   }
 
   async function handleUpdateStatus() {
+    console.log("handleUpdateStatus called")
     if (!session?.user?.id || !currentStatus) return
 
     try {
@@ -423,6 +424,7 @@ export function OrderStatusesList() {
           <DialogHeader>
             <DialogTitle>Редагувати статус замовлення</DialogTitle>
           </DialogHeader>
+          {/* Add onSubmit handler to the form */}
           <form
             onSubmit={(e) => {
               e.preventDefault()
