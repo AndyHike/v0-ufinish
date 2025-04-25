@@ -20,15 +20,13 @@ export default function GlobalError({
 
   const clearSession = async () => {
     try {
-      // Очищаємо сесію через API
-      await fetch("/api/auth/clear-session")
+      // Очищаємо сесію через JavaScript (API може бути недоступним при глобальній помилці)
+      document.cookie = "session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
 
       // Перезавантажуємо сторінку
       window.location.href = "/"
     } catch (e) {
       console.error("Failed to clear session:", e)
-      // Якщо API не працює, очищаємо cookie вручну через JavaScript
-      document.cookie = "session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
       window.location.href = "/"
     }
   }
@@ -39,17 +37,18 @@ export default function GlobalError({
         <div className="container flex items-center justify-center min-h-screen py-12">
           <Card className="w-full max-w-md">
             <CardHeader>
-              <CardTitle>Виникла помилка</CardTitle>
+              <CardTitle>Критична помилка</CardTitle>
               <CardDescription>
-                Сталася помилка при завантаженні сторінки. Це може бути пов'язано з проблемою сесії.
+                Сталася критична помилка при завантаженні додатку. Спробуйте наступні дії для вирішення проблеми.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Помилка сервера</AlertTitle>
+                <AlertTitle>Помилка додатку</AlertTitle>
                 <AlertDescription>
-                  Виникла помилка при рендерингу сторінки. Спробуйте очистити сесію або увійти знову.
+                  Виникла критична помилка при завантаженні додатку. Спробуйте очистити сесію або перезавантажити
+                  сторінку.
                   {error.digest && <div className="mt-2 text-xs">Код помилки: {error.digest}</div>}
                 </AlertDescription>
               </Alert>
@@ -58,7 +57,7 @@ export default function GlobalError({
               <Button className="w-full" onClick={clearSession} variant="default">
                 Очистити сесію і перезавантажити
               </Button>
-              <Button className="w-full" onClick={reset} variant="outline">
+              <Button className="w-full" onClick={() => reset()} variant="outline">
                 Спробувати ще раз
               </Button>
               <Button className="w-full" onClick={() => (window.location.href = "/")} variant="ghost">
