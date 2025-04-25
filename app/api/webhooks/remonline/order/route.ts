@@ -77,16 +77,6 @@ const remonlineStatusChangeWebhookSchema = z.object({
   }),
 })
 
-// Map of RemOnline status IDs to our status names
-const statusIdMap: Record<number, string> = {
-  3153189: "Новий", // New order status ID
-  3153184: "В роботі", // In progress status ID
-  3153185: "Готовий", // Ready status ID
-  3153186: "Виданий", // Completed/Delivered status ID
-  3153187: "Скасований", // Cancelled status ID
-  // Add more status mappings as needed
-}
-
 export async function POST(request: NextRequest) {
   try {
     // Log the request URL to debug routing issues
@@ -277,12 +267,6 @@ async function processStatusChangeFromWebhook(webhookData: z.infer<typeof remonl
     console.log(`Processing status change for order ID: ${orderId}`)
     console.log(`Order Number: ${orderNumber}, Old Status ID: ${oldStatusId}, New Status ID: ${newStatusId}`)
 
-    // Map status IDs to status names
-    const oldStatus = statusIdMap[oldStatusId] || "Невідомий"
-    const newStatus = statusIdMap[newStatusId] || "Невідомий"
-
-    console.log(`Status change: ${oldStatus} -> ${newStatus}`)
-
     // Find the order in our database
     console.log(`Looking for order with remonline_id: ${orderId}`)
     const { data: existingOrder, error: orderError } = await supabase
@@ -303,12 +287,12 @@ async function processStatusChangeFromWebhook(webhookData: z.infer<typeof remonl
 
     console.log(`Found order with ID: ${existingOrder.id}`)
 
-    // Update the order status
-    console.log(`Updating order status to: ${newStatus}`)
+    // Update the order status - now storing the numeric status ID instead of text
+    console.log(`Updating order status to ID: ${newStatusId}`)
     const { data: updatedOrder, error: updateError } = await supabase
       .from("repair_orders")
       .update({
-        status: newStatus,
+        status: newStatusId.toString(), // Store as string to maintain compatibility
         updated_at: updatedAt,
       })
       .eq("remonline_id", orderId)
@@ -332,8 +316,8 @@ async function processStatusChangeFromWebhook(webhookData: z.infer<typeof remonl
           entity_id: existingOrder.id,
           user_id: existingOrder.user_id,
           details: {
-            old_status: oldStatus,
-            new_status: newStatus,
+            old_status_id: oldStatusId,
+            new_status_id: newStatusId,
             changed_by: employeeName,
             order_number: orderNumber,
           },
@@ -358,8 +342,8 @@ async function processStatusChangeFromWebhook(webhookData: z.infer<typeof remonl
         {
           order_id: existingOrder.id,
           user_id: existingOrder.user_id,
-          old_status: oldStatus,
-          new_status: newStatus,
+          old_status: oldStatusId.toString(), // Store as string to maintain compatibility
+          new_status: newStatusId.toString(), // Store as string to maintain compatibility
           changed_by: employeeName,
           changed_at: updatedAt,
         },
@@ -374,16 +358,13 @@ async function processStatusChangeFromWebhook(webhookData: z.infer<typeof remonl
       console.log(`Status history logged successfully`)
     }
 
-    // TODO: Send notification to the user about status change
-    // This could be implemented later
-
     return {
       success: true,
       message: "Order status updated successfully",
       order: updatedOrder,
       statusChange: {
-        from: oldStatus,
-        to: newStatus,
+        from: oldStatusId,
+        to: newStatusId,
       },
     }
   } catch (error) {
@@ -454,10 +435,7 @@ async function processOrderFromWebhook(webhookData: z.infer<typeof remonlineOrde
       }
     }
 
-    // Map status ID to status name
-    const status = statusIdMap[statusId] || "Новий" // Default to "New" if status ID is not found
-
-    // Prepare order details for database
+    // Prepare order details for database - now storing the numeric status ID
     const orderDetails = {
       user_id: user.id,
       remonline_id: orderId,
@@ -465,7 +443,7 @@ async function processOrderFromWebhook(webhookData: z.infer<typeof remonlineOrde
       device_brand: deviceBrand,
       device_model: deviceModel,
       service_type: "Діагностика", // Default service type, will be updated with actual data if needed
-      status: status,
+      status: statusId.toString(), // Store as string to maintain compatibility
       price: null, // Price is not available in the webhook payload
       created_at: createdAt,
       updated_at: new Date().toISOString(),
@@ -530,7 +508,7 @@ async function processOrderFromWebhook(webhookData: z.infer<typeof remonlineOrde
           details: {
             order_number: orderNumber,
             device: `${deviceBrand} ${deviceModel}`,
-            status: status,
+            status_id: statusId,
           },
           created_at: createdAt,
         },

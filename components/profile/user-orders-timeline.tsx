@@ -22,8 +22,6 @@ import {
   Search,
   ChevronRight,
 } from "lucide-react"
-
-// Оновіть імпорт утиліт для статусів замовлень
 import { getStatusByRemOnlineId } from "@/lib/order-status-utils"
 
 type OrderStatusHistory = {
@@ -56,20 +54,32 @@ export function UserOrdersTimeline() {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
-
-  // Додайте новий стан для зберігання статусів
   const [statusColors, setStatusColors] = useState<Record<string, { name: string; color: string }>>({})
 
   useEffect(() => {
     fetchOrders()
   }, [])
 
-  // Оновіть функцію loadStatusColors для використання цифрових кодів
+  // Функція для завантаження статусів замовлень
   async function loadStatusColors(orders: RepairOrder[]) {
     const uniqueStatuses = [...new Set(orders.map((order) => order.status))]
     const statusMap: Record<string, { name: string; color: string }> = {}
 
-    for (const statusCode of uniqueStatuses) {
+    // Додаємо всі унікальні статуси з історії
+    const historyStatuses = new Set<string>()
+    orders.forEach((order) => {
+      if (order.statusHistory) {
+        order.statusHistory.forEach((history) => {
+          historyStatuses.add(history.old_status)
+          historyStatuses.add(history.new_status)
+        })
+      }
+    })
+
+    // Об'єднуємо всі унікальні статуси
+    const allUniqueStatuses = new Set([...uniqueStatuses, ...historyStatuses])
+
+    for (const statusCode of allUniqueStatuses) {
       // Перетворюємо рядок статусу на число, оскільки тепер ми працюємо з цифровими кодами
       const remonlineId = Number.parseInt(statusCode, 10)
       if (!isNaN(remonlineId)) {
@@ -82,7 +92,7 @@ export function UserOrdersTimeline() {
     setStatusColors(statusMap)
   }
 
-  // Оновіть функцію fetchOrders, щоб також завантажувати статуси
+  // Завантаження замовлень
   async function fetchOrders() {
     setLoading(true)
     setError(null)
@@ -128,24 +138,32 @@ export function UserOrdersTimeline() {
     }
   }
 
-  function getStatusIcon(status: string) {
-    switch (status.toLowerCase()) {
-      case "новий":
+  function getStatusIcon(statusCode: string) {
+    // Перетворюємо рядок статусу на число
+    const statusId = Number.parseInt(statusCode, 10)
+
+    if (isNaN(statusId)) {
+      return <Clock className="h-5 w-5 text-gray-500" />
+    }
+
+    // Визначаємо іконку на основі ID статусу
+    switch (statusId) {
+      case 3153189: // Новий
         return <Clock className="h-5 w-5 text-blue-500" />
-      case "в роботі":
+      case 3153184: // В роботі
         return <RefreshCcw className="h-5 w-5 text-amber-500" />
-      case "готовий":
+      case 3153185: // Готовий
         return <CheckCircle2 className="h-5 w-5 text-green-500" />
-      case "виданий":
+      case 3153186: // Виданий
         return <CheckCircle2 className="h-5 w-5 text-green-700" />
-      case "скасований":
+      case 3153187: // Скасований
         return <AlertCircle className="h-5 w-5 text-red-500" />
       default:
         return <Clock className="h-5 w-5 text-gray-500" />
     }
   }
 
-  // Оновіть функцію getStatusColor, щоб використовувати дані з бази даних
+  // Отримання кольору статусу з бази даних
   function getStatusColor(status: string) {
     return statusColors[status]?.color || "bg-gray-100 text-gray-800 hover:bg-gray-200"
   }
@@ -160,11 +178,20 @@ export function UserOrdersTimeline() {
 
   const filteredOrders = orders.filter((order) => {
     // Filter by tab
-    if (activeTab === "active" && ["виданий", "скасований"].includes(order.status.toLowerCase())) {
-      return false
+    if (activeTab === "active") {
+      // Активні замовлення - статуси "Новий" та "В роботі"
+      const statusId = Number.parseInt(order.status, 10)
+      if (statusId !== 3153189 && statusId !== 3153184) {
+        return false
+      }
     }
-    if (activeTab === "completed" && !["виданий", "скасований"].includes(order.status.toLowerCase())) {
-      return false
+
+    if (activeTab === "completed") {
+      // Завершені замовлення - статуси "Готовий" та "Виданий"
+      const statusId = Number.parseInt(order.status, 10)
+      if (statusId !== 3153185 && statusId !== 3153186) {
+        return false
+      }
     }
 
     // Filter by search query
@@ -174,7 +201,7 @@ export function UserOrdersTimeline() {
         order.reference_number.toLowerCase().includes(query) ||
         order.device_brand.toLowerCase().includes(query) ||
         order.device_model.toLowerCase().includes(query) ||
-        order.status.toLowerCase().includes(query)
+        statusColors[order.status]?.name.toLowerCase().includes(query)
       )
     }
 
@@ -249,7 +276,6 @@ export function UserOrdersTimeline() {
                     </CardTitle>
                     <CardDescription>Замовлення №: {order.reference_number}</CardDescription>
                   </div>
-                  {/* Оновіть відображення статусу в Badge */}
                   <Badge className={getStatusColor(order.status)}>
                     {getStatusIcon(order.status)}
                     <span className="ml-1">{statusColors[order.status]?.name || order.status}</span>
@@ -279,9 +305,13 @@ export function UserOrdersTimeline() {
                             <div className="mr-2 mt-0.5">{getStatusIcon(history.new_status)}</div>
                             <div className="flex-1">
                               <div className="flex items-center">
-                                <span className="text-sm font-medium">{history.old_status}</span>
+                                <span className="text-sm font-medium">
+                                  {statusColors[history.old_status]?.name || history.old_status}
+                                </span>
                                 <ArrowRight className="h-3 w-3 mx-2 text-muted-foreground" />
-                                <span className="text-sm font-medium">{history.new_status}</span>
+                                <span className="text-sm font-medium">
+                                  {statusColors[history.new_status]?.name || history.new_status}
+                                </span>
                               </div>
                               <div className="text-xs text-muted-foreground mt-1">
                                 {formatDate(history.changed_at)} • {history.changed_by}

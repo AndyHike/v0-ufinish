@@ -8,7 +8,6 @@ import { ArrowRight, Clock, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
-// Оновіть імпорт утиліт для статусів замовлень
 import { getStatusByRemOnlineId } from "@/lib/order-status-utils"
 
 type RepairOrder = {
@@ -30,10 +29,9 @@ export function UserOrders() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("all")
-  // Додайте новий стан для зберігання статусів
   const [statusColors, setStatusColors] = useState<Record<string, { name: string; color: string }>>({})
 
-  // Оновіть функцію loadStatusColors для використання цифрових кодів
+  // Функція для завантаження статусів замовлень
   async function loadStatusColors(orders: RepairOrder[]) {
     const uniqueStatuses = [...new Set(orders.map((order) => order.status))]
     const statusMap: Record<string, { name: string; color: string }> = {}
@@ -51,7 +49,7 @@ export function UserOrders() {
     setStatusColors(statusMap)
   }
 
-  // Оновіть useEffect для завантаження замовлень, щоб також завантажувати статуси
+  // Завантаження замовлень
   useEffect(() => {
     async function fetchOrders() {
       try {
@@ -78,6 +76,7 @@ export function UserOrders() {
     fetchOrders()
   }, [t])
 
+  // Фільтрація замовлень
   useEffect(() => {
     // Filter orders based on search query and active tab
     let filtered = orders
@@ -94,13 +93,16 @@ export function UserOrders() {
       )
     }
 
-    // Apply tab filter
+    // Apply tab filter - використовуємо статуси з бази даних
     if (activeTab !== "all") {
       filtered = filtered.filter((order) => {
+        const statusId = Number.parseInt(order.status, 10)
         if (activeTab === "active") {
-          return order.status === "Новий" || order.status === "В процесі"
+          // Активні замовлення - статуси "Новий" та "В роботі"
+          return statusId === 3153189 || statusId === 3153184
         } else if (activeTab === "completed") {
-          return order.status === "Завершено"
+          // Завершені замовлення - статуси "Готовий" та "Виданий"
+          return statusId === 3153185 || statusId === 3153186
         }
         return true
       })
@@ -122,7 +124,7 @@ export function UserOrders() {
     }
   }
 
-  // Оновіть функцію getStatusColor, щоб використовувати дані з бази даних
+  // Отримання кольору статусу з бази даних
   function getStatusColor(status: string): string {
     return statusColors[status]?.color || "text-gray-600"
   }
@@ -226,7 +228,6 @@ export function UserOrders() {
                     </td>
                     <td className="py-4 px-4 text-muted-foreground">{order.reference_number}</td>
                     <td className="py-4 px-4 text-muted-foreground">{order.service_type}</td>
-                    {/* Оновіть відображення статусу в таблиці */}
                     <td className="py-4 px-4">
                       <span className={cn("font-medium", getStatusColor(order.status))}>
                         {statusColors[order.status]?.name || order.status}
