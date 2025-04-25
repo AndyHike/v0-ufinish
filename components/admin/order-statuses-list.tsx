@@ -49,6 +49,15 @@ export function OrderStatusesList() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Перевіряємо, чи користувач авторизований і зберігаємо ID в localStorage
+  useEffect(() => {
+    // Якщо сесія завантажена і є ID користувача, зберігаємо його в localStorage
+    if (sessionStatus === "authenticated" && session?.user?.id) {
+      localStorage.setItem("userId", session.user.id)
+      console.log("ID користувача збережено в localStorage:", session.user.id)
+    }
+  }, [session, sessionStatus])
+
   // Dialog states
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -413,15 +422,6 @@ export function OrderStatusesList() {
       </div>
     )
   }
-
-  // Перевіряємо, чи користувач авторизований
-  useEffect(() => {
-    // Якщо сесія завантажена і є ID користувача, зберігаємо його в localStorage
-    if (sessionStatus === "authenticated" && session?.user?.id) {
-      localStorage.setItem("userId", session.user.id)
-      console.log("ID користувача збережено в localStorage:", session.user.id)
-    }
-  }, [session, sessionStatus])
 
   return (
     <div className="space-y-6">
