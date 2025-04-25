@@ -10,21 +10,49 @@ if (!REMONLINE_ORDER_WEBHOOK_SECRET) {
   console.warn("REMONLINE_ORDER_WEBHOOK_SECRET is not set. Webhook verification will be skipped.")
 }
 
-// Define a schema for the RemOnline webhook payload for orders
+// Define a schema for the RemOnline webhook payload for orders based on the example
 const remonlineOrderWebhookSchema = z.object({
   id: z.string(),
   created_at: z.string(),
+  created_at_ts: z.number(),
   event_name: z.string(),
   context: z.object({
     object_id: z.number(),
     object_type: z.string(),
   }),
+  metadata: z.object({
+    order: z.object({
+      id: z.number(),
+      name: z.string(),
+      type: z.number(),
+    }),
+    client: z.object({
+      id: z.number(),
+      fullname: z.string(),
+    }),
+    status: z.object({
+      id: z.number(),
+    }),
+    asset: z
+      .object({
+        id: z.number(),
+        name: z.string(),
+      })
+      .optional(),
+  }),
+  "x-signature": z.string().optional(),
   employee: z.object({
     id: z.number(),
     full_name: z.string(),
     email: z.string().email(),
   }),
 })
+
+// Map of RemOnline status IDs to our status names
+const statusIdMap: Record<number, string> = {
+  3153189: "Новий", // New order status ID
+  // Add more status mappings as needed
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,25 +84,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid JSON" })
     }
 
-    // Verify the webhook signature according to RemOnline documentation
-    // The signature is a SHA-256 hash generated using the webhook id and the secret key
-    const signature = request.headers.get("x-signature")
+    // Verify the webhook signature
+    // The signature could be in the header or in the payload itself
+    const headerSignature = request.headers.get("x-signature")
+    const payloadSignature = payload["x-signature"]
+    const signature = headerSignature || payloadSignature
 
     if (REMONLINE_ORDER_WEBHOOK_SECRET && signature && payload.id) {
-      // Try multiple signature verification methods to find the correct one
+      // Based on the example, it seems the signature is in the payload itself
+      // and might be using a different method than we initially thought
+
+      const webhookId = payload.id
+
+      // Try different signature verification methods
       let signatureValid = false
 
       // Method 1: Using webhook ID + secret (as per documentation)
-      const webhookId = payload.id
       const computedSignature1 = crypto
         .createHash("sha256")
         .update(`${webhookId}${REMONLINE_ORDER_WEBHOOK_SECRET}`)
         .digest("hex")
 
       // Method 2: Using request body + secret (common webhook pattern)
+      // For this method, we need to remove the x-signature field from the payload
+      const payloadWithoutSignature = { ...payload }
+      delete payloadWithoutSignature["x-signature"]
+      const payloadString = JSON.stringify(payloadWithoutSignature)
+
       const computedSignature2 = crypto
         .createHmac("sha256", REMONLINE_ORDER_WEBHOOK_SECRET)
-        .update(requestText)
+        .update(payloadString)
         .digest("hex")
 
       // Method 3: Using webhook ID + secret with HMAC
@@ -83,20 +122,12 @@ export async function POST(request: NextRequest) {
         .update(webhookId)
         .digest("hex")
 
-      // Method 4: Using webhook ID + secret with different encoding
-      const computedSignature4 = crypto
-        .createHash("sha256")
-        .update(`${webhookId}${REMONLINE_ORDER_WEBHOOK_SECRET}`, "utf8")
-        .digest("hex")
-
       console.log(`Webhook ID: ${webhookId}`)
       console.log(`Received signature: ${signature}`)
       console.log(`Computed signature 1 (ID+Secret): ${computedSignature1}`)
       console.log(`Computed signature 2 (HMAC body): ${computedSignature2}`)
       console.log(`Computed signature 3 (HMAC ID): ${computedSignature3}`)
-      console.log(`Computed signature 4 (ID+Secret UTF8): ${computedSignature4}`)
 
-      // Check if any of the computed signatures match
       if (signature === computedSignature1) {
         console.log("Webhook signature verified successfully using method 1")
         signatureValid = true
@@ -106,9 +137,6 @@ export async function POST(request: NextRequest) {
       } else if (signature === computedSignature3) {
         console.log("Webhook signature verified successfully using method 3")
         signatureValid = true
-      } else if (signature === computedSignature4) {
-        console.log("Webhook signature verified successfully using method 4")
-        signatureValid = true
       }
 
       if (!signatureValid) {
@@ -117,7 +145,7 @@ export async function POST(request: NextRequest) {
       }
     } else {
       if (!signature) {
-        console.warn("No X-Signature header found in the request")
+        console.warn("No X-Signature header or payload signature found in the request")
       }
       if (!payload.id) {
         console.warn("No webhook ID found in the payload")
@@ -141,11 +169,18 @@ export async function POST(request: NextRequest) {
     const eventType = orderData.event_name
     const orderId = orderData.context.object_id
 
+    // Extract metadata from the webhook payload
+    const clientId = orderData.metadata.client.id
+    const orderNumber = orderData.metadata.order.name
+    const statusId = orderData.metadata.status.id
+    const deviceName = orderData.metadata.asset?.name || "Unknown Device"
+
     console.log(`Processing ${eventType} for order ID: ${orderId}`)
+    console.log(`Client ID: ${clientId}, Order Number: ${orderNumber}, Status ID: ${statusId}, Device: ${deviceName}`)
 
     // Start background processing and immediately return success
     // This prevents webhook timeout and deactivation
-    processOrderAsync(orderId, eventType).catch((error) => {
+    processOrderFromWebhook(orderData).catch((error) => {
       console.error(`Background processing error for order ${orderId}:`, error)
     })
 
@@ -161,31 +196,168 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Asynchronous function for background order processing
-async function processOrderAsync(orderId: number, eventType: string) {
-  try {
-    console.log(`Background processing started for order ${orderId}`)
+// Process order data directly from webhook payload
+async function processOrderFromWebhook(webhookData: any) {
+  const supabase = createClient()
 
-    // Only process relevant event types
-    if (eventType === "Order.Created" || eventType === "Order.Updated" || eventType === "Order.StatusChanged") {
-      // Fetch complete order details from RemOnline API
+  try {
+    const orderId = webhookData.context.object_id
+    const clientId = webhookData.metadata.client.id
+    const orderNumber = webhookData.metadata.order.name
+    const statusId = webhookData.metadata.status.id
+    const deviceName = webhookData.metadata.asset?.name || "Unknown Device"
+    const createdAt = webhookData.created_at
+
+    console.log(`Processing order from webhook: ${orderId}`)
+
+    // Find the user by RemOnline client ID
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("remonline_id", clientId)
+      .single()
+
+    if (userError) {
+      console.error("Error finding user by RemOnline ID:", userError)
+
+      // If the user is not found, we might need to fetch more details from RemOnline API
+      // and create a new user record, or just log the error and skip this order
+      console.log("User not found, fetching additional details from RemOnline API...")
+
+      // Fetch complete order details to get more information
       const orderDetails = await fetchOrderDetailsFromRemonline(orderId)
 
       if (!orderDetails.success) {
         console.error("Failed to fetch order details from RemOnline:", orderDetails.message)
-        return
+        return { success: false, message: "User not found and failed to fetch order details" }
       }
 
-      // Process the order details
-      await processOrderDetails(orderDetails.order)
-      console.log(`Successfully processed order ${orderId}`)
-    } else {
-      console.log(`Skipping processing for event type: ${eventType}`)
+      console.log("Order details fetched, but user still not found. Skipping order processing.")
+      return { success: false, message: "User not found" }
     }
 
-    console.log(`Background processing completed for order ${orderId}`)
+    // Extract device brand and model from the device name
+    let deviceBrand = "Unknown"
+    let deviceModel = deviceName
+
+    // Try to extract brand from device name (e.g., "iphone 11 pro" -> "iPhone" as brand, "11 Pro" as model)
+    const knownBrands = ["iphone", "samsung", "xiaomi", "huawei", "oppo", "vivo", "realme", "oneplus", "google"]
+    for (const brand of knownBrands) {
+      if (deviceName.toLowerCase().includes(brand)) {
+        deviceBrand = brand.charAt(0).toUpperCase() + brand.slice(1) // Capitalize brand name
+        deviceModel = deviceName.replace(new RegExp(brand, "i"), "").trim()
+        break
+      }
+    }
+
+    // Map status ID to status name
+    const status = statusIdMap[statusId] || "Новий" // Default to "New" if status ID is not found
+
+    // Prepare order details for database
+    const orderDetails = {
+      user_id: user.id,
+      remonline_id: orderId,
+      reference_number: orderNumber,
+      device_brand: deviceBrand,
+      device_model: deviceModel,
+      service_type: "Діагностика", // Default service type, will be updated with actual data if needed
+      status: status,
+      price: null, // Price is not available in the webhook payload
+      created_at: createdAt,
+      updated_at: new Date().toISOString(),
+    }
+
+    // Check if order already exists
+    const { data: existingOrder, error: checkError } = await supabase
+      .from("repair_orders")
+      .select("id")
+      .eq("remonline_id", orderId)
+      .single()
+
+    if (checkError && checkError.code !== "PGRST116") {
+      console.error("Error checking existing order:", checkError)
+    }
+
+    if (existingOrder) {
+      // Update existing order
+      const { error: updateError } = await supabase
+        .from("repair_orders")
+        .update(orderDetails)
+        .eq("remonline_id", orderId)
+
+      if (updateError) {
+        console.error("Error updating order:", updateError)
+        return { success: false, message: "Failed to update order" }
+      }
+
+      console.log(`Order updated: ${orderId}`)
+    } else {
+      // Create new order
+      const { error: insertError } = await supabase.from("repair_orders").insert([orderDetails])
+
+      if (insertError) {
+        console.error("Error creating order:", insertError)
+        return { success: false, message: "Failed to create order" }
+      }
+
+      console.log(`Order created: ${orderId}`)
+    }
+
+    // If we need more detailed information, we can fetch it from the RemOnline API
+    // This is optional and can be done asynchronously
+    fetchAndUpdateOrderDetails(orderId, orderDetails).catch((error) => {
+      console.error(`Error updating order details: ${error}`)
+    })
+
+    return { success: true }
   } catch (error) {
-    console.error(`Background processing failed for order ${orderId}:`, error)
+    console.error("Error processing order from webhook:", error)
+    return {
+      success: false,
+      message: "Failed to process order from webhook",
+      details: error instanceof Error ? error.message : String(error),
+    }
+  }
+}
+
+// Fetch additional order details from RemOnline API and update the database
+async function fetchAndUpdateOrderDetails(orderId: number, existingDetails: any) {
+  try {
+    console.log(`Fetching additional details for order ${orderId}`)
+
+    // Fetch complete order details from RemOnline API
+    const orderDetails = await fetchOrderDetailsFromRemonline(orderId)
+
+    if (!orderDetails.success) {
+      console.error("Failed to fetch additional order details from RemOnline:", orderDetails.message)
+      return
+    }
+
+    const orderData = orderDetails.order
+
+    // Extract additional information from the API response
+    const updatedDetails = {
+      ...existingDetails,
+      service_type: extractServiceType(orderData),
+      price: orderData.price || null,
+      // Update any other fields as needed
+    }
+
+    // Update the order in the database with the additional information
+    const supabase = createClient()
+    const { error: updateError } = await supabase
+      .from("repair_orders")
+      .update(updatedDetails)
+      .eq("remonline_id", orderId)
+
+    if (updateError) {
+      console.error("Error updating order with additional details:", updateError)
+      return
+    }
+
+    console.log(`Order ${orderId} updated with additional details`)
+  } catch (error) {
+    console.error(`Error in fetchAndUpdateOrderDetails for order ${orderId}:`, error)
     // Log the error but don't throw - this is a background process
   }
 }
@@ -246,90 +418,6 @@ async function fetchOrderDetailsFromRemonline(orderId: number) {
     return {
       success: false,
       message: "Failed to fetch order details from RemOnline API",
-      details: error instanceof Error ? error.message : String(error),
-    }
-  }
-}
-
-async function processOrderDetails(orderData: any) {
-  const supabase = createClient()
-
-  try {
-    // Extract client ID from order data
-    const clientId = orderData.client?.id
-    if (!clientId) {
-      console.error("Order has no client ID, cannot process order")
-      return { success: false, message: "Order has no client ID" }
-    }
-
-    // Find the user by RemOnline client ID
-    const { data: user, error: userError } = await supabase
-      .from("users")
-      .select("id")
-      .eq("remonline_id", clientId)
-      .single()
-
-    if (userError) {
-      console.error("Error finding user by RemOnline ID:", userError)
-      return { success: false, message: "User not found" }
-    }
-
-    // Extract order details
-    const orderDetails = {
-      user_id: user.id,
-      remonline_id: orderData.id,
-      reference_number: orderData.number || `ORD-${orderData.id}`,
-      device_brand: orderData.brand?.name || "Unknown Brand",
-      device_model: orderData.model?.name || orderData.custom_model || "Unknown Model",
-      service_type: extractServiceType(orderData),
-      status: mapOrderStatus(orderData.status?.name || "New"),
-      price: orderData.price || null,
-      created_at: orderData.created_at || new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-
-    // Check if order already exists
-    const { data: existingOrder, error: checkError } = await supabase
-      .from("repair_orders")
-      .select("id")
-      .eq("remonline_id", orderData.id)
-      .single()
-
-    if (checkError && checkError.code !== "PGRST116") {
-      console.error("Error checking existing order:", checkError)
-    }
-
-    if (existingOrder) {
-      // Update existing order
-      const { error: updateError } = await supabase
-        .from("repair_orders")
-        .update(orderDetails)
-        .eq("remonline_id", orderData.id)
-
-      if (updateError) {
-        console.error("Error updating order:", updateError)
-        return { success: false, message: "Failed to update order" }
-      }
-
-      console.log(`Order updated: ${orderData.id}`)
-    } else {
-      // Create new order
-      const { error: insertError } = await supabase.from("repair_orders").insert([orderDetails])
-
-      if (insertError) {
-        console.error("Error creating order:", insertError)
-        return { success: false, message: "Failed to create order" }
-      }
-
-      console.log(`Order created: ${orderData.id}`)
-    }
-
-    return { success: true }
-  } catch (error) {
-    console.error("Error processing order details:", error)
-    return {
-      success: false,
-      message: "Failed to process order details",
       details: error instanceof Error ? error.message : String(error),
     }
   }
