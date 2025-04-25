@@ -10,6 +10,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json()
     const { remonline_status_id, name_uk, name_en, name_cs, color, userId } = body
 
+    console.log("Received update request with data:", body)
+
     // Verify admin permissions
     const { data: userData, error: userError } = await supabase.from("users").select("role").eq("id", userId).single()
 
@@ -52,7 +54,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error("Supabase error:", error)
+      throw error
+    }
 
     // Clear the status cache
     clearStatusCache()

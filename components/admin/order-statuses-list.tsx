@@ -173,18 +173,12 @@ export function OrderStatusesList() {
     try {
       setIsSubmitting(true)
 
-      console.log("Updating status with data:", {
-        ...formState,
-        remonline_status_id: Number.parseInt(formState.remonline_status_id, 10),
-        userId: session.user.id,
-      })
-
       const response = await fetch(`/api/admin/order-statuses/${selectedStatus.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formState,
-          remonline_status_id: Number.parseInt(formState.remonline_status_id, 10),
+          remonline_status_id: Number(formState.remonline_status_id),
           userId: session.user.id,
         }),
       })
@@ -537,7 +531,7 @@ export function OrderStatusesList() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
                 Скасувати
               </Button>
               <Button type="submit" disabled={isSubmitting}>
