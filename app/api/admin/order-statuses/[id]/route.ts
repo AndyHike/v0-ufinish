@@ -6,7 +6,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   try {
     const supabase = createClient()
     const { id } = params
-    const { code, name_uk, name_en, name_cs, color, userId } = await request.json()
+    const { remonline_status_id, name_uk, name_en, name_cs, color, userId } = await request.json()
 
     // Verify admin permissions
     const { data: userData, error: userError } = await supabase.from("users").select("role").eq("id", userId).single()
@@ -16,26 +16,29 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Validate required fields
-    if (!code || !name_uk || !name_en || !name_cs || !color) {
+    if (!remonline_status_id || !name_uk || !name_en || !name_cs || !color) {
       return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 })
     }
 
-    // Check if code already exists for another status
+    // Check if remonline_status_id already exists for another status
     const { data: existingStatus, error: checkError } = await supabase
       .from("order_statuses")
       .select("id")
-      .eq("code", code)
+      .eq("remonline_status_id", remonline_status_id)
       .neq("id", id)
       .maybeSingle()
 
     if (existingStatus) {
-      return NextResponse.json({ success: false, message: "Status code already exists" }, { status: 400 })
+      return NextResponse.json(
+        { success: false, message: "Status with this RemOnline ID already exists" },
+        { status: 400 },
+      )
     }
 
     // Update status
     const { data, error } = await supabase
       .from("order_statuses")
-      .update({ code, name_uk, name_en, name_cs, color, updated_at: new Date().toISOString() })
+      .update({ remonline_status_id, name_uk, name_en, name_cs, color, updated_at: new Date().toISOString() })
       .eq("id", id)
       .select()
       .single()
@@ -48,7 +51,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       entityType: "order_status",
       entityId: id,
       actionType: "update",
-      details: { code, name_uk },
+      details: { remonline_status_id, name_uk },
     })
 
     return NextResponse.json({ success: true, status: data })
@@ -74,7 +77,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     // Get status details for logging
     const { data: statusData, error: statusError } = await supabase
       .from("order_statuses")
-      .select("code, name_uk")
+      .select("remonline_status_id, name_uk")
       .eq("id", id)
       .single()
 

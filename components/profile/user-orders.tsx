@@ -8,8 +8,8 @@ import { ArrowRight, Clock, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
-// Імпортуємо утиліти для статусів замовлень
-import { getStatusByCode } from "@/lib/order-status-utils"
+// Оновіть імпорт утиліт для статусів замовлень
+import { getStatusByRemOnlineId } from "@/lib/order-status-utils"
 
 type RepairOrder = {
   id: string
@@ -33,13 +33,19 @@ export function UserOrders() {
   // Додайте новий стан для зберігання статусів
   const [statusColors, setStatusColors] = useState<Record<string, { name: string; color: string }>>({})
 
-  // Додайте функцію для завантаження статусів
+  // Оновіть функцію loadStatusColors для використання цифрових кодів
   async function loadStatusColors(orders: RepairOrder[]) {
     const uniqueStatuses = [...new Set(orders.map((order) => order.status))]
     const statusMap: Record<string, { name: string; color: string }> = {}
 
     for (const statusCode of uniqueStatuses) {
-      statusMap[statusCode] = await getStatusByCode(statusCode)
+      // Перетворюємо рядок статусу на число, оскільки тепер ми працюємо з цифровими кодами
+      const remonlineId = Number.parseInt(statusCode, 10)
+      if (!isNaN(remonlineId)) {
+        statusMap[statusCode] = await getStatusByRemOnlineId(remonlineId)
+      } else {
+        statusMap[statusCode] = { name: statusCode, color: "text-gray-600" }
+      }
     }
 
     setStatusColors(statusMap)

@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase"
 
 type OrderStatus = {
   id: number
-  code: string
+  remonline_status_id: number
   name_uk: string
   name_en: string
   name_cs: string
@@ -24,7 +24,10 @@ export async function getOrderStatuses(): Promise<OrderStatus[]> {
 
   try {
     const supabase = createClient()
-    const { data, error } = await supabase.from("order_statuses").select("*").order("created_at", { ascending: true })
+    const { data, error } = await supabase
+      .from("order_statuses")
+      .select("*")
+      .order("remonline_status_id", { ascending: true })
 
     if (error) throw error
 
@@ -40,12 +43,15 @@ export async function getOrderStatuses(): Promise<OrderStatus[]> {
   }
 }
 
-export async function getStatusByCode(code: string, locale = "uk"): Promise<{ name: string; color: string }> {
+export async function getStatusByRemOnlineId(
+  remonlineStatusId: number,
+  locale = "uk",
+): Promise<{ name: string; color: string }> {
   const statuses = await getOrderStatuses()
-  const status = statuses.find((s) => s.code === code)
+  const status = statuses.find((s) => s.remonline_status_id === remonlineStatusId)
 
   if (!status) {
-    return { name: code, color: "bg-gray-100 text-gray-800" }
+    return { name: `Status ${remonlineStatusId}`, color: "bg-gray-100 text-gray-800" }
   }
 
   let name = status.name_uk

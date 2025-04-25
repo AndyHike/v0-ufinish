@@ -23,8 +23,8 @@ import {
   ChevronRight,
 } from "lucide-react"
 
-// Імпортуємо утиліти для статусів замовлень
-import { getStatusByCode } from "@/lib/order-status-utils"
+// Оновіть імпорт утиліт для статусів замовлень
+import { getStatusByRemOnlineId } from "@/lib/order-status-utils"
 
 type OrderStatusHistory = {
   id: string
@@ -64,13 +64,19 @@ export function UserOrdersTimeline() {
     fetchOrders()
   }, [])
 
-  // Додайте функцію для завантаження статусів
+  // Оновіть функцію loadStatusColors для використання цифрових кодів
   async function loadStatusColors(orders: RepairOrder[]) {
     const uniqueStatuses = [...new Set(orders.map((order) => order.status))]
     const statusMap: Record<string, { name: string; color: string }> = {}
 
     for (const statusCode of uniqueStatuses) {
-      statusMap[statusCode] = await getStatusByCode(statusCode)
+      // Перетворюємо рядок статусу на число, оскільки тепер ми працюємо з цифровими кодами
+      const remonlineId = Number.parseInt(statusCode, 10)
+      if (!isNaN(remonlineId)) {
+        statusMap[statusCode] = await getStatusByRemOnlineId(remonlineId)
+      } else {
+        statusMap[statusCode] = { name: statusCode, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" }
+      }
     }
 
     setStatusColors(statusMap)

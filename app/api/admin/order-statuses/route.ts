@@ -6,7 +6,10 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
 
-    const { data, error } = await supabase.from("order_statuses").select("*").order("created_at", { ascending: true })
+    const { data, error } = await supabase
+      .from("order_statuses")
+      .select("*")
+      .order("remonline_status_id", { ascending: true })
 
     if (error) throw error
 
@@ -20,7 +23,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient()
-    const { userId } = await request.json()
+    const body = await request.json()
+    const { remonline_status_id, name_uk, name_en, name_cs, color, userId } = body
 
     // Verify admin permissions
     const { data: userData, error: userError } = await supabase.from("users").select("role").eq("id", userId).single()
@@ -29,28 +33,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 403 })
     }
 
-    const { code, name_uk, name_en, name_cs, color } = await request.json()
-
     // Validate required fields
-    if (!code || !name_uk || !name_en || !name_cs || !color) {
+    if (!remonline_status_id || !name_uk || !name_en || !name_cs || !color) {
       return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 })
     }
 
-    // Check if code already exists
+    // Check if remonline_id already exists
     const { data: existingStatus, error: checkError } = await supabase
       .from("order_statuses")
       .select("id")
-      .eq("code", code)
+      .eq("remonline_status_id", remonline_status_id)
       .maybeSingle()
 
     if (existingStatus) {
-      return NextResponse.json({ success: false, message: "Status code already exists" }, { status: 400 })
+      return NextResponse.json(
+        { success: false, message: "Status with this RemOnline ID already exists" },
+        { status: 400 },
+      )
     }
 
     // Insert new status
     const { data, error } = await supabase
       .from("order_statuses")
-      .insert([{ code, name_uk, name_en, name_cs, color }])
+      .insert([{ remonline_status_id, name_uk, name_en, name_cs, color }])
       .select()
       .single()
 
@@ -62,7 +67,7 @@ export async function POST(request: NextRequest) {
       entityType: "order_status",
       entityId: data.id,
       actionType: "create",
-      details: { code, name_uk },
+      details: { remonline_status_id, name_uk },
     })
 
     return NextResponse.json({ success: true, status: data })

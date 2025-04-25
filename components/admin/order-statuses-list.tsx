@@ -25,7 +25,7 @@ import { Edit, Trash2, Plus, AlertCircle } from "lucide-react"
 
 type OrderStatus = {
   id: number
-  code: string
+  remonline_status_id: number
   name_uk: string
   name_en: string
   name_cs: string
@@ -43,6 +43,10 @@ const colorOptions = [
   { value: "bg-pink-100 text-pink-800", label: "Рожевий" },
   { value: "bg-indigo-100 text-indigo-800", label: "Індиго" },
   { value: "bg-gray-100 text-gray-800", label: "Сірий" },
+  { value: "bg-teal-100 text-teal-800", label: "Бірюзовий" },
+  { value: "bg-cyan-100 text-cyan-800", label: "Блакитний" },
+  { value: "bg-orange-100 text-orange-800", label: "Помаранчевий" },
+  { value: "bg-lime-100 text-lime-800", label: "Лаймовий" },
 ]
 
 export function OrderStatusesList() {
@@ -58,7 +62,7 @@ export function OrderStatusesList() {
 
   // Form state
   const [formData, setFormData] = useState({
-    code: "",
+    remonline_status_id: "",
     name_uk: "",
     name_en: "",
     name_cs: "",
@@ -97,7 +101,7 @@ export function OrderStatusesList() {
 
   function resetForm() {
     setFormData({
-      code: "",
+      remonline_status_id: "",
       name_uk: "",
       name_en: "",
       name_cs: "",
@@ -108,7 +112,7 @@ export function OrderStatusesList() {
   function handleEditClick(status: OrderStatus) {
     setCurrentStatus(status)
     setFormData({
-      code: status.code,
+      remonline_status_id: status.remonline_status_id.toString(),
       name_uk: status.name_uk,
       name_en: status.name_en,
       name_cs: status.name_cs,
@@ -133,6 +137,7 @@ export function OrderStatusesList() {
         },
         body: JSON.stringify({
           ...formData,
+          remonline_status_id: Number.parseInt(formData.remonline_status_id, 10),
           userId: session.user.id,
         }),
       })
@@ -172,6 +177,7 @@ export function OrderStatusesList() {
         },
         body: JSON.stringify({
           ...formData,
+          remonline_status_id: Number.parseInt(formData.remonline_status_id, 10),
           userId: session.user.id,
         }),
       })
@@ -290,16 +296,17 @@ export function OrderStatusesList() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="code" className="text-right">
-                  Код
+                <Label htmlFor="remonline_status_id" className="text-right">
+                  Код RemOnline
                 </Label>
                 <Input
-                  id="code"
-                  name="code"
-                  value={formData.code}
+                  id="remonline_status_id"
+                  name="remonline_status_id"
+                  value={formData.remonline_status_id}
                   onChange={handleInputChange}
                   className="col-span-3"
-                  placeholder="new_status"
+                  placeholder="3153189"
+                  type="number"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -377,7 +384,7 @@ export function OrderStatusesList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Код</TableHead>
+              <TableHead>Код RemOnline</TableHead>
               <TableHead>Назва (UK)</TableHead>
               <TableHead>Назва (EN)</TableHead>
               <TableHead>Назва (CS)</TableHead>
@@ -395,7 +402,7 @@ export function OrderStatusesList() {
             ) : (
               statuses.map((status) => (
                 <TableRow key={status.id}>
-                  <TableCell className="font-medium">{status.code}</TableCell>
+                  <TableCell className="font-medium">{status.remonline_status_id}</TableCell>
                   <TableCell>{status.name_uk}</TableCell>
                   <TableCell>{status.name_en}</TableCell>
                   <TableCell>{status.name_cs}</TableCell>
@@ -429,15 +436,16 @@ export function OrderStatusesList() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-code" className="text-right">
-                Код
+              <Label htmlFor="edit-remonline_status_id" className="text-right">
+                Код RemOnline
               </Label>
               <Input
-                id="edit-code"
-                name="code"
-                value={formData.code}
+                id="edit-remonline_status_id"
+                name="remonline_status_id"
+                value={formData.remonline_status_id}
                 onChange={handleInputChange}
                 className="col-span-3"
+                type="number"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
