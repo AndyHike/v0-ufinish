@@ -64,6 +64,67 @@ const statusIdMap: Record<number, string> = {
   // Add more status mappings as needed
 }
 
+async function fetchOrderDetailsFromRemonline(orderId: number) {
+  try {
+    // Authenticate with RemOnline API
+    const authResult = await remonline.auth()
+    if (!authResult.success) {
+      console.error("Failed to authenticate with RemOnline API:", authResult.message)
+      return {
+        success: false,
+        message: "Failed to connect to RemOnline. Will retry later.",
+      }
+    }
+
+    console.log(`Fetching order details for ID: ${orderId}`)
+
+    // Use the token from our authenticated client
+    const url = `https://api.remonline.app/orders/${orderId}?token=${authResult.token}`
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { accept: "application/json" },
+    })
+
+    console.log(`Response status: ${response.status}`)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Failed to fetch order details with status ${response.status}: ${errorText}`)
+      return {
+        success: false,
+        message: `Failed to fetch order details with status ${response.status}`,
+        details: errorText,
+      }
+    }
+
+    const responseText = await response.text()
+    console.log("Response received, parsing JSON")
+
+    let data
+    try {
+      data = JSON.parse(responseText)
+      console.log("Order details parsed successfully")
+    } catch (e) {
+      console.error("Failed to parse response as JSON:", e)
+      return {
+        success: false,
+        message: "Failed to parse order details response",
+        details: e instanceof Error ? e.message : String(e),
+      }
+    }
+
+    return { success: true, order: data }
+  } catch (error) {
+    console.error("Error fetching order details from RemOnline:", error)
+    return {
+      success: false,
+      message: "Failed to fetch order details from RemOnline API",
+      details: error instanceof Error ? error.message : String(error),
+    }
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Log the request URL to debug routing issues
@@ -233,22 +294,12 @@ async function processOrderFromWebhook(webhookData: any) {
     if (userError) {
       console.log("Error finding user by RemOnline ID:", userError)
       console.error("Error finding user by RemOnline ID:", userError)
+      return NextResponse.json({ success: false, message: "Error finding user" }, { status: 400 })
+    }
 
-      // If the user is not found, we might need to fetch more details from RemOnline API
-      // and create a new user record, or just log the error and skip this order
-      console.log("User not found, fetching additional details from RemOnline API...")
-
-      // Fetch complete order details to get more information
-      console.log(`Fetching order details from RemOnline API for order ID: ${orderId}`)
-      const orderDetails = await fetchOrderDetailsFromRemonline(orderId)
-
-      if (!orderDetails.success) {
-        console.error("Failed to fetch order details from RemOnline:", orderDetails.message)
-        return { success: false, message: "User not found and failed to fetch order details" }
-      }
-
-      console.log("Order details fetched, but user still not found. Skipping order processing.")
-      return { success: false, message: "User not found" }
+    if (!user) {
+      console.log(`No user found with remonline_id: ${clientId}. Skipping order creation.`)
+      return NextResponse.json({ success: false, message: "User not found" }, { status: 404 })
     }
 
     console.log(`Found user with ID: ${user.id}`)
@@ -347,146 +398,4 @@ async function processOrderFromWebhook(webhookData: any) {
       details: error instanceof Error ? error.message : String(error),
     }
   }
-}
-
-// Fetch additional order details from RemOnline API and update the database
-async function fetchAndUpdateOrderDetails(orderId: number, existingDetails: any) {
-  try {
-    console.log(`Fetching additional details for order ${orderId}`)
-    console.log(`Existing Details: ${JSON.stringify(existingDetails, null, 2)}`)
-
-    // Fetch complete order details from RemOnline API
-    const orderDetails = await fetchOrderDetailsFromRemonline(orderId)
-
-    if (!orderDetails.success) {
-      console.error("Failed to fetch additional order details from RemOnline:", orderDetails.message)
-      return
-    }
-
-    const orderData = orderDetails.order
-
-    // Extract additional information from the API response
-    const updatedDetails = {
-      ...existingDetails,
-      service_type: extractServiceType(orderData),
-      price: orderData.price || null,
-      // Update any other fields as needed
-    }
-
-    // Update the order in the database with the additional information
-    const supabase = createClient()
-    const { error: updateError } = await supabase
-      .from("repair_orders")
-      .update(updatedDetails)
-      .eq("remonline_id", orderId)
-
-    if (updateError) {
-      console.error("Error updating order with additional details:", updateError)
-      return
-    }
-
-    console.log(`Order ${orderId} updated with additional details`)
-  } catch (error) {
-    console.error("Error in fetchAndUpdateOrderDetails for order ${orderId}:", error)
-    // Log the error but don't throw - this is a background process
-  }
-}
-
-async function fetchOrderDetailsFromRemonline(orderId: number) {
-  try {
-    // Authenticate with RemOnline API
-    console.log("Authenticating with RemOnline API...")
-    const authResult = await remonline.auth()
-    if (!authResult.success) {
-      console.error("Failed to authenticate with RemOnline API:", authResult.message)
-      return {
-        success: false,
-        message: "Failed to connect to RemOnline. Will retry later.",
-      }
-    }
-
-    console.log(`Fetching order details for ID: ${orderId}`)
-
-    // Use the token from our authenticated client
-    const url = `https://api.remonline.app/orders/${orderId}?token=${authResult.token}`
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: { accept: "application/json" },
-    })
-
-    console.log(`Response status: ${response.status}`)
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Failed to fetch order details with status ${response.status}: ${errorText}`)
-      return {
-        success: false,
-        message: `Failed to fetch order details with status ${response.status}`,
-        details: errorText,
-      }
-    }
-
-    const responseText = await response.text()
-    console.log("Response received, parsing JSON")
-
-    let data
-    try {
-      data = JSON.parse(responseText)
-      console.log("Order details parsed successfully")
-    } catch (e) {
-      console.error("Failed to parse response as JSON:", e)
-      return {
-        success: false,
-        message: "Failed to parse order details response",
-        details: e instanceof Error ? e.message : String(e),
-      }
-    }
-
-    return { success: true, order: data }
-  } catch (error) {
-    console.error("Error fetching order details from RemOnline:", error)
-    return {
-      success: false,
-      message: "Failed to fetch order details from RemOnline API",
-      details: error instanceof Error ? error.message : String(error),
-    }
-  }
-}
-
-function extractServiceType(orderData: any): string {
-  // Try to extract service type from different possible fields
-  if (orderData.works && Array.isArray(orderData.works) && orderData.works.length > 0) {
-    return orderData.works.map((work: any) => work.name || work.title).join(", ")
-    console.log(`Service Type (from works): ${orderData.works.map((work: any) => work.name || work.title).join(", ")}`)
-  }
-
-  if (orderData.service_name) {
-    return orderData.service_name
-  }
-
-  if (orderData.description) {
-    return orderData.description.substring(0, 100) // Limit length
-  }
-
-  return "Діагностика"
-}
-
-function mapOrderStatus(status: string): string {
-  // Map RemOnline status to our status
-  const statusMap: Record<string, string> = {
-    Новий: "Новий",
-    New: "Новий",
-    "В роботі": "В процесі",
-    "In Progress": "В процесі",
-    Готовий: "Завершено",
-    Ready: "Завершено",
-    Completed: "Завершено",
-    Виданий: "Завершено",
-    Delivered: "Завершено",
-    Cancelled: "Скасовано",
-    Скасовано: "Скасовано",
-  }
-
-  return statusMap[status] || "Новий"
 }
