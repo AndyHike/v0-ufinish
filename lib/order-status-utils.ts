@@ -49,18 +49,35 @@ export async function getStatusByRemOnlineId(
   remonlineStatusId: number,
   locale = "uk",
 ): Promise<{ name: string; color: string }> {
-  const statuses = await getOrderStatuses()
-  const status = statuses.find((s) => s.remonline_status_id === remonlineStatusId)
+  try {
+    const statuses = await getOrderStatuses()
+    const status = statuses.find((s) => s.remonline_status_id === remonlineStatusId)
 
-  if (!status) {
-    return { name: `Status ${remonlineStatusId}`, color: "bg-gray-100 text-gray-800" }
+    if (!status) {
+      console.warn(`Status with ID ${remonlineStatusId} not found`)
+      return { name: `Статус ${remonlineStatusId}`, color: "text-gray-600" }
+    }
+
+    // Вибираємо назву статусу відповідно до локалі
+    let name = status.name_uk
+    if (locale === "en") name = status.name_en || status.name_uk
+    if (locale === "cs") name = status.name_cs || status.name_uk
+
+    // Перетворюємо колір для використання в тексті, якщо він у форматі bg-*
+    let color = status.color
+    if (color.startsWith("bg-")) {
+      // Якщо колір починається з bg-, замінюємо на text-
+      const colorClass = color.split(" ")[0]
+      if (colorClass.startsWith("bg-")) {
+        color = `text-${colorClass.substring(3)}`
+      }
+    }
+
+    return { name, color }
+  } catch (error) {
+    console.error("Error getting status by RemOnline ID:", error)
+    return { name: `Статус ${remonlineStatusId}`, color: "text-gray-600" }
   }
-
-  let name = status.name_uk
-  if (locale === "en") name = status.name_en
-  if (locale === "cs") name = status.name_cs
-
-  return { name, color: status.color }
 }
 
 export function clearStatusCache() {

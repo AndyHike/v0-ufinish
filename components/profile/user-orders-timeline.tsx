@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { createClient } from "@/lib/supabase"
 import { format } from "date-fns"
 import { uk } from "date-fns/locale"
@@ -49,6 +49,7 @@ type RepairOrder = {
 
 export function UserOrdersTimeline() {
   const t = useTranslations("Profile")
+  const locale = useLocale() // Отримуємо поточну локаль
   const [orders, setOrders] = useState<RepairOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -60,7 +61,7 @@ export function UserOrdersTimeline() {
     fetchOrders()
   }, [])
 
-  // Функція для завантаження статусів замовлень
+  // Оновлена функція для завантаження статусів замовлень
   async function loadStatusColors(orders: RepairOrder[]) {
     const uniqueStatuses = [...new Set(orders.map((order) => order.status))]
     const statusMap: Record<string, { name: string; color: string }> = {}
@@ -83,7 +84,7 @@ export function UserOrdersTimeline() {
       // Перетворюємо рядок статусу на число, оскільки тепер ми працюємо з цифровими кодами
       const remonlineId = Number.parseInt(statusCode, 10)
       if (!isNaN(remonlineId)) {
-        statusMap[statusCode] = await getStatusByRemOnlineId(remonlineId)
+        statusMap[statusCode] = await getStatusByRemOnlineId(remonlineId, locale)
       } else {
         statusMap[statusCode] = { name: statusCode, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" }
       }

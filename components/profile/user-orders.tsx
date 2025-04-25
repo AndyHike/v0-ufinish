@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { getUserRepairOrders } from "@/app/actions/repair-orders"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { cn } from "@/lib/utils"
 import { ArrowRight, Clock, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -23,6 +23,7 @@ type RepairOrder = {
 
 export function UserOrders() {
   const t = useTranslations("Profile")
+  const locale = useLocale() // Отримуємо поточну локаль
   const [orders, setOrders] = useState<RepairOrder[]>([])
   const [filteredOrders, setFilteredOrders] = useState<RepairOrder[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,7 +32,7 @@ export function UserOrders() {
   const [activeTab, setActiveTab] = useState("all")
   const [statusColors, setStatusColors] = useState<Record<string, { name: string; color: string }>>({})
 
-  // Функція для завантаження статусів замовлень
+  // Оновлена функція для завантаження статусів замовлень
   async function loadStatusColors(orders: RepairOrder[]) {
     const uniqueStatuses = [...new Set(orders.map((order) => order.status))]
     const statusMap: Record<string, { name: string; color: string }> = {}
@@ -40,7 +41,7 @@ export function UserOrders() {
       // Перетворюємо рядок статусу на число, оскільки тепер ми працюємо з цифровими кодами
       const remonlineId = Number.parseInt(statusCode, 10)
       if (!isNaN(remonlineId)) {
-        statusMap[statusCode] = await getStatusByRemOnlineId(remonlineId)
+        statusMap[statusCode] = await getStatusByRemOnlineId(remonlineId, locale)
       } else {
         statusMap[statusCode] = { name: statusCode, color: "text-gray-600" }
       }
@@ -74,7 +75,7 @@ export function UserOrders() {
     }
 
     fetchOrders()
-  }, [t])
+  }, [t, locale])
 
   // Фільтрація замовлень
   useEffect(() => {
