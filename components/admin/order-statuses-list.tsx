@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/use-toast"
 import { Loader2, Plus, Pencil, Trash, AlertCircle } from "lucide-react"
 import type { OrderStatus } from "@/lib/order-status-utils"
+import { getOrderStatuses } from "@/lib/order-status-utils"
 
 // Color options for status badges
 const colorOptions = [
@@ -69,14 +70,8 @@ export function OrderStatusesList() {
       setLoading(true)
       setError(null)
 
-      const response = await fetch("/api/admin/order-statuses")
-      const data = await response.json()
-
-      if (!data.success) {
-        throw new Error(data.message || "Failed to fetch statuses")
-      }
-
-      setStatuses(data.statuses)
+      const data = await getOrderStatuses()
+      setStatuses(data)
     } catch (err) {
       console.error("Error fetching statuses:", err)
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -172,12 +167,6 @@ export function OrderStatusesList() {
 
     try {
       setIsSubmitting(true)
-
-      console.log("Updating status with data:", {
-        ...formState,
-        remonline_status_id: Number.parseInt(formState.remonline_status_id, 10),
-        userId: session.user.id,
-      })
 
       const response = await fetch(`/api/admin/order-statuses/${selectedStatus.id}`, {
         method: "PUT",
