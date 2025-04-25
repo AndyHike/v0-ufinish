@@ -174,6 +174,7 @@ export async function POST(request: NextRequest) {
     const orderNumber = orderData.metadata.order.name
     const statusId = orderData.metadata.status.id
     const deviceName = orderData.metadata.asset?.name || "Unknown Device"
+    const createdAt = orderData.created_at
 
     console.log(`Processing ${eventType} for order ID: ${orderId}`)
     console.log(`Client ID: ${clientId}, Order Number: ${orderNumber}, Status ID: ${statusId}, Device: ${deviceName}`)
@@ -357,7 +358,7 @@ async function fetchAndUpdateOrderDetails(orderId: number, existingDetails: any)
 
     console.log(`Order ${orderId} updated with additional details`)
   } catch (error) {
-    console.error(`Error in fetchAndUpdateOrderDetails for order ${orderId}:`, error)
+    console.error("Error in fetchAndUpdateOrderDetails for order ${orderId}:", error)
     // Log the error but don't throw - this is a background process
   }
 }
