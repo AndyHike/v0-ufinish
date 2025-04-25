@@ -236,7 +236,9 @@ export function UserOrders() {
                     <td className="py-4 px-4 text-muted-foreground">{order.reference_number}</td>
                     <td className="py-4 px-4 text-muted-foreground">{order.service_type}</td>
                     <td className="py-4 px-4">
-                      <span className={cn("font-medium", order.statusColor)}>{order.statusName}</span>
+                      <span className={cn("font-medium px-2 py-1 rounded-full text-xs", order.statusColor)}>
+                        {order.statusName}
+                      </span>
                     </td>
                     <td className="py-4 px-4 text-muted-foreground">
                       <div className="flex items-center gap-2">

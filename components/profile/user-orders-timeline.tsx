@@ -21,14 +21,17 @@ import {
   Search,
   ChevronRight,
 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 type OrderStatusHistory = {
   id: string
   order_id: string
   old_status: string
   old_status_name?: string
+  old_status_color?: string
   new_status: string
   new_status_name?: string
+  new_status_color?: string
   changed_by: string
   changed_at: string
   created_at: string
@@ -239,7 +242,7 @@ export function UserOrdersTimeline() {
                     </CardTitle>
                     <CardDescription>Замовлення №: {order.reference_number}</CardDescription>
                   </div>
-                  <Badge className={order.status_color || "bg-gray-100"}>
+                  <Badge className={order.status_color || "bg-gray-100"} variant="outline">
                     {getStatusIcon(order.status)}
                     <span className="ml-1">{order.status_name || order.status}</span>
                   </Badge>
@@ -268,11 +271,21 @@ export function UserOrdersTimeline() {
                             <div className="mr-2 mt-0.5">{getStatusIcon(history.new_status)}</div>
                             <div className="flex-1">
                               <div className="flex items-center">
-                                <span className="text-sm font-medium">
+                                <span
+                                  className={cn(
+                                    "text-sm font-medium px-2 py-0.5 rounded-full text-xs",
+                                    history.old_status_color || "bg-gray-100",
+                                  )}
+                                >
                                   {history.old_status_name || history.old_status}
                                 </span>
                                 <ArrowRight className="h-3 w-3 mx-2 text-muted-foreground" />
-                                <span className="text-sm font-medium">
+                                <span
+                                  className={cn(
+                                    "text-sm font-medium px-2 py-0.5 rounded-full text-xs",
+                                    history.new_status_color || "bg-gray-100",
+                                  )}
+                                >
                                   {history.new_status_name || history.new_status}
                                 </span>
                               </div>

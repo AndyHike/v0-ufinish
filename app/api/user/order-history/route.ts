@@ -56,13 +56,24 @@ export async function GET(request: Request) {
         // Перетворюємо статуси в історії
         const historyWithNames = await Promise.all(
           (historyData || []).map(async (history) => {
-            const oldStatusInfo = await getStatusByRemOnlineId(Number.parseInt(history.old_status, 10), locale)
-            const newStatusInfo = await getStatusByRemOnlineId(Number.parseInt(history.new_status, 10), locale)
+            const oldStatusId = Number.parseInt(history.old_status, 10)
+            const newStatusId = Number.parseInt(history.new_status, 10)
+
+            const [oldStatusInfo, newStatusInfo] = await Promise.all([
+              !isNaN(oldStatusId)
+                ? getStatusByRemOnlineId(oldStatusId, locale)
+                : { name: history.old_status, color: "bg-gray-100" },
+              !isNaN(newStatusId)
+                ? getStatusByRemOnlineId(newStatusId, locale)
+                : { name: history.new_status, color: "bg-gray-100" },
+            ])
 
             return {
               ...history,
               old_status_name: oldStatusInfo.name,
+              old_status_color: oldStatusInfo.color,
               new_status_name: newStatusInfo.name,
+              new_status_color: newStatusInfo.color,
             }
           }),
         )

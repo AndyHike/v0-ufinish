@@ -45,6 +45,7 @@ export async function getOrderStatuses(): Promise<OrderStatus[]> {
   }
 }
 
+// Змінюємо функцію getStatusByRemOnlineId, щоб вона повертала оригінальний колір фону
 export async function getStatusByRemOnlineId(
   remonlineStatusId: number,
   locale = "uk",
@@ -55,7 +56,7 @@ export async function getStatusByRemOnlineId(
 
     if (!status) {
       console.warn(`Status with ID ${remonlineStatusId} not found`)
-      return { name: `Статус ${remonlineStatusId}`, color: "text-gray-600" }
+      return { name: `Статус ${remonlineStatusId}`, color: "bg-gray-100" }
     }
 
     // Вибираємо назву статусу відповідно до локалі
@@ -63,20 +64,11 @@ export async function getStatusByRemOnlineId(
     if (locale === "en") name = status.name_en || status.name_uk
     if (locale === "cs") name = status.name_cs || status.name_uk
 
-    // Перетворюємо колір для використання в тексті, якщо він у форматі bg-*
-    let color = status.color
-    if (color.startsWith("bg-")) {
-      // Якщо колір починається з bg-, замінюємо на text-
-      const colorClass = color.split(" ")[0]
-      if (colorClass.startsWith("bg-")) {
-        color = `text-${colorClass.substring(3)}`
-      }
-    }
-
-    return { name, color }
+    // Повертаємо оригінальний колір без перетворення
+    return { name, color: status.color }
   } catch (error) {
     console.error("Error getting status by RemOnline ID:", error)
-    return { name: `Статус ${remonlineStatusId}`, color: "text-gray-600" }
+    return { name: `Статус ${remonlineStatusId}`, color: "bg-gray-100" }
   }
 }
 

@@ -30,7 +30,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, message: "Failed to fetch repair orders" }, { status: 500 })
     }
 
-    // Перетворюємо статуси на їх текстові значення
+    // Змінюємо API для отримання замовлень, щоб повертати колір фону
     const ordersWithStatusNames = await Promise.all(
       orders.map(async (order) => {
         const statusId = Number.parseInt(order.status, 10)
@@ -39,13 +39,13 @@ export async function GET(request: Request) {
           return {
             ...order,
             statusName: statusInfo.name,
-            statusColor: statusInfo.color,
+            statusColor: statusInfo.color, // Тепер це буде bg-* клас
           }
         }
         return {
           ...order,
           statusName: order.status,
-          statusColor: "text-gray-600",
+          statusColor: "bg-gray-100", // Змінюємо на bg-* клас
         }
       }),
     )
