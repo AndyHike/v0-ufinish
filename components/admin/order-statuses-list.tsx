@@ -304,90 +304,97 @@ export function OrderStatusesList() {
             <DialogHeader>
               <DialogTitle>Додати новий статус замовлення</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="remonline_status_id" className="text-right">
-                  Код RemOnline
-                </Label>
-                <Input
-                  id="remonline_status_id"
-                  name="remonline_status_id"
-                  value={formData.remonline_status_id}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  placeholder="3153189"
-                  type="number"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name_uk" className="text-right">
-                  Назва (UK)
-                </Label>
-                <Input
-                  id="name_uk"
-                  name="name_uk"
-                  value={formData.name_uk}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  placeholder="Новий статус"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name_en" className="text-right">
-                  Назва (EN)
-                </Label>
-                <Input
-                  id="name_en"
-                  name="name_en"
-                  value={formData.name_en}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  placeholder="New Status"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name_cs" className="text-right">
-                  Назва (CS)
-                </Label>
-                <Input
-                  id="name_cs"
-                  name="name_cs"
-                  value={formData.name_cs}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  placeholder="Nový stav"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="color" className="text-right">
-                  Колір
-                </Label>
-                <div className="col-span-3 flex gap-2">
-                  <select
-                    id="color"
-                    name="color"
-                    value={formData.color}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleAddStatus()
+              }}
+            >
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="remonline_status_id" className="text-right">
+                    Код RemOnline
+                  </Label>
+                  <Input
+                    id="remonline_status_id"
+                    name="remonline_status_id"
+                    value={formData.remonline_status_id}
                     onChange={handleInputChange}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {colorOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <Badge className={formData.color}>Приклад</Badge>
+                    className="col-span-3"
+                    placeholder="3153189"
+                    type="number"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name_uk" className="text-right">
+                    Назва (UK)
+                  </Label>
+                  <Input
+                    id="name_uk"
+                    name="name_uk"
+                    value={formData.name_uk}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                    placeholder="Новий статус"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name_en" className="text-right">
+                    Назва (EN)
+                  </Label>
+                  <Input
+                    id="name_en"
+                    name="name_en"
+                    value={formData.name_en}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                    placeholder="New Status"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name_cs" className="text-right">
+                    Назва (CS)
+                  </Label>
+                  <Input
+                    id="name_cs"
+                    name="name_cs"
+                    value={formData.name_cs}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                    placeholder="Nový stav"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="color" className="text-right">
+                    Колір
+                  </Label>
+                  <div className="col-span-3 flex gap-2">
+                    <select
+                      id="color"
+                      name="color"
+                      value={formData.color}
+                      onChange={handleInputChange}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {colorOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <Badge className={formData.color}>Приклад</Badge>
+                  </div>
                 </div>
               </div>
-            </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Скасувати</Button>
-              </DialogClose>
-              <Button onClick={handleAddStatus} disabled={isSubmitting}>
-                Додати
-              </Button>
-            </DialogFooter>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">Скасувати</Button>
+                </DialogClose>
+                <Button type="submit" disabled={isSubmitting}>
+                  Додати
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
