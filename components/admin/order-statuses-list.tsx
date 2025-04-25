@@ -19,9 +19,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/use-toast"
-import { Loader2, Plus, Pencil, Trash, AlertCircle } from "lucide-react"
+import { Loader2, Plus, Pencil, Trash, AlertCircle, ShieldAlert } from "lucide-react"
 import type { OrderStatus } from "@/lib/order-status-utils"
 import { clearStatusCache } from "@/lib/order-status-utils"
+import { getCurrentUser } from "@/lib/auth/session"
 
 // Color options for status badges
 const colorOptions = [
@@ -48,14 +49,80 @@ export function OrderStatusesList() {
   const [statuses, setStatuses] = useState<OrderStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
 
-  // Перевіряємо, чи користувач авторизований і зберігаємо ID в localStorage
+  // Перевіряємо автентифікацію користувача
   useEffect(() => {
-    // Якщо сесія завантажена і є ID користувача, зберігаємо його в localStorage
-    if (sessionStatus === "authenticated" && session?.user?.id) {
-      localStorage.setItem("userId", session.user.id)
-      console.log("ID користувача збережено в localStorage:", session.user.id)
+    async function checkAuth() {
+      try {
+        // Спочатку перевіряємо сесію NextAuth
+        if (sessionStatus === "authenticated" && session?.user?.id) {
+          console.log("Користувач автентифікований через NextAuth:", session.user)
+          setUserId(session.user.id)
+          setIsAdmin(session.user.role === "admin")
+          localStorage.setItem("userId", session.user.id)
+          localStorage.setItem("userRole", session.user.role || "")
+          setAuthChecked(true)
+          return
+        }
+
+        // Якщо NextAuth не працює, перевіряємо localStorage
+        const storedUserId = localStorage.getItem("userId")
+        const storedUserRole = localStorage.getItem("userRole")
+
+        if (storedUserId) {
+          console.log("Користувач знайдений в localStorage:", { id: storedUserId, role: storedUserRole })
+          setUserId(storedUserId)
+          setIsAdmin(storedUserRole === "admin")
+          setAuthChecked(true)
+          return
+        }
+
+        // Якщо і це не працює, спробуємо отримати користувача через API
+        console.log("Спроба отримати користувача через API...")
+        const response = await fetch("/api/auth/me")
+        const data = await response.json()
+
+        if (data.success && data.user) {
+          console.log("Користувач отриманий через API:", data.user)
+          setUserId(data.user.id)
+          setIsAdmin(data.user.role === "admin")
+          localStorage.setItem("userId", data.user.id)
+          localStorage.setItem("userRole", data.user.role || "")
+          setAuthChecked(true)
+          return
+        }
+
+        // Якщо нічого не працює, спробуємо отримати користувача через серверну функцію
+        try {
+          const currentUser = await getCurrentUser()
+          if (currentUser) {
+            console.log("Користувач отриманий через серверну функцію:", currentUser)
+            setUserId(currentUser.id)
+            setIsAdmin(currentUser.role === "admin")
+            localStorage.setItem("userId", currentUser.id)
+            localStorage.setItem("userRole", currentUser.role || "")
+            setAuthChecked(true)
+            return
+          }
+        } catch (serverError) {
+          console.error("Помилка при отриманні користувача через серверну функцію:", serverError)
+        }
+
+        // Якщо всі спроби невдалі
+        console.log("Користувач не автентифікований")
+        setUserId(null)
+        setIsAdmin(false)
+        setAuthChecked(true)
+      } catch (err) {
+        console.error("Помилка при перевірці автентифікації:", err)
+        setAuthChecked(true)
+      }
     }
+
+    checkAuth()
   }, [session, sessionStatus])
 
   // Dialog states
@@ -153,33 +220,45 @@ export function OrderStatusesList() {
     console.log("Діалог видалення відкрито, selectedStatus встановлено:", { deleteDialogOpen: true, status })
   }
 
-  // Add new status
-  async function handleAddStatus(e: React.FormEvent) {
-    e.preventDefault()
-    console.log("handleAddStatus викликано", { session, sessionStatus })
+  // Check if user is authenticated and admin
+  function checkAdminAuth() {
+    console.log("Перевірка автентифікації адміністратора:", { userId, isAdmin, authChecked })
 
-    // Перевіряємо, чи завантажилась сесія
-    if (sessionStatus === "loading") {
-      console.log("Сесія ще завантажується, чекаємо...")
+    if (!authChecked) {
       toast({
         title: t("pleaseWait"),
-        description: t("sessionLoading"),
+        description: t("checkingAuthentication"),
       })
-      return
+      return false
     }
 
-    // Отримуємо ID користувача з localStorage, якщо сесія недоступна
-    const userId = session?.user?.id || localStorage.getItem("userId")
-
     if (!userId) {
-      console.log("Немає ID користувача в сесії або localStorage")
       toast({
         title: t("error"),
         description: t("notAuthenticated"),
         variant: "destructive",
       })
-      return
+      return false
     }
+
+    if (!isAdmin) {
+      toast({
+        title: t("error"),
+        description: t("notAuthorized"),
+        variant: "destructive",
+      })
+      return false
+    }
+
+    return true
+  }
+
+  // Add new status
+  async function handleAddStatus(e: React.FormEvent) {
+    e.preventDefault()
+    console.log("handleAddStatus викликано", { userId, isAdmin, authChecked })
+
+    if (!checkAdminAuth()) return
 
     try {
       setIsSubmitting(true)
@@ -238,29 +317,15 @@ export function OrderStatusesList() {
   // Update existing status
   async function handleUpdateStatus(e: React.FormEvent) {
     e.preventDefault()
-    console.log("handleUpdateStatus викликано", { session, sessionStatus, selectedStatus })
+    console.log("handleUpdateStatus викликано", { userId, isAdmin, authChecked, selectedStatus })
 
-    // Перевіряємо, чи завантажилась сесія
-    if (sessionStatus === "loading") {
-      console.log("Сесія ще завантажується, чекаємо...")
-      toast({
-        title: t("pleaseWait"),
-        description: t("sessionLoading"),
-      })
-      return
-    }
+    if (!checkAdminAuth()) return
 
-    // Отримуємо ID користувача з localStorage, якщо сесія недоступна
-    const userId = session?.user?.id || localStorage.getItem("userId")
-
-    if (!userId || !selectedStatus) {
-      console.log("Немає ID користувача або не вибрано статус", {
-        hasUserId: !!userId,
-        hasSelectedStatus: !!selectedStatus,
-      })
+    if (!selectedStatus) {
+      console.log("Не вибрано статус")
       toast({
         title: t("error"),
-        description: !userId ? t("notAuthenticated") : t("noStatusSelected"),
+        description: t("noStatusSelected"),
         variant: "destructive",
       })
       return
@@ -322,29 +387,15 @@ export function OrderStatusesList() {
 
   // Delete status
   async function handleDeleteStatus() {
-    console.log("handleDeleteStatus викликано", { session, sessionStatus, selectedStatus })
+    console.log("handleDeleteStatus викликано", { userId, isAdmin, authChecked, selectedStatus })
 
-    // Перевіряємо, чи завантажилась сесія
-    if (sessionStatus === "loading") {
-      console.log("Сесія ще завантажується, чекаємо...")
-      toast({
-        title: t("pleaseWait"),
-        description: t("sessionLoading"),
-      })
-      return
-    }
+    if (!checkAdminAuth()) return
 
-    // Отримуємо ID користувача з localStorage, якщо сесія недоступна
-    const userId = session?.user?.id || localStorage.getItem("userId")
-
-    if (!userId || !selectedStatus) {
-      console.log("Немає ID користувача або не вибрано статус", {
-        hasUserId: !!userId,
-        hasSelectedStatus: !!selectedStatus,
-      })
+    if (!selectedStatus) {
+      console.log("Не вибрано статус")
       toast({
         title: t("error"),
-        description: !userId ? t("notAuthenticated") : t("noStatusSelected"),
+        description: t("noStatusSelected"),
         variant: "destructive",
       })
       return
@@ -419,6 +470,20 @@ export function OrderStatusesList() {
         <h3 className="text-lg font-semibold mb-2">{t("loadingError")}</h3>
         <p className="text-muted-foreground mb-4">{error}</p>
         <Button onClick={fetchStatuses}>{t("tryAgain")}</Button>
+      </div>
+    )
+  }
+
+  // Show authentication error
+  if (authChecked && (!userId || !isAdmin)) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <ShieldAlert className="h-12 w-12 text-destructive mb-4" />
+        <h3 className="text-xl font-semibold mb-2">{t("authError")}</h3>
+        <p className="text-muted-foreground mb-6 max-w-md">
+          {!userId ? t("notAuthenticatedMessage") : t("notAuthorizedMessage")}
+        </p>
+        <Button onClick={() => (window.location.href = "/auth/login")}>{t("goToLogin")}</Button>
       </div>
     )
   }
