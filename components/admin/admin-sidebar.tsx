@@ -72,12 +72,6 @@ export function AdminSidebar() {
       active: pathname.includes("/admin/discounts"),
     },
     {
-      label: "Статуси замовлень",
-      icon: Tag,
-      href: `/${locale}/admin/order-statuses`,
-      active: pathname.includes("/admin/order-statuses"),
-    },
-    {
       label: t("syncWithRemonline"),
       icon: RefreshCw,
       href: `/${locale}/admin/sync`,
