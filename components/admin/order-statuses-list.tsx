@@ -111,6 +111,7 @@ export function OrderStatusesList() {
   }
 
   function handleEditClick(status: OrderStatus) {
+    console.log("Edit button clicked", status)
     setCurrentStatus(status)
     setFormData({
       remonline_status_id: status.remonline_status_id.toString(),
@@ -123,6 +124,7 @@ export function OrderStatusesList() {
   }
 
   function handleDeleteClick(status: OrderStatus) {
+    console.log("Delete button clicked", status)
     setCurrentStatus(status)
     setIsDeleteDialogOpen(true)
   }
