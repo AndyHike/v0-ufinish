@@ -213,6 +213,7 @@ async function processOrderFromWebhook(webhookData: any) {
     console.log(`Webhook Data: ${JSON.stringify(webhookData, null, 2)}`)
 
     // Find the user by RemOnline client ID
+    console.log(`Looking for user with remonline_id: ${clientId}`)
     const { data: user, error: userError } = await supabase
       .from("users")
       .select("id")
@@ -239,6 +240,8 @@ async function processOrderFromWebhook(webhookData: any) {
       console.log("Order details fetched, but user still not found. Skipping order processing.")
       return { success: false, message: "User not found" }
     }
+
+    console.log(`Found user with ID: ${user.id}`)
 
     // Extract device brand and model from the device name
     let deviceBrand = "Unknown"
@@ -287,6 +290,7 @@ async function processOrderFromWebhook(webhookData: any) {
     }
 
     if (existingOrder) {
+      console.log(`Order already exists, updating: ${orderId}`)
       // Update existing order
       const { error: updateError } = await supabase
         .from("repair_orders")
@@ -300,15 +304,19 @@ async function processOrderFromWebhook(webhookData: any) {
 
       console.log(`Order updated: ${orderId}`)
     } else {
+      console.log(`Order does not exist, creating new order: ${orderId}`)
       // Create new order
-      const { error: insertError } = await supabase.from("repair_orders").insert([orderDetails]).select()
+      const { data: insertedData, error: insertError } = await supabase
+        .from("repair_orders")
+        .insert([orderDetails])
+        .select()
 
       if (insertError) {
         console.error("Error creating order:", insertError)
         return { success: false, message: "Failed to create order" }
       }
 
-      console.log(`Order created: ${orderId}`)
+      console.log(`Order created: ${orderId}, Inserted Data: ${JSON.stringify(insertedData)}`)
     }
 
     // If we need more detailed information, we can fetch it from the RemOnline API
