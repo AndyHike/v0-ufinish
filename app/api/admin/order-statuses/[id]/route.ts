@@ -8,14 +8,21 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const supabase = createClient()
     const { id } = params
     const body = await request.json()
-    const { remonline_status_id, name_uk, name_en, name_cs, color, userId } = body
+    console.log("Received PUT request for ID:", id, "with body:", body)
 
-    console.log("Received update request with data:", body)
+    const { remonline_status_id, name_uk, name_en, name_cs, color, userId } = body
 
     // Verify admin permissions
     const { data: userData, error: userError } = await supabase.from("users").select("role").eq("id", userId).single()
 
-    if (userError || !userData || userData.role !== "admin") {
+    console.log("User data:", userData, "User error:", userError)
+
+    if (userError) {
+      console.error("User verification error:", userError)
+      return NextResponse.json({ success: false, message: "User verification failed" }, { status: 403 })
+    }
+
+    if (!userData || userData.role !== "admin") {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 403 })
     }
 
@@ -32,6 +39,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       .neq("id", id)
       .maybeSingle()
 
+    console.log("Existing status check:", existingStatus, "Check error:", checkError)
+
+    if (checkError) {
+      console.error("Error checking existing status:", checkError)
+    }
+
     if (existingStatus) {
       return NextResponse.json(
         { success: false, message: "Status with this RemOnline ID already exists" },
@@ -40,6 +53,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Update status
+    console.log("Updating status:", { remonline_status_id, name_uk, name_en, name_cs, color })
+
     const { data, error } = await supabase
       .from("order_statuses")
       .update({
@@ -55,21 +70,28 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       .single()
 
     if (error) {
-      console.error("Supabase error:", error)
+      console.error("Supabase update error:", error)
       throw error
     }
+
+    console.log("Status updated successfully:", data)
 
     // Clear the status cache
     clearStatusCache()
 
     // Log activity
-    await logActivity({
-      userId,
-      entityType: "order_status",
-      entityId: id,
-      actionType: "update",
-      details: { remonline_status_id, name_uk },
-    })
+    try {
+      await logActivity({
+        userId,
+        entityType: "order_status",
+        entityId: id,
+        actionType: "update",
+        details: { remonline_status_id, name_uk },
+      })
+    } catch (logError) {
+      console.error("Error logging activity:", logError)
+      // Continue even if logging fails
+    }
 
     return NextResponse.json({ success: true, status: data })
   } catch (error) {
@@ -78,16 +100,28 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
+// Перевіримо та виправимо обробник DELETE-запиту
+
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = createClient()
     const { id } = params
-    const { userId } = await request.json()
+    const body = await request.json()
+    console.log("Received DELETE request for ID:", id, "with body:", body)
+
+    const { userId } = body
 
     // Verify admin permissions
     const { data: userData, error: userError } = await supabase.from("users").select("role").eq("id", userId).single()
 
-    if (userError || !userData || userData.role !== "admin") {
+    console.log("User data:", userData, "User error:", userError)
+
+    if (userError) {
+      console.error("User verification error:", userError)
+      return NextResponse.json({ success: false, message: "User verification failed" }, { status: 403 })
+    }
+
+    if (!userData || userData.role !== "admin") {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 403 })
     }
 
@@ -98,24 +132,39 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       .eq("id", id)
       .single()
 
-    if (statusError) throw statusError
+    if (statusError) {
+      console.error("Error fetching status details:", statusError)
+      throw statusError
+    }
+
+    console.log("Status to delete:", statusData)
 
     // Delete status
     const { error } = await supabase.from("order_statuses").delete().eq("id", id)
 
-    if (error) throw error
+    if (error) {
+      console.error("Supabase delete error:", error)
+      throw error
+    }
+
+    console.log("Status deleted successfully")
 
     // Clear the status cache
     clearStatusCache()
 
     // Log activity
-    await logActivity({
-      userId,
-      entityType: "order_status",
-      entityId: id,
-      actionType: "delete",
-      details: statusData,
-    })
+    try {
+      await logActivity({
+        userId,
+        entityType: "order_status",
+        entityId: id,
+        actionType: "delete",
+        details: statusData,
+      })
+    } catch (logError) {
+      console.error("Error logging activity:", logError)
+      // Continue even if logging fails
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

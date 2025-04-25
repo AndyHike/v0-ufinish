@@ -125,10 +125,24 @@ export function OrderStatusesList() {
   // Add new status
   async function handleAddStatus(e: React.FormEvent) {
     e.preventDefault()
-    if (!session?.user?.id) return
+    if (!session?.user?.id) {
+      toast({
+        title: t("error"),
+        description: t("notAuthenticated"),
+        variant: "destructive",
+      })
+      return
+    }
 
     try {
       setIsSubmitting(true)
+
+      // Перевіримо дані форми перед відправкою
+      console.log("Submitting form data:", {
+        ...formState,
+        remonline_status_id: Number.parseInt(formState.remonline_status_id, 10),
+        userId: session.user.id,
+      })
 
       const response = await fetch("/api/admin/order-statuses", {
         method: "POST",
@@ -140,7 +154,11 @@ export function OrderStatusesList() {
         }),
       })
 
+      // Перевіримо відповідь сервера
+      console.log("Server response status:", response.status)
+
       const data = await response.json()
+      console.log("Server response data:", data)
 
       if (!data.success) {
         throw new Error(data.message || "Failed to add status")
@@ -169,10 +187,24 @@ export function OrderStatusesList() {
   // Update existing status
   async function handleUpdateStatus(e: React.FormEvent) {
     e.preventDefault()
-    if (!session?.user?.id || !selectedStatus) return
+    if (!session?.user?.id || !selectedStatus) {
+      toast({
+        title: t("error"),
+        description: !session?.user?.id ? t("notAuthenticated") : t("noStatusSelected"),
+        variant: "destructive",
+      })
+      return
+    }
 
     try {
       setIsSubmitting(true)
+
+      // Перевіримо дані форми перед відправкою
+      console.log("Updating status with data:", {
+        ...formState,
+        remonline_status_id: Number(formState.remonline_status_id),
+        userId: session.user.id,
+      })
 
       const response = await fetch(`/api/admin/order-statuses/${selectedStatus.id}`, {
         method: "PUT",
@@ -184,7 +216,11 @@ export function OrderStatusesList() {
         }),
       })
 
+      // Перевіримо відповідь сервера
+      console.log("Server response status:", response.status)
+
       const data = await response.json()
+      console.log("Server response data:", data)
 
       if (!data.success) {
         throw new Error(data.message || "Failed to update status")
@@ -212,10 +248,20 @@ export function OrderStatusesList() {
 
   // Delete status
   async function handleDeleteStatus() {
-    if (!session?.user?.id || !selectedStatus) return
+    if (!session?.user?.id || !selectedStatus) {
+      toast({
+        title: t("error"),
+        description: !session?.user?.id ? t("notAuthenticated") : t("noStatusSelected"),
+        variant: "destructive",
+      })
+      return
+    }
 
     try {
       setIsSubmitting(true)
+
+      // Перевіримо дані перед відправкою
+      console.log("Deleting status:", selectedStatus.id, "User ID:", session.user.id)
 
       const response = await fetch(`/api/admin/order-statuses/${selectedStatus.id}`, {
         method: "DELETE",
@@ -223,7 +269,11 @@ export function OrderStatusesList() {
         body: JSON.stringify({ userId: session.user.id }),
       })
 
+      // Перевіримо відповідь сервера
+      console.log("Server response status:", response.status)
+
       const data = await response.json()
+      console.log("Server response data:", data)
 
       if (!data.success) {
         throw new Error(data.message || "Failed to delete status")
