@@ -319,7 +319,6 @@ export function OrderStatusesList() {
                     value={formData.name_en}
                     onChange={handleInputChange}
                     className="col-span-3"
-                    placeholder="New Status"
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -429,6 +428,7 @@ export function OrderStatusesList() {
             onSubmit={(e) => {
               e.preventDefault()
               console.log("Edit form submitted") // Add this line
+              console.log("Form data:", formData) // Add this line
               handleUpdateStatus()
             }}
           >

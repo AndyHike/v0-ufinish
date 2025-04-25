@@ -46,7 +46,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error("Error updating order status:", error)
+      return NextResponse.json(
+        { success: false, message: "Failed to update order status", details: error },
+        { status: 500 },
+      )
+    }
 
     // Log activity
     await logActivity({
