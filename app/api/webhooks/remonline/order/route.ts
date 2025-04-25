@@ -9,7 +9,7 @@ if (!REMONLINE_ORDER_WEBHOOK_SECRET) {
   console.warn("REMONLINE_ORDER_WEBHOOK_SECRET is not set. Webhook verification will be skipped.")
 }
 
-// Define a schema for the RemOnline webhook payload
+// Define a schema for the RemOnline webhook payload for order creation
 const remonlineOrderWebhookSchema = z.object({
   id: z.string(),
   created_at: z.string(),
@@ -47,9 +47,43 @@ const remonlineOrderWebhookSchema = z.object({
   }),
 })
 
+// Define a schema for the RemOnline webhook payload for status change
+const remonlineStatusChangeWebhookSchema = z.object({
+  id: z.string(),
+  created_at: z.string(),
+  created_at_ts: z.number(),
+  event_name: z.literal("Order.Status.Changed"),
+  context: z.object({
+    object_id: z.number(),
+    object_type: z.string(),
+  }),
+  metadata: z.object({
+    new: z.object({
+      id: z.number(),
+    }),
+    old: z.object({
+      id: z.number(),
+    }),
+    order: z.object({
+      id: z.number(),
+      name: z.string(),
+    }),
+  }),
+  "x-signature": z.string().optional(),
+  employee: z.object({
+    id: z.number(),
+    full_name: z.string(),
+    email: z.string().email(),
+  }),
+})
+
 // Map of RemOnline status IDs to our status names
 const statusIdMap: Record<number, string> = {
   3153189: "Новий", // New order status ID
+  3153184: "В роботі", // In progress status ID
+  3153185: "Готовий", // Ready status ID
+  3153186: "Виданий", // Completed/Delivered status ID
+  3153187: "Скасований", // Cancelled status ID
   // Add more status mappings as needed
 }
 
@@ -70,7 +104,7 @@ export async function POST(request: NextRequest) {
     const requestText = await clonedRequest.text()
 
     // Log the received webhook
-    console.log("RemOnline order webhook received")
+    console.log("RemOnline webhook received")
 
     // Parse the request body
     let payload
@@ -155,48 +189,65 @@ export async function POST(request: NextRequest) {
       console.warn("Webhook signature verification skipped")
     }
 
-    // Validate the webhook payload against the schema
-    const parsedPayload = remonlineOrderWebhookSchema.safeParse(payload)
-    if (!parsedPayload.success) {
-      console.error("Invalid webhook payload structure:", parsedPayload.error)
-      // Return 200 OK even for invalid payload to prevent webhook deactivation
-      return NextResponse.json({ success: false, message: "Invalid payload structure" })
-    }
+    // Determine the event type and process accordingly
+    const eventName = payload.event_name
 
-    // Get the order data
-    const orderData = parsedPayload.data
-    const eventType = orderData.event_name
-    const orderId = orderData.context.object_id
-    const clientId = orderData.metadata.client.id
+    if (eventName === "Order.Status.Changed") {
+      // Process status change event
+      console.log("Processing order status change event")
 
-    // Extract metadata from the webhook payload
-    const orderNumber = orderData.metadata.order.name
-    const statusId = orderData.metadata.status.id
-    const deviceName = orderData.metadata.asset?.name || "Unknown Device"
-    const createdAt = orderData.created_at
+      // Validate the webhook payload against the status change schema
+      const parsedPayload = remonlineStatusChangeWebhookSchema.safeParse(payload)
+      if (!parsedPayload.success) {
+        console.error("Invalid status change webhook payload structure:", parsedPayload.error)
+        return NextResponse.json({ success: false, message: "Invalid payload structure for status change" })
+      }
 
-    console.log(`Processing ${eventType} for order ID: ${orderId}`)
-    console.log(`Client ID: ${clientId}, Order Number: ${orderNumber}, Status ID: ${statusId}, Device: ${deviceName}`)
+      try {
+        const result = await processStatusChangeFromWebhook(parsedPayload.data)
+        console.log("Status change processing result:", result)
 
-    // Process synchronously
-    try {
-      const result = await processOrderFromWebhook(orderData)
-      console.log("Order processing result:", result)
+        return NextResponse.json({
+          success: true,
+          message: "Status change webhook processed successfully",
+          result: result,
+        })
+      } catch (error) {
+        console.error(`Error processing status change:`, error)
+        return NextResponse.json({
+          success: false,
+          message: "Error processing status change webhook, but received",
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    } else {
+      // Process order creation event (original logic)
+      console.log("Processing order creation event")
 
-      // Immediately return success response with processing result
-      return NextResponse.json({
-        success: true,
-        message: "Webhook processed successfully",
-        result: result,
-      })
-    } catch (error) {
-      console.error(`Error processing order ${orderId}:`, error)
-      // Return 200 OK even for errors to prevent webhook deactivation
-      return NextResponse.json({
-        success: false,
-        message: "Error processing webhook, but received",
-        error: error instanceof Error ? error.message : String(error),
-      })
+      // Validate the webhook payload against the order creation schema
+      const parsedPayload = remonlineOrderWebhookSchema.safeParse(payload)
+      if (!parsedPayload.success) {
+        console.error("Invalid order creation webhook payload structure:", parsedPayload.error)
+        return NextResponse.json({ success: false, message: "Invalid payload structure for order creation" })
+      }
+
+      try {
+        const result = await processOrderFromWebhook(parsedPayload.data)
+        console.log("Order processing result:", result)
+
+        return NextResponse.json({
+          success: true,
+          message: "Order creation webhook processed successfully",
+          result: result,
+        })
+      } catch (error) {
+        console.error(`Error processing order creation:`, error)
+        return NextResponse.json({
+          success: false,
+          message: "Error processing order creation webhook, but received",
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
     }
   } catch (error) {
     console.error("Error in webhook handler:", error)
@@ -209,8 +260,144 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// Process status change data from webhook payload
+async function processStatusChangeFromWebhook(webhookData: z.infer<typeof remonlineStatusChangeWebhookSchema>) {
+  console.log("Creating Supabase client for status change processing...")
+  const supabase = createClient()
+  console.log("Supabase client created successfully")
+
+  try {
+    const orderId = webhookData.context.object_id
+    const orderNumber = webhookData.metadata.order.name
+    const oldStatusId = webhookData.metadata.old.id
+    const newStatusId = webhookData.metadata.new.id
+    const updatedAt = webhookData.created_at
+    const employeeName = webhookData.employee.full_name
+
+    console.log(`Processing status change for order ID: ${orderId}`)
+    console.log(`Order Number: ${orderNumber}, Old Status ID: ${oldStatusId}, New Status ID: ${newStatusId}`)
+
+    // Map status IDs to status names
+    const oldStatus = statusIdMap[oldStatusId] || "Невідомий"
+    const newStatus = statusIdMap[newStatusId] || "Невідомий"
+
+    console.log(`Status change: ${oldStatus} -> ${newStatus}`)
+
+    // Find the order in our database
+    console.log(`Looking for order with remonline_id: ${orderId}`)
+    const { data: existingOrder, error: orderError } = await supabase
+      .from("repair_orders")
+      .select("id, user_id")
+      .eq("remonline_id", orderId)
+      .single()
+
+    if (orderError) {
+      console.error("Error finding order:", orderError)
+      return { success: false, message: "Order not found", error: orderError }
+    }
+
+    if (!existingOrder) {
+      console.log(`No order found with remonline_id: ${orderId}. Skipping status update.`)
+      return { success: false, message: "Order not found", code: "ORDER_NOT_FOUND" }
+    }
+
+    console.log(`Found order with ID: ${existingOrder.id}`)
+
+    // Update the order status
+    console.log(`Updating order status to: ${newStatus}`)
+    const { data: updatedOrder, error: updateError } = await supabase
+      .from("repair_orders")
+      .update({
+        status: newStatus,
+        updated_at: updatedAt,
+      })
+      .eq("remonline_id", orderId)
+      .select()
+
+    if (updateError) {
+      console.error("Error updating order status:", updateError)
+      return { success: false, message: "Failed to update order status", error: updateError }
+    }
+
+    console.log(`Order status updated successfully: ${orderId}`)
+
+    // Log the status change in the activity log
+    console.log(`Logging status change in activities table`)
+    const { data: activityLog, error: activityError } = await supabase
+      .from("activities")
+      .insert([
+        {
+          entity_type: "repair_order",
+          action_type: "status_changed",
+          entity_id: existingOrder.id,
+          user_id: existingOrder.user_id,
+          details: {
+            old_status: oldStatus,
+            new_status: newStatus,
+            changed_by: employeeName,
+            order_number: orderNumber,
+          },
+          created_at: updatedAt,
+        },
+      ])
+      .select()
+
+    if (activityError) {
+      console.error("Error logging activity:", activityError)
+      // We don't want to fail the whole operation if just the logging fails
+      console.log("Continuing despite activity logging error")
+    } else {
+      console.log(`Activity logged successfully`)
+    }
+
+    // Log the status change in the order_status_history table
+    console.log(`Logging status change in order_status_history table`)
+    const { data: historyLog, error: historyError } = await supabase
+      .from("order_status_history")
+      .insert([
+        {
+          order_id: existingOrder.id,
+          user_id: existingOrder.user_id,
+          old_status: oldStatus,
+          new_status: newStatus,
+          changed_by: employeeName,
+          changed_at: updatedAt,
+        },
+      ])
+      .select()
+
+    if (historyError) {
+      console.error("Error logging status history:", historyError)
+      // We don't want to fail the whole operation if just the logging fails
+      console.log("Continuing despite history logging error")
+    } else {
+      console.log(`Status history logged successfully`)
+    }
+
+    // TODO: Send notification to the user about status change
+    // This could be implemented later
+
+    return {
+      success: true,
+      message: "Order status updated successfully",
+      order: updatedOrder,
+      statusChange: {
+        from: oldStatus,
+        to: newStatus,
+      },
+    }
+  } catch (error) {
+    console.error("Error processing status change from webhook:", error)
+    return {
+      success: false,
+      message: "Failed to process status change from webhook",
+      details: error instanceof Error ? error.message : String(error),
+    }
+  }
+}
+
 // Process order data directly from webhook payload
-async function processOrderFromWebhook(webhookData: any) {
+async function processOrderFromWebhook(webhookData: z.infer<typeof remonlineOrderWebhookSchema>) {
   console.log("Creating Supabase client...")
   const supabase = createClient()
   console.log("Supabase client created successfully")
@@ -270,13 +457,10 @@ async function processOrderFromWebhook(webhookData: any) {
     // Map status ID to status name
     const status = statusIdMap[statusId] || "Новий" // Default to "New" if status ID is not found
 
-    // FIXED: Changed remonline_client_id to client_remonline_id to match the database schema
     // Prepare order details for database
     const orderDetails = {
       user_id: user.id,
       remonline_id: orderId,
-      // Removed remonline_client_id field as it doesn't exist in the database
-      // Instead, we'll store the client ID in a different way if needed
       reference_number: orderNumber,
       device_brand: deviceBrand,
       device_model: deviceModel,
@@ -285,16 +469,6 @@ async function processOrderFromWebhook(webhookData: any) {
       price: null, // Price is not available in the webhook payload
       created_at: createdAt,
       updated_at: new Date().toISOString(),
-    }
-
-    // Log the database schema for the repair_orders table to debug column issues
-    console.log("Checking repair_orders table schema...")
-    const { data: tableInfo, error: tableError } = await supabase.from("repair_orders").select("*").limit(1)
-
-    if (tableError) {
-      console.error("Error checking table schema:", tableError)
-    } else {
-      console.log("Table schema sample:", tableInfo)
     }
 
     console.log(`Order Details: ${JSON.stringify(orderDetails, null, 2)}`)
@@ -344,6 +518,32 @@ async function processOrderFromWebhook(webhookData: any) {
       }
 
       console.log(`Order created: ${orderId}, Inserted Data:`, insertedData)
+
+      // Log the order creation in the activity log
+      console.log(`Logging order creation in activities table`)
+      const { error: activityError } = await supabase.from("activities").insert([
+        {
+          entity_type: "repair_order",
+          action_type: "created",
+          entity_id: insertedData[0].id,
+          user_id: user.id,
+          details: {
+            order_number: orderNumber,
+            device: `${deviceBrand} ${deviceModel}`,
+            status: status,
+          },
+          created_at: createdAt,
+        },
+      ])
+
+      if (activityError) {
+        console.error("Error logging activity:", activityError)
+        // We don't want to fail the whole operation if just the logging fails
+        console.log("Continuing despite activity logging error")
+      } else {
+        console.log(`Activity logged successfully`)
+      }
+
       return { success: true, message: "Order created", order: insertedData }
     }
   } catch (error) {
