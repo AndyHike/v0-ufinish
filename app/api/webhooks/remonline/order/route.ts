@@ -178,27 +178,45 @@ export async function POST(request: NextRequest) {
     console.log(`Processing ${eventType} for order ID: ${orderId}`)
     console.log(`Client ID: ${clientId}, Order Number: ${orderNumber}, Status ID: ${statusId}, Device: ${deviceName}`)
 
-    // Start background processing and immediately return success
-    // This prevents webhook timeout and deactivation
-    processOrderFromWebhook(orderData).catch((error) => {
-      console.error(`Background processing error for order ${orderId}:`, error)
-    })
+    // ISSUE 1: The background processing approach might be causing the function to not complete
+    // Instead of starting background processing, let's process synchronously
+    // This ensures the database operations complete before the response is sent
+    try {
+      const result = await processOrderFromWebhook(orderData)
+      console.log("Order processing result:", result)
 
-    // Immediately return success response
-    return NextResponse.json({ success: true, message: "Webhook received and processing started" })
+      // Immediately return success response with processing result
+      return NextResponse.json({
+        success: true,
+        message: "Webhook processed successfully",
+        result: result,
+      })
+    } catch (error) {
+      console.error(`Error processing order ${orderId}:`, error)
+      // Return 200 OK even for errors to prevent webhook deactivation
+      return NextResponse.json({
+        success: false,
+        message: "Error processing webhook, but received",
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   } catch (error) {
     console.error("Error in webhook handler:", error)
     // Return 200 OK even for errors to prevent webhook deactivation
     return NextResponse.json({
       success: false,
       message: "Error processing webhook, but received",
+      error: error instanceof Error ? error.message : String(error),
     })
   }
 }
 
 // Process order data directly from webhook payload
 async function processOrderFromWebhook(webhookData: any) {
+  // ISSUE 2: Let's add more logging around the Supabase client creation
+  console.log("Creating Supabase client...")
   const supabase = createClient()
+  console.log("Supabase client created successfully")
 
   try {
     const orderId = webhookData.context.object_id
@@ -219,15 +237,47 @@ async function processOrderFromWebhook(webhookData: any) {
       .eq("remonline_id", clientId)
       .single()
 
+    // ISSUE 3: Better error handling for user lookup
     if (userError) {
-      console.log("Error finding user by RemOnline ID:", userError)
       console.error("Error finding user by RemOnline ID:", userError)
-      return { success: false, message: "User not found" }
+
+      // ISSUE 4: Let's check if the error is because no user was found
+      if (userError.code === "PGRST116") {
+        console.log(`No user found with remonline_id: ${clientId}. Creating a placeholder user.`)
+
+        // OPTION: Create a placeholder user if needed
+        // This is commented out but could be uncommented if you want to create users automatically
+        /*
+        const { data: newUser, error: createError } = await supabase
+          .from("users")
+          .insert([{
+            remonline_id: clientId,
+            name: webhookData.metadata.client.fullname,
+            email: `placeholder_${clientId}@example.com`,
+            role: "customer"
+          }])
+          .select()
+          .single()
+          
+        if (createError) {
+          console.error("Error creating placeholder user:", createError)
+          return { success: false, message: "Failed to create placeholder user" }
+        }
+        
+        console.log(`Created placeholder user with ID: ${newUser.id}`)
+        user = newUser
+        */
+
+        // For now, just return an error
+        return { success: false, message: "User not found", code: "USER_NOT_FOUND" }
+      }
+
+      return { success: false, message: "Error finding user", error: userError }
     }
 
     if (!user) {
       console.log(`No user found with remonline_id: ${clientId}. Skipping order creation.`)
-      return { success: false, message: "User not found" }
+      return { success: false, message: "User not found", code: "USER_NOT_FOUND" }
     }
 
     console.log(`Found user with ID: ${user.id}`)
@@ -268,34 +318,41 @@ async function processOrderFromWebhook(webhookData: any) {
     console.log(`Order Details: ${JSON.stringify(orderDetails, null, 2)}`)
 
     // Check if order already exists
+    console.log(`Checking if order with remonline_id ${orderId} already exists...`)
     const { data: existingOrder, error: checkError } = await supabase
       .from("repair_orders")
       .select("id")
       .eq("remonline_id", orderId)
       .single()
 
+    // ISSUE 5: Better error handling for order lookup
     if (checkError && checkError.code !== "PGRST116") {
-      console.log("Error checking existing order:", checkError)
       console.error("Error checking existing order:", checkError)
+      return { success: false, message: "Error checking existing order", error: checkError }
     }
 
+    // ISSUE 6: Let's add more detailed logging for database operations
     if (existingOrder) {
-      console.log(`Order already exists, updating: ${orderId}`)
+      console.log(`Order already exists with ID ${existingOrder.id}, updating: ${orderId}`)
       // Update existing order
-      const { error: updateError } = await supabase
+      console.log("Updating order with details:", orderDetails)
+      const { data: updatedOrder, error: updateError } = await supabase
         .from("repair_orders")
         .update(orderDetails)
         .eq("remonline_id", orderId)
+        .select()
 
       if (updateError) {
         console.error("Error updating order:", updateError)
-        return { success: false, message: "Failed to update order" }
+        return { success: false, message: "Failed to update order", error: updateError }
       }
 
-      console.log(`Order updated: ${orderId}`)
+      console.log(`Order updated: ${orderId}`, updatedOrder)
+      return { success: true, message: "Order updated", order: updatedOrder }
     } else {
       console.log(`Order does not exist, creating new order: ${orderId}`)
       // Create new order
+      console.log("Inserting order with details:", orderDetails)
       const { data: insertedData, error: insertError } = await supabase
         .from("repair_orders")
         .insert([orderDetails])
@@ -303,13 +360,12 @@ async function processOrderFromWebhook(webhookData: any) {
 
       if (insertError) {
         console.error("Error creating order:", insertError)
-        return { success: false, message: "Failed to create order" }
+        return { success: false, message: "Failed to create order", error: insertError }
       }
 
-      console.log(`Order created: ${orderId}, Inserted Data: ${JSON.stringify(insertedData)}`)
+      console.log(`Order created: ${orderId}, Inserted Data:`, insertedData)
+      return { success: true, message: "Order created", order: insertedData }
     }
-
-    return { success: true }
   } catch (error) {
     console.error("Error processing order from webhook:", error)
     return {
