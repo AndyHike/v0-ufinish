@@ -402,7 +402,7 @@ export function OrderStatusesList() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{t("addNewStatus")}</DialogTitle>
-            <DialogDescription>{t("Admin.addNewStatusDescription")}</DialogDescription>
+            <DialogDescription>{t("addNewStatusDescription")}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAddStatus}>
             <div className="grid gap-4 py-4">
@@ -516,7 +516,7 @@ export function OrderStatusesList() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{t("editStatus")}</DialogTitle>
-            <DialogDescription>{t("Admin.editStatusDescription")}</DialogDescription>
+            <DialogDescription>{t("editStatusDescription")}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleUpdateStatus}>
             <div className="grid gap-4 py-4">
@@ -621,7 +621,7 @@ export function OrderStatusesList() {
           <DialogHeader>
             <DialogTitle>{t("deleteStatus")}</DialogTitle>
             <DialogDescription>
-              {t("Admin.deleteStatusConfirmation", { status: selectedStatus?.nameUk || selectedStatus?.nameEn || "" })}
+              {t("deleteStatusConfirmation", { status: selectedStatus?.name_uk || selectedStatus?.name_en || "" })}
             </DialogDescription>
           </DialogHeader>
 
