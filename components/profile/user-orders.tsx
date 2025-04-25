@@ -4,10 +4,10 @@ import { useEffect, useState } from "react"
 import { getUserRepairOrders } from "@/app/actions/repair-orders"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
-import { AlertCircle, ArrowRight, Clock, RefreshCw, Search } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { ArrowRight, Clock, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
 
 type RepairOrder = {
   id: string
@@ -76,8 +76,6 @@ export function UserOrders() {
           return order.status === "Новий" || order.status === "В процесі"
         } else if (activeTab === "completed") {
           return order.status === "Завершено"
-        } else if (activeTab === "cancelled") {
-          return order.status === "Скасовано"
         }
         return true
       })
@@ -116,130 +114,122 @@ export function UserOrders() {
 
   return (
     <div className="w-full">
-      <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <TabsList className="h-9 bg-muted/50">
-            <TabsTrigger value="all" className="text-xs sm:text-sm">
-              {t("repairHistory.allOrders")}
-            </TabsTrigger>
-            <TabsTrigger value="active" className="text-xs sm:text-sm">
-              {t("repairHistory.activeOrders")}
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="text-xs sm:text-sm">
-              {t("repairHistory.completedOrders")}
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="relative w-full sm:w-auto">
+      <div className="flex flex-col space-y-4">
+        {/* Tabs */}
+        <div className="flex border-b">
+          <button
+            className={cn(
+              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+              activeTab === "all"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+            onClick={() => setActiveTab("all")}
+          >
+            Всі замовлення
+          </button>
+          <button
+            className={cn(
+              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+              activeTab === "active"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+            onClick={() => setActiveTab("active")}
+          >
+            Активні замовлення
+          </button>
+          <button
+            className={cn(
+              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+              activeTab === "completed"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+            onClick={() => setActiveTab("completed")}
+          >
+            Завершені замовлення
+          </button>
+          <div className="ml-auto relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder={t("repairHistory.searchPlaceholder")}
-              className="pl-9 h-9 w-full sm:w-[200px] text-sm"
+              placeholder="Пошук замовлень..."
+              className="pl-9 h-9 w-[200px] text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
 
-        <TabsContent value="all" className="m-0">
-          {renderOrdersList()}
-        </TabsContent>
-        <TabsContent value="active" className="m-0">
-          {renderOrdersList()}
-        </TabsContent>
-        <TabsContent value="completed" className="m-0">
-          {renderOrdersList()}
-        </TabsContent>
-      </Tabs>
+        {/* Table */}
+        {loading ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center justify-between p-4 border-b">
+                <Skeleton className="h-5 w-[150px]" />
+                <Skeleton className="h-5 w-[80px]" />
+                <Skeleton className="h-5 w-[120px]" />
+                <Skeleton className="h-5 w-[80px]" />
+                <Skeleton className="h-5 w-[120px]" />
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <p className="text-red-500 mb-2">{error}</p>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+              Спробувати знову
+            </Button>
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            {searchQuery ? "Немає результатів пошуку" : "У вас ще немає історії ремонтів"}
+          </div>
+        ) : (
+          <div className="border rounded-sm overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-muted/30 text-xs uppercase">
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Пристрій</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Замовлення №</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Послуга</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Статус</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Дата</th>
+                  <th className="w-10"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {filteredOrders.map((order) => (
+                  <tr
+                    key={order.id}
+                    className="hover:bg-muted/20 transition-colors cursor-pointer"
+                    onClick={() => console.log(`View order details for ${order.id}`)}
+                  >
+                    <td className="py-4 px-4 font-medium">
+                      {order.device_brand} {order.device_model}
+                    </td>
+                    <td className="py-4 px-4 text-muted-foreground">{order.reference_number}</td>
+                    <td className="py-4 px-4 text-muted-foreground">{order.service_type}</td>
+                    <td className="py-4 px-4">
+                      <span className={cn("font-medium", getStatusColor(order.status))}>{order.status}</span>
+                    </td>
+                    <td className="py-4 px-4 text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-3.5 w-3.5" />
+                        {formatDate(order.created_at)}
+                      </div>
+                    </td>
+                    <td className="py-4 px-2 text-right">
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   )
-
-  function renderOrdersList() {
-    if (loading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      )
-    }
-
-    if (error) {
-      return (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
-          <p className="text-lg font-medium text-red-500">{error}</p>
-          <Button variant="outline" onClick={() => window.location.reload()} className="mt-4">
-            {t("repairHistory.tryAgain")}
-          </Button>
-        </div>
-      )
-    }
-
-    if (filteredOrders.length === 0) {
-      return (
-        <div className="text-center py-12 border-t">
-          <p className="text-muted-foreground">
-            {searchQuery ? t("repairHistory.noSearchResults") : t("repairHistory.noOrders")}
-          </p>
-        </div>
-      )
-    }
-
-    return (
-      <div className="border rounded-md overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-muted/50">
-              <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                {t("repairHistory.device")}
-              </th>
-              <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">
-                {t("repairHistory.orderNumber")}
-              </th>
-              <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">
-                {t("repairHistory.service")}
-              </th>
-              <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                {t("repairHistory.status")}
-              </th>
-              <th className="text-right py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                {t("repairHistory.date")}
-              </th>
-              <th className="w-10"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {filteredOrders.map((order) => (
-              <tr
-                key={order.id}
-                className="hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => console.log(`View order details for ${order.id}`)}
-              >
-                <td className="py-4 px-4">
-                  <div className="font-medium">
-                    {order.device_brand} {order.device_model}
-                  </div>
-                </td>
-                <td className="py-4 px-4 hidden md:table-cell text-muted-foreground">{order.reference_number}</td>
-                <td className="py-4 px-4 hidden sm:table-cell text-muted-foreground">{order.service_type}</td>
-                <td className="py-4 px-4">
-                  <span className={cn("font-medium", getStatusColor(order.status))}>{order.status}</span>
-                </td>
-                <td className="py-4 px-4 text-right text-muted-foreground text-sm whitespace-nowrap">
-                  <div className="flex items-center justify-end gap-2">
-                    <Clock className="h-3 w-3" />
-                    {formatDate(order.created_at)}
-                  </div>
-                </td>
-                <td className="py-4 px-2 text-right">
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )
-  }
 }
