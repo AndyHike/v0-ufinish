@@ -18,10 +18,9 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/use-toast"
-import { Edit, Trash2, Plus, AlertCircle } from "lucide-react"
+import { Edit, Trash2, Plus } from "lucide-react"
 
 type OrderStatus = {
   id: number
@@ -259,42 +258,6 @@ export function OrderStatusesList() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <div className="border rounded-md">
-          <div className="p-4">
-            <Skeleton className="h-8 w-full" />
-          </div>
-          <div className="p-4 border-t">
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg">
-        <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Помилка завантаження</h3>
-        <p className="text-muted-foreground mb-4">{error}</p>
-        <Button onClick={fetchStatuses} variant="outline">
-          Спробувати знову
-        </Button>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -313,6 +276,7 @@ export function OrderStatusesList() {
             <form
               onSubmit={(e) => {
                 e.preventDefault()
+                console.log("Add form submitted") // Add this line
                 handleAddStatus()
               }}
             >

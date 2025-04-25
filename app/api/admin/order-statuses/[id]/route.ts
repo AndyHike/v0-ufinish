@@ -57,6 +57,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       details: { remonline_status_id, name_uk },
     })
 
+    console.log("PUT /api/admin/order-statuses/[id] - Status updated successfully")
     return NextResponse.json({ success: true, status: data })
   } catch (error) {
     console.error("Error updating order status:", error)
