@@ -8,6 +8,8 @@ import { ArrowRight, Clock, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
+// Імпортуємо утиліти для статусів замовлень
+import { getStatusByCode } from "@/lib/order-status-utils"
 
 type RepairOrder = {
   id: string
@@ -28,7 +30,22 @@ export function UserOrders() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("all")
+  // Додайте новий стан для зберігання статусів
+  const [statusColors, setStatusColors] = useState<Record<string, { name: string; color: string }>>({})
 
+  // Додайте функцію для завантаження статусів
+  async function loadStatusColors(orders: RepairOrder[]) {
+    const uniqueStatuses = [...new Set(orders.map((order) => order.status))]
+    const statusMap: Record<string, { name: string; color: string }> = {}
+
+    for (const statusCode of uniqueStatuses) {
+      statusMap[statusCode] = await getStatusByCode(statusCode)
+    }
+
+    setStatusColors(statusMap)
+  }
+
+  // Оновіть useEffect для завантаження замовлень, щоб також завантажувати статуси
   useEffect(() => {
     async function fetchOrders() {
       try {
@@ -39,6 +56,8 @@ export function UserOrders() {
         if (result.success && result.orders) {
           setOrders(result.orders)
           setFilteredOrders(result.orders)
+          // Завантажуємо статуси
+          await loadStatusColors(result.orders)
         } else {
           setError(result.message || t("repairHistory.errorFetching"))
         }
@@ -97,19 +116,9 @@ export function UserOrders() {
     }
   }
 
+  // Оновіть функцію getStatusColor, щоб використовувати дані з бази даних
   function getStatusColor(status: string): string {
-    switch (status) {
-      case "Новий":
-        return "text-blue-600"
-      case "В процесі":
-        return "text-amber-600"
-      case "Завершено":
-        return "text-green-600"
-      case "Скасовано":
-        return "text-red-600"
-      default:
-        return "text-gray-600"
-    }
+    return statusColors[status]?.color || "text-gray-600"
   }
 
   return (
@@ -211,8 +220,11 @@ export function UserOrders() {
                     </td>
                     <td className="py-4 px-4 text-muted-foreground">{order.reference_number}</td>
                     <td className="py-4 px-4 text-muted-foreground">{order.service_type}</td>
+                    {/* Оновіть відображення статусу в таблиці */}
                     <td className="py-4 px-4">
-                      <span className={cn("font-medium", getStatusColor(order.status))}>{order.status}</span>
+                      <span className={cn("font-medium", getStatusColor(order.status))}>
+                        {statusColors[order.status]?.name || order.status}
+                      </span>
                     </td>
                     <td className="py-4 px-4 text-muted-foreground">
                       <div className="flex items-center gap-2">

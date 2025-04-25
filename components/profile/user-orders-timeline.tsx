@@ -23,6 +23,9 @@ import {
   ChevronRight,
 } from "lucide-react"
 
+// Імпортуємо утиліти для статусів замовлень
+import { getStatusByCode } from "@/lib/order-status-utils"
+
 type OrderStatusHistory = {
   id: string
   order_id: string
@@ -54,10 +57,26 @@ export function UserOrdersTimeline() {
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
 
+  // Додайте новий стан для зберігання статусів
+  const [statusColors, setStatusColors] = useState<Record<string, { name: string; color: string }>>({})
+
   useEffect(() => {
     fetchOrders()
   }, [])
 
+  // Додайте функцію для завантаження статусів
+  async function loadStatusColors(orders: RepairOrder[]) {
+    const uniqueStatuses = [...new Set(orders.map((order) => order.status))]
+    const statusMap: Record<string, { name: string; color: string }> = {}
+
+    for (const statusCode of uniqueStatuses) {
+      statusMap[statusCode] = await getStatusByCode(statusCode)
+    }
+
+    setStatusColors(statusMap)
+  }
+
+  // Оновіть функцію fetchOrders, щоб також завантажувати статуси
   async function fetchOrders() {
     setLoading(true)
     setError(null)
@@ -92,6 +111,9 @@ export function UserOrdersTimeline() {
       )
 
       setOrders(ordersWithHistory)
+
+      // Завантажуємо статуси
+      await loadStatusColors(ordersWithHistory)
     } catch (err) {
       console.error("Error fetching orders:", err)
       setError(err instanceof Error ? err.message : "Помилка завантаження замовлень")
@@ -117,21 +139,9 @@ export function UserOrdersTimeline() {
     }
   }
 
+  // Оновіть функцію getStatusColor, щоб використовувати дані з бази даних
   function getStatusColor(status: string) {
-    switch (status.toLowerCase()) {
-      case "новий":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-200"
-      case "в роботі":
-        return "bg-amber-100 text-amber-800 hover:bg-amber-200"
-      case "готовий":
-        return "bg-green-100 text-green-800 hover:bg-green-200"
-      case "виданий":
-        return "bg-green-100 text-green-800 hover:bg-green-200"
-      case "скасований":
-        return "bg-red-100 text-red-800 hover:bg-red-200"
-      default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-200"
-    }
+    return statusColors[status]?.color || "bg-gray-100 text-gray-800 hover:bg-gray-200"
   }
 
   function formatDate(dateString: string) {
@@ -233,9 +243,10 @@ export function UserOrdersTimeline() {
                     </CardTitle>
                     <CardDescription>Замовлення №: {order.reference_number}</CardDescription>
                   </div>
+                  {/* Оновіть відображення статусу в Badge */}
                   <Badge className={getStatusColor(order.status)}>
                     {getStatusIcon(order.status)}
-                    <span className="ml-1">{order.status}</span>
+                    <span className="ml-1">{statusColors[order.status]?.name || order.status}</span>
                   </Badge>
                 </div>
               </CardHeader>
