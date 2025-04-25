@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { getUserRepairOrders } from "@/app/actions/repair-orders"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useTranslations } from "next-intl"
-import { formatCurrency } from "@/lib/format-currency"
 import { cn } from "@/lib/utils"
-import { ChevronRight, Clock, Package, Settings, Smartphone, PenToolIcon as Tool } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { AlertCircle, ArrowRight, Clock, RefreshCw, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 type RepairOrder = {
   id: string
@@ -24,8 +23,11 @@ type RepairOrder = {
 export function UserOrders() {
   const t = useTranslations("Profile")
   const [orders, setOrders] = useState<RepairOrder[]>([])
+  const [filteredOrders, setFilteredOrders] = useState<RepairOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [activeTab, setActiveTab] = useState("all")
 
   useEffect(() => {
     async function fetchOrders() {
@@ -36,6 +38,7 @@ export function UserOrders() {
 
         if (result.success && result.orders) {
           setOrders(result.orders)
+          setFilteredOrders(result.orders)
         } else {
           setError(result.message || t("repairHistory.errorFetching"))
         }
@@ -50,183 +53,193 @@ export function UserOrders() {
     fetchOrders()
   }, [t])
 
+  useEffect(() => {
+    // Filter orders based on search query and active tab
+    let filtered = orders
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(
+        (order) =>
+          order.device_brand.toLowerCase().includes(query) ||
+          order.device_model.toLowerCase().includes(query) ||
+          order.reference_number.toLowerCase().includes(query) ||
+          order.service_type.toLowerCase().includes(query),
+      )
+    }
+
+    // Apply tab filter
+    if (activeTab !== "all") {
+      filtered = filtered.filter((order) => {
+        if (activeTab === "active") {
+          return order.status === "Новий" || order.status === "В процесі"
+        } else if (activeTab === "completed") {
+          return order.status === "Завершено"
+        } else if (activeTab === "cancelled") {
+          return order.status === "Скасовано"
+        }
+        return true
+      })
+    }
+
+    setFilteredOrders(filtered)
+  }, [orders, searchQuery, activeTab])
+
   function formatDate(dateString: string) {
     try {
       const date = new Date(dateString)
       return new Intl.DateTimeFormat("uk-UA", {
-        year: "numeric",
-        month: "long",
         day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
+        month: "short",
+        year: "numeric",
       }).format(date)
     } catch (e) {
       return dateString
     }
   }
 
-  function getStatusDetails(status: string): { icon: JSX.Element; color: string; bgColor: string } {
+  function getStatusColor(status: string): string {
     switch (status) {
       case "Новий":
-        return {
-          icon: <Package className="h-4 w-4" />,
-          color: "text-blue-700",
-          bgColor: "bg-blue-50",
-        }
+        return "text-blue-600"
       case "В процесі":
-        return {
-          icon: <Tool className="h-4 w-4" />,
-          color: "text-amber-700",
-          bgColor: "bg-amber-50",
-        }
+        return "text-amber-600"
       case "Завершено":
-        return {
-          icon: <Settings className="h-4 w-4" />,
-          color: "text-green-700",
-          bgColor: "bg-green-50",
-        }
+        return "text-green-600"
       case "Скасовано":
-        return {
-          icon: <Clock className="h-4 w-4" />,
-          color: "text-red-700",
-          bgColor: "bg-red-50",
-        }
+        return "text-red-600"
       default:
-        return {
-          icon: <Clock className="h-4 w-4" />,
-          color: "text-gray-700",
-          bgColor: "bg-gray-50",
-        }
+        return "text-gray-600"
     }
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">{t("repairHistory.title")}</h2>
-        <p className="text-muted-foreground">{t("repairHistory.description")}</p>
-      </div>
+    <div className="w-full">
+      <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <TabsList className="h-9 bg-muted/50">
+            <TabsTrigger value="all" className="text-xs sm:text-sm">
+              {t("repairHistory.allOrders")}
+            </TabsTrigger>
+            <TabsTrigger value="active" className="text-xs sm:text-sm">
+              {t("repairHistory.activeOrders")}
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="text-xs sm:text-sm">
+              {t("repairHistory.completedOrders")}
+            </TabsTrigger>
+          </TabsList>
 
-      {loading ? (
-        // Loading state with modern skeleton
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-              <div className="bg-gradient-to-r from-gray-50 to-white p-5">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-2">
-                    <Skeleton className="h-5 w-[180px] rounded-md" />
-                    <Skeleton className="h-4 w-[140px] rounded-md" />
-                  </div>
-                  <Skeleton className="h-7 w-20 rounded-full" />
-                </div>
-                <div className="mt-4 pt-4 border-t border-dashed border-gray-100">
-                  <div className="flex justify-between items-center">
-                    <Skeleton className="h-4 w-[200px] rounded-md" />
-                    <Skeleton className="h-4 w-[100px] rounded-md" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : error ? (
-        // Modern error state
-        <div className="flex flex-col items-center justify-center py-12 px-4 rounded-lg bg-red-50 border border-red-100">
-          <div className="text-red-500 bg-red-100 p-3 rounded-full mb-4">
-            <svg
-              className="h-6 w-6"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
+          <div className="relative w-full sm:w-auto">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder={t("repairHistory.searchPlaceholder")}
+              className="pl-9 h-9 w-full sm:w-[200px] text-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-          <p className="text-red-800 font-medium mb-2">{error}</p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.location.reload()}
-            className="mt-2 text-sm border-red-200 hover:bg-red-100 text-red-700"
-          >
+        </div>
+
+        <TabsContent value="all" className="m-0">
+          {renderOrdersList()}
+        </TabsContent>
+        <TabsContent value="active" className="m-0">
+          {renderOrdersList()}
+        </TabsContent>
+        <TabsContent value="completed" className="m-0">
+          {renderOrdersList()}
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+
+  function renderOrdersList() {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      )
+    }
+
+    if (error) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
+          <p className="text-lg font-medium text-red-500">{error}</p>
+          <Button variant="outline" onClick={() => window.location.reload()} className="mt-4">
             {t("repairHistory.tryAgain")}
           </Button>
         </div>
-      ) : orders.length === 0 ? (
-        // Modern empty state
-        <div className="flex flex-col items-center justify-center py-16 px-4">
-          <div className="bg-gray-100 p-4 rounded-full mb-4 text-gray-500">
-            <Smartphone className="h-8 w-8" />
-          </div>
-          <h3 className="text-lg font-medium mb-1">{t("repairHistory.noOrdersTitle")}</h3>
-          <p className="text-muted-foreground text-center max-w-sm">{t("repairHistory.noOrders")}</p>
-        </div>
-      ) : (
-        // Modern orders list
-        <div className="space-y-4">
-          {orders.map((order) => {
-            const statusDetails = getStatusDetails(order.status)
-            return (
-              <div
-                key={order.id}
-                className="group rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
-              >
-                <div className="bg-gradient-to-r from-gray-50 to-white p-5">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Smartphone className="h-4 w-4 text-gray-500" />
-                        <h3 className="font-medium text-lg">
-                          {order.device_brand} {order.device_model}
-                        </h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {t("repairHistory.orderNumber")}: {order.reference_number}
-                      </p>
-                    </div>
-                    <Badge
-                      className={cn(
-                        "flex items-center gap-1.5 px-3 py-1 font-medium",
-                        statusDetails.bgColor,
-                        statusDetails.color,
-                      )}
-                      variant="outline"
-                    >
-                      {statusDetails.icon}
-                      {order.status}
-                    </Badge>
-                  </div>
+      )
+    }
 
-                  <div className="mt-4 pt-4 border-t border-dashed border-gray-100">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <Clock className="h-3.5 w-3.5" />
-                        {formatDate(order.created_at)}
-                      </div>
-                      <div className="flex items-center">
-                        <p className="font-medium mr-1">{order.service_type}</p>
-                        {order.price && (
-                          <Badge variant="secondary" className="font-medium">
-                            {formatCurrency(order.price)}
-                          </Badge>
-                        )}
-                        <ChevronRight className="h-5 w-5 text-muted-foreground ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
+    if (filteredOrders.length === 0) {
+      return (
+        <div className="text-center py-12 border-t">
+          <p className="text-muted-foreground">
+            {searchQuery ? t("repairHistory.noSearchResults") : t("repairHistory.noOrders")}
+          </p>
         </div>
-      )}
-    </div>
-  )
+      )
+    }
+
+    return (
+      <div className="border rounded-md overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-muted/50">
+              <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                {t("repairHistory.device")}
+              </th>
+              <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">
+                {t("repairHistory.orderNumber")}
+              </th>
+              <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">
+                {t("repairHistory.service")}
+              </th>
+              <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                {t("repairHistory.status")}
+              </th>
+              <th className="text-right py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                {t("repairHistory.date")}
+              </th>
+              <th className="w-10"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {filteredOrders.map((order) => (
+              <tr
+                key={order.id}
+                className="hover:bg-muted/50 transition-colors cursor-pointer"
+                onClick={() => console.log(`View order details for ${order.id}`)}
+              >
+                <td className="py-4 px-4">
+                  <div className="font-medium">
+                    {order.device_brand} {order.device_model}
+                  </div>
+                </td>
+                <td className="py-4 px-4 hidden md:table-cell text-muted-foreground">{order.reference_number}</td>
+                <td className="py-4 px-4 hidden sm:table-cell text-muted-foreground">{order.service_type}</td>
+                <td className="py-4 px-4">
+                  <span className={cn("font-medium", getStatusColor(order.status))}>{order.status}</span>
+                </td>
+                <td className="py-4 px-4 text-right text-muted-foreground text-sm whitespace-nowrap">
+                  <div className="flex items-center justify-end gap-2">
+                    <Clock className="h-3 w-3" />
+                    {formatDate(order.created_at)}
+                  </div>
+                </td>
+                <td className="py-4 px-2 text-right">
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
 }
