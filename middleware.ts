@@ -1,7 +1,7 @@
 import createMiddleware from "next-intl/middleware"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { createClient } from "@/lib/supabase"
+import { createMiddlewareClient } from "@/utils/supabase/middleware"
 
 // Hardcode the locales and defaultLocale to avoid importing from i18n.js
 const locales = ["uk", "cs", "en"]
@@ -49,11 +49,11 @@ export default async function middleware(request: NextRequest) {
     // Verify that the session exists in the database and is valid
     // This is important to catch cases where a user was deleted but still has a cookie
     try {
-      // We can't use server actions in middleware, so we need to check the session directly
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
 
-      const supabase = createClient()
+      // Використовуємо спеціальний клієнт для middleware
+      const supabase = createMiddlewareClient(supabaseUrl, supabaseKey)
 
       const { data: session, error } = await supabase
         .from("sessions")
@@ -67,9 +67,15 @@ export default async function middleware(request: NextRequest) {
         const redirectUrl = new URL(`/${locale}/auth/login`, request.url)
         redirectUrl.searchParams.set("redirect", pathname)
 
-        // Clear the invalid session cookie
+        // Створюємо нову відповідь для видалення cookie
         const response = NextResponse.redirect(redirectUrl)
-        response.cookies.delete("session_id")
+
+        // Видаляємо cookie безпечним способом
+        response.cookies.set("session_id", "", {
+          expires: new Date(0),
+          path: "/",
+        })
+
         return response
       }
     } catch (error) {
