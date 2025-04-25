@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
 import { z } from "zod"
-import remonline from "@/lib/api/remonline"
 import crypto from "crypto"
 
 // This is the secret key that RemOnline will use to authenticate the webhook
@@ -9,16 +8,6 @@ const REMONLINE_ORDER_WEBHOOK_SECRET = process.env.REMONLINE_ORDER_WEBHOOK_SECRE
 if (!REMONLINE_ORDER_WEBHOOK_SECRET) {
   console.warn("REMONLINE_ORDER_WEBHOOK_SECRET is not set. Webhook verification will be skipped.")
 }
-
-// Define a schema for the RemOnline client data
-const remonlineClientSchema = z.object({
-  id: z.number(),
-  first_name: z.string().optional(),
-  last_name: z.string().optional(),
-  email: z.string().email().optional(),
-  phone: z.array(z.string()).optional(),
-  address: z.string().optional(),
-})
 
 // Define a schema for the RemOnline webhook payload
 const remonlineOrderWebhookSchema = z.object({
@@ -62,67 +51,6 @@ const remonlineOrderWebhookSchema = z.object({
 const statusIdMap: Record<number, string> = {
   3153189: "Новий", // New order status ID
   // Add more status mappings as needed
-}
-
-async function fetchOrderDetailsFromRemonline(orderId: number) {
-  try {
-    // Authenticate with RemOnline API
-    const authResult = await remonline.auth()
-    if (!authResult.success) {
-      console.error("Failed to authenticate with RemOnline API:", authResult.message)
-      return {
-        success: false,
-        message: "Failed to connect to RemOnline. Will retry later.",
-      }
-    }
-
-    console.log(`Fetching order details for ID: ${orderId}`)
-
-    // Use the token from our authenticated client
-    const url = `https://api.remonline.app/orders/${orderId}?token=${authResult.token}`
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: { accept: "application/json" },
-    })
-
-    console.log(`Response status: ${response.status}`)
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Failed to fetch order details with status ${response.status}: ${errorText}`)
-      return {
-        success: false,
-        message: `Failed to fetch order details with status ${response.status}`,
-        details: errorText,
-      }
-    }
-
-    const responseText = await response.text()
-    console.log("Response received, parsing JSON")
-
-    let data
-    try {
-      data = JSON.parse(responseText)
-      console.log("Order details parsed successfully")
-    } catch (e) {
-      console.error("Failed to parse response as JSON:", e)
-      return {
-        success: false,
-        message: "Failed to parse order details response",
-        details: e instanceof Error ? e.message : String(e),
-      }
-    }
-
-    return { success: true, order: data }
-  } catch (error) {
-    console.error("Error fetching order details from RemOnline:", error)
-    return {
-      success: false,
-      message: "Failed to fetch order details from RemOnline API",
-      details: error instanceof Error ? error.message : String(error),
-    }
-  }
 }
 
 export async function POST(request: NextRequest) {
@@ -294,7 +222,7 @@ async function processOrderFromWebhook(webhookData: any) {
     if (userError) {
       console.log("Error finding user by RemOnline ID:", userError)
       console.error("Error finding user by RemOnline ID:", userError)
-      return NextResponse.json({ success: false, message: "Error finding user" }, { status: 400 })
+      return { success: false, message: "User not found" }
     }
 
     if (!user) {
