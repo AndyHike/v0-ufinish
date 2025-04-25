@@ -132,6 +132,7 @@ export function OrderStatusesList() {
 
     try {
       setIsSubmitting(true)
+      console.log("Adding status with data:", formData) // Log the form data
       const response = await fetch("/api/admin/order-statuses", {
         method: "POST",
         headers: {
@@ -175,6 +176,7 @@ export function OrderStatusesList() {
 
     try {
       setIsSubmitting(true)
+      console.log("Updating status with data:", formData) // Log the form data
       const response = await fetch(`/api/admin/order-statuses/${currentStatus.id}`, {
         method: "PUT",
         headers: {
@@ -456,6 +458,7 @@ export function OrderStatusesList() {
           <form
             onSubmit={(e) => {
               e.preventDefault()
+              console.log("Edit form submitted") // Add this line
               handleUpdateStatus()
             }}
           >
