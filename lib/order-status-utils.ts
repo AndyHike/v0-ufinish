@@ -66,10 +66,8 @@ export async function getStatusByRemOnlineId(
 // Перевіримо функцію clearStatusCache
 
 export function clearStatusCache() {
-  console.log("Clearing order status cache")
+  console.log("Clearing order status cache - початок очищення кешу")
   statusesCache = null
   lastFetchTime = 0
-  // Додайте тут логіку очищення кешу, якщо вона є
-  // Якщо функція порожня, додайте коментар
-  // Ця функція викликається після змін у статусах замовлень
+  console.log("Кеш статусів очищено", { statusesCache, lastFetchTime })
 }

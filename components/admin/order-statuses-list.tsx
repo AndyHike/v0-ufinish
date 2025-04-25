@@ -112,6 +112,7 @@ export function OrderStatusesList() {
 
   // Open edit dialog and populate form with status data
   function handleEditClick(status: OrderStatus) {
+    console.log("handleEditClick викликано для статусу:", status)
     setSelectedStatus(status)
     setFormState({
       remonline_status_id: status.remonline_status_id.toString(),
@@ -121,18 +122,34 @@ export function OrderStatusesList() {
       color: status.color,
     })
     setEditDialogOpen(true)
+    console.log("Діалог редагування відкрито, formState та selectedStatus встановлено:", {
+      editDialogOpen: true,
+      formState: {
+        remonline_status_id: status.remonline_status_id.toString(),
+        name_uk: status.name_uk,
+        name_en: status.name_en,
+        name_cs: status.name_cs,
+        color: status.color,
+      },
+      status,
+    })
   }
 
   // Open delete dialog
   function handleDeleteClick(status: OrderStatus) {
+    console.log("handleDeleteClick викликано для статусу:", status)
     setSelectedStatus(status)
     setDeleteDialogOpen(true)
+    console.log("Діалог видалення відкрито, selectedStatus встановлено:", { deleteDialogOpen: true, status })
   }
 
   // Add new status
   async function handleAddStatus(e: React.FormEvent) {
     e.preventDefault()
+    console.log("handleAddStatus викликано", { session })
+
     if (!session?.user?.id) {
+      console.log("Немає ID користувача в сесії")
       toast({
         title: t("error"),
         description: t("notAuthenticated"),
@@ -143,6 +160,7 @@ export function OrderStatusesList() {
 
     try {
       setIsSubmitting(true)
+      console.log("Починаємо відправку форми для додавання статусу")
 
       // Перевіримо дані форми перед відправкою
       console.log("Submitting form data:", {
@@ -194,7 +212,13 @@ export function OrderStatusesList() {
   // Update existing status
   async function handleUpdateStatus(e: React.FormEvent) {
     e.preventDefault()
+    console.log("handleUpdateStatus викликано", { session, selectedStatus })
+
     if (!session?.user?.id || !selectedStatus) {
+      console.log("Немає ID користувача в сесії або не вибрано статус", {
+        hasUserId: !!session?.user?.id,
+        hasSelectedStatus: !!selectedStatus,
+      })
       toast({
         title: t("error"),
         description: !session?.user?.id ? t("notAuthenticated") : t("noStatusSelected"),
@@ -205,6 +229,7 @@ export function OrderStatusesList() {
 
     try {
       setIsSubmitting(true)
+      console.log("Починаємо відправку форми для оновлення статусу")
 
       // Перевіримо дані форми перед відправкою
       console.log("Updating status with data:", {
@@ -255,7 +280,13 @@ export function OrderStatusesList() {
 
   // Delete status
   async function handleDeleteStatus() {
+    console.log("handleDeleteStatus викликано", { session, selectedStatus })
+
     if (!session?.user?.id || !selectedStatus) {
+      console.log("Немає ID користувача в сесії або не вибрано статус", {
+        hasUserId: !!session?.user?.id,
+        hasSelectedStatus: !!selectedStatus,
+      })
       toast({
         title: t("error"),
         description: !session?.user?.id ? t("notAuthenticated") : t("noStatusSelected"),
@@ -266,6 +297,7 @@ export function OrderStatusesList() {
 
     try {
       setIsSubmitting(true)
+      console.log("Починаємо відправку запиту на видалення статусу")
 
       // Перевіримо дані перед відправкою
       console.log("Deleting status:", selectedStatus.id, "User ID:", session.user.id)
@@ -490,7 +522,13 @@ export function OrderStatusesList() {
               <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
                 {t("cancel")}
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                onClick={() => {
+                  console.log("Кнопка додавання натиснута")
+                }}
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -600,7 +638,13 @@ export function OrderStatusesList() {
               <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
                 {t("cancel")}
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                onClick={() => {
+                  console.log("Кнопка збереження натиснута")
+                }}
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -629,7 +673,14 @@ export function OrderStatusesList() {
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               {t("cancel")}
             </Button>
-            <Button variant="destructive" onClick={handleDeleteStatus} disabled={isSubmitting}>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                console.log("Кнопка видалення натиснута, викликаємо handleDeleteStatus")
+                handleDeleteStatus()
+              }}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
