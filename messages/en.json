@@ -495,5 +495,15 @@
     "learnMore": "Learn More",
     "contactUs": "Contact Us",
     "viewAll": "View All"
+  },
+  "Profile": {
+    "repairHistory": {
+      "title": "Repair History",
+      "description": "View your repair history and status",
+      "noOrders": "You don't have any repair history yet",
+      "errorFetching": "Error loading repair history",
+      "tryAgain": "Try again",
+      "orderNumber": "Order #"
+    }
   }
 }

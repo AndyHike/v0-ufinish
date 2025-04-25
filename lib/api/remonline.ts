@@ -327,6 +327,110 @@ class RemonlineClient {
       }
     }
   }
+
+  // Get order by ID
+  async getOrderById(orderId: number) {
+    try {
+      // Ensure we have a valid token
+      const authResult = await this.auth()
+      if (!authResult.success) {
+        return {
+          success: false,
+          message: "Authentication failed",
+          details: authResult,
+        }
+      }
+
+      console.log(`Fetching order with ID: ${orderId}`)
+
+      const url = `${this.baseUrl}/orders/${orderId}?token=${this.token}`
+      console.log("Request URL:", url)
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+        },
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`Failed to fetch order with status ${response.status}: ${errorText}`)
+        return {
+          success: false,
+          message: `Failed to fetch order with status ${response.status}`,
+          details: errorText,
+        }
+      }
+
+      const data = await response.json()
+      console.log("Order response:", data)
+
+      return { success: true, order: data }
+    } catch (error) {
+      console.error("Remonline getOrderById error:", error)
+      return {
+        success: false,
+        message: "Failed to fetch order from Remonline API",
+        details: error instanceof Error ? error.message : String(error),
+      }
+    }
+  }
+
+  // Get orders for a client
+  async getOrdersByClientId(clientId: number, params = {}) {
+    try {
+      // Ensure we have a valid token
+      const authResult = await this.auth()
+      if (!authResult.success) {
+        return {
+          success: false,
+          message: "Authentication failed",
+          details: authResult,
+        }
+      }
+
+      console.log(`Fetching orders for client ID: ${clientId}`)
+
+      // Build query string from params
+      const queryParams = new URLSearchParams({ client_id: String(clientId) })
+      Object.entries(params).forEach(([key, value]) => {
+        queryParams.append(key, String(value))
+      })
+
+      const url = `${this.baseUrl}/orders/?token=${this.token}&${queryParams.toString()}`
+      console.log("Request URL:", url)
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+        },
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`Failed to fetch orders with status ${response.status}: ${errorText}`)
+        return {
+          success: false,
+          message: `Failed to fetch orders with status ${response.status}`,
+          details: errorText,
+        }
+      }
+
+      const data = await response.json()
+      console.log("Orders response:", data)
+
+      return { success: true, data }
+    } catch (error) {
+      console.error("Remonline getOrdersByClientId error:", error)
+      return {
+        success: false,
+        message: "Failed to fetch orders from Remonline API",
+        details: error instanceof Error ? error.message : String(error),
+      }
+    }
+  }
 }
 
 // Create a singleton instance

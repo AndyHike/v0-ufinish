@@ -6,7 +6,6 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { isValidPhoneNumber } from "libphonenumber-js"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,7 +15,6 @@ import { Smartphone, Mail, ArrowLeft } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { checkUserExists, sendVerificationCode, verifyCode } from "@/app/actions/auth-api"
-import { CustomPhoneInput } from "@/components/phone-input/custom-phone-input"
 
 interface ModernLoginFormProps {
   locale: string
@@ -27,11 +25,9 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [identifier, setIdentifier] = useState("")
-  const [phoneNumber, setPhoneNumber] = useState("+420") // Czech Republic code by default
   const [error, setError] = useState("")
   const [step, setStep] = useState<"initial" | "verification">("initial")
   const [verificationCode, setVerificationCode] = useState("")
-  const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email")
   const [userEmail, setUserEmail] = useState("")
 
   const handleInitialSubmit = async (e: React.FormEvent) => {
@@ -40,17 +36,10 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
     setError("")
 
     try {
-      const currentIdentifier = loginMethod === "email" ? identifier : phoneNumber
-      console.log(`Submitting login with ${loginMethod}: ${currentIdentifier}`)
-
-      if (loginMethod === "phone" && !isValidPhoneNumber(phoneNumber)) {
-        setError(t("invalidPhoneNumber"))
-        setIsLoading(false)
-        return
-      }
+      console.log(`Submitting login with email: ${identifier}`)
 
       // Check if user exists in Remonline API
-      const userExists = await checkUserExists(currentIdentifier)
+      const userExists = await checkUserExists(identifier)
 
       if (!userExists.success) {
         setError(userExists.message || t("userNotFound"))
@@ -61,7 +50,7 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
       console.log("User exists:", userExists)
 
       // Send verification code
-      const result = await sendVerificationCode(currentIdentifier, "login")
+      const result = await sendVerificationCode(identifier, "login")
 
       if (!result.success) {
         setError(result.message || t("somethingWentWrong"))
@@ -90,7 +79,7 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
     setError("")
 
     try {
-      const currentIdentifier = loginMethod === "email" ? identifier : phoneNumber
+      const currentIdentifier = identifier
 
       // Verify the code
       const result = await verifyCode(currentIdentifier, verificationCode, "login")
@@ -116,7 +105,7 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
     setError("")
 
     try {
-      const currentIdentifier = loginMethod === "email" ? identifier : phoneNumber
+      const currentIdentifier = identifier
       const result = await sendVerificationCode(currentIdentifier, "login")
 
       if (!result.success) {
@@ -149,15 +138,11 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
 
         {step === "initial" && (
           <>
-            <Tabs defaultValue="email" onValueChange={(value) => setLoginMethod(value as "email" | "phone")}>
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs defaultValue="email">
+              <TabsList className="grid w-full grid-cols-1">
                 <TabsTrigger value="email">
                   <Mail className="mr-2 h-4 w-4" />
                   {t("emailLogin")}
-                </TabsTrigger>
-                <TabsTrigger value="phone">
-                  <Smartphone className="mr-2 h-4 w-4" />
-                  {t("phoneLogin")}
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="email">
@@ -174,26 +159,6 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? t("processing") : t("continueLogin")}
-                  </Button>
-                </form>
-              </TabsContent>
-              <TabsContent value="phone">
-                <form onSubmit={handleInitialSubmit} className="space-y-4 mt-4">
-                  <CustomPhoneInput
-                    id="phone"
-                    label={t("phone")}
-                    value={phoneNumber}
-                    onChange={setPhoneNumber}
-                    placeholder={t("phonePlaceholder")}
-                    disabled={isLoading}
-                    required
-                  />
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isLoading || (phoneNumber && !isValidPhoneNumber(phoneNumber))}
-                  >
                     {isLoading ? t("processing") : t("continueLogin")}
                   </Button>
                 </form>
@@ -223,9 +188,7 @@ export function ModernLoginForm({ locale }: ModernLoginFormProps) {
 
             <div className="text-center mb-4">
               <p>{t("verificationCodeSent")}</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {userEmail || (loginMethod === "email" ? identifier : phoneNumber)}
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">{userEmail || identifier}</p>
             </div>
 
             <form onSubmit={handleVerificationSubmit} className="space-y-4">

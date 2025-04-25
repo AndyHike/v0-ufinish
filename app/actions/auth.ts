@@ -198,8 +198,19 @@ export async function login(formData: FormData) {
   }
 }
 
+// Update the logout function to also remove the session from the database
+
 // Logout user
 export async function logout() {
+  const sessionId = cookies().get("session_id")?.value
+
+  if (sessionId) {
+    // Delete the session from the database
+    const supabase = createServerClient()
+    await supabase.from("sessions").delete().eq("id", sessionId)
+  }
+
+  // Delete the cookie
   cookies().delete("session_id")
   return { success: true }
 }

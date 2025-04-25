@@ -1,13 +1,29 @@
 "use client"
 
 import type React from "react"
-import { useState, useCallback, forwardRef } from "react"
-import { type CountryCode, getCountryCallingCode } from "libphonenumber-js"
-import { AsYouType, parsePhoneNumber } from "libphonenumber-js"
+
+import { useState, useEffect, forwardRef } from "react"
 import { Input } from "@/components/ui/input"
-import { CustomCountrySelect } from "./custom-country-select"
-import en from "react-phone-number-input/locale/en.json"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { parsePhoneNumber, AsYouType, getCountries, getCountryCallingCode } from "libphonenumber-js"
+import flags from "react-phone-number-input/flags"
+import en from "react-phone-number-input/locale/en.json"
+
+// Define popular countries to show at the top
+const POPULAR_COUNTRIES = ["CZ", "SK", "PL", "DE", "GB", "US", "UA"]
+
+// Get all available countries and sort them
+const allCountries = getCountries()
+const popularCountriesFiltered = POPULAR_COUNTRIES.filter((country) => allCountries.includes(country))
+
+// Sort the remaining countries alphabetically by name
+const otherCountries = allCountries
+  .filter((country) => !POPULAR_COUNTRIES.includes(country))
+  .sort((a, b) => (en[a] || a).localeCompare(en[b] || b))
+
+// Combine the lists with popular countries first
+const sortedCountries = [...popularCountriesFiltered, ...otherCountries]
 
 interface CustomPhoneInputProps {
   value: string
@@ -23,62 +39,101 @@ interface CustomPhoneInputProps {
 export const CustomPhoneInput = forwardRef<HTMLInputElement, CustomPhoneInputProps>(
   ({ value, onChange, placeholder, disabled, error, label, required, id }, ref) => {
     // Extract country code from the phone number
-    const getInitialCountry = (): CountryCode | undefined => {
-      if (!value) return "CZ" as CountryCode // Default to Czech Republic
+    const getInitialCountry = () => {
+      if (!value) return "CZ" // Default to Czech Republic
       try {
         const parsed = parsePhoneNumber(value)
-        return parsed.country as CountryCode
+        return parsed.country || "CZ"
       } catch (e) {
-        return "CZ" as CountryCode
+        return "CZ"
       }
     }
 
-    const [country, setCountry] = useState<CountryCode | undefined>(getInitialCountry())
-    const [nationalNumber, setNationalNumber] = useState<string>(() => {
+    const [country, setCountry] = useState(getInitialCountry())
+    const [nationalNumber, setNationalNumber] = useState(() => {
       if (!value) return ""
       try {
         const parsed = parsePhoneNumber(value)
         return parsed.nationalNumber || ""
       } catch (e) {
-        return value.replace(/^\+\d+/, "") // Remove country code if present
+        // If parsing fails, try to extract national number by removing country code
+        try {
+          const countryCode = getCountryCallingCode(getInitialCountry())
+          return value.replace(new RegExp(`^\\+?${countryCode}`), "")
+        } catch {
+          return value
+        }
       }
     })
 
     // Update the full phone number when country or national number changes
-    const updatePhoneNumber = useCallback(
-      (newCountry: CountryCode | undefined, newNationalNumber: string) => {
-        if (!newCountry || !newNationalNumber) {
-          onChange(newNationalNumber ? newNationalNumber : "")
-          return
-        }
+    useEffect(() => {
+      if (!country || !nationalNumber) {
+        onChange(nationalNumber || "")
+        return
+      }
 
-        try {
-          const countryCallingCode = getCountryCallingCode(newCountry)
-          const formatter = new AsYouType(newCountry)
-          formatter.input(`+${countryCallingCode}${newNationalNumber}`)
-          onChange(formatter.getNumberValue() || `+${countryCallingCode}${newNationalNumber}`)
-        } catch (e) {
-          onChange(`+${getCountryCallingCode(newCountry)}${newNationalNumber}`)
-        }
-      },
-      [onChange],
-    )
+      try {
+        const countryCallingCode = getCountryCallingCode(country)
+        const formatter = new AsYouType(country)
+        formatter.input(`+${countryCallingCode}${nationalNumber}`)
+        onChange(formatter.getNumberValue() || `+${countryCallingCode}${nationalNumber}`)
+      } catch (e) {
+        onChange(`+${getCountryCallingCode(country)}${nationalNumber}`)
+      }
+    }, [country, nationalNumber, onChange])
 
     // Handle country change
-    const handleCountryChange = (newCountry: CountryCode) => {
+    const handleCountryChange = (newCountry: string) => {
       setCountry(newCountry)
-      updatePhoneNumber(newCountry, nationalNumber)
     }
 
     // Handle national number change
     const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newNationalNumber = e.target.value.replace(/\D/g, "")
-      setNationalNumber(newNationalNumber)
-      updatePhoneNumber(country, newNationalNumber)
+      // Only allow digits and remove any potential country code
+      let newValue = e.target.value.replace(/\D/g, "")
+
+      // If user tries to paste a full number with country code, strip it
+      try {
+        const countryCode = getCountryCallingCode(country)
+        newValue = newValue.replace(new RegExp(`^${countryCode}`), "")
+      } catch (e) {
+        // If country code extraction fails, just use the digits
+      }
+
+      setNationalNumber(newValue)
+    }
+
+    // Handle paste event to strip country code
+    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+      const pastedText = e.clipboardData.getData("text")
+
+      // If pasted text contains a plus sign, it might be a full phone number
+      if (pastedText.includes("+")) {
+        e.preventDefault()
+
+        try {
+          // Try to parse the pasted text as a phone number
+          const parsed = parsePhoneNumber(pastedText)
+          if (parsed.country) {
+            // If successful, update country and national number
+            setCountry(parsed.country)
+            setNationalNumber(parsed.nationalNumber || "")
+          } else {
+            // If parsing fails but it still has a plus, just extract digits after the plus
+            const digits = pastedText.replace(/\D/g, "")
+            setNationalNumber(digits)
+          }
+        } catch (e) {
+          // If parsing fails, just extract digits
+          const digits = pastedText.replace(/\D/g, "")
+          setNationalNumber(digits)
+        }
+      }
     }
 
     // Format the national number for display
-    const formatNationalNumber = (number: string, countryCode: CountryCode | undefined) => {
+    const formatNationalNumber = (number: string, countryCode: string) => {
       if (!number || !countryCode) return number
       try {
         const formatter = new AsYouType(countryCode)
@@ -91,25 +146,43 @@ export const CustomPhoneInput = forwardRef<HTMLInputElement, CustomPhoneInputPro
 
     const displayNumber = formatNationalNumber(nationalNumber, country)
 
-    // Validate phone number
-    const isValid = () => {
-      if (!value) return true // Consider empty input as valid
-
-      return true
+    // Get flag component for a country
+    const getFlag = (country: string) => {
+      const Flag = flags[country]
+      return Flag ? <Flag className="h-4 w-6 mr-2" /> : null
     }
 
-    const isCurrentlyValid = isValid()
-
     return (
-      <div className="space-y-2 phone-input-container">
+      <div className="space-y-2">
         {label && (
           <Label htmlFor={id} className={required ? "after:content-['*'] after:ml-0.5 after:text-red-500" : ""}>
             {label}
           </Label>
         )}
         <div className="flex space-x-2">
-          <div className="w-[80px] flex-shrink-0 cursor-pointer">
-            <CustomCountrySelect value={country} onChange={handleCountryChange} labels={en} disabled={disabled} />
+          <div className="w-[90px] flex-shrink-0">
+            <Select value={country} onValueChange={handleCountryChange} disabled={disabled}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  <div className="flex items-center">
+                    {getFlag(country)}
+                    <span className="ml-1">+{getCountryCallingCode(country)}</span>
+                  </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {sortedCountries.map((country) => (
+                  <SelectItem key={country} value={country}>
+                    <div className="flex items-center">
+                      {getFlag(country)}
+                      <span className="ml-2">
+                        {en[country]} (+{getCountryCallingCode(country)})
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex-grow">
             <Input
@@ -118,15 +191,14 @@ export const CustomPhoneInput = forwardRef<HTMLInputElement, CustomPhoneInputPro
               type="tel"
               value={displayNumber}
               onChange={handleNumberChange}
+              onPaste={handlePaste}
               placeholder={placeholder}
               disabled={disabled}
-              className={error || !isCurrentlyValid ? "border-destructive" : ""}
+              className={error ? "border-destructive" : ""}
             />
           </div>
         </div>
-        {(error || !isCurrentlyValid) && value && (
-          <p className="text-sm text-destructive">{error || "Invalid phone number"}</p>
-        )}
+        {error && value && <p className="text-sm text-destructive">{error}</p>}
       </div>
     )
   },
