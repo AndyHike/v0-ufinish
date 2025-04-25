@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase"
 import { type NextRequest, NextResponse } from "next/server"
 import { logActivity } from "@/lib/admin/activity-logger"
+import { clearStatusCache } from "@/lib/order-status-utils"
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,6 +61,9 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) throw error
+
+    // Clear the status cache
+    clearStatusCache()
 
     // Log activity
     await logActivity({

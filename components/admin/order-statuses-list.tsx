@@ -173,13 +173,16 @@ export function OrderStatusesList() {
   }
 
   async function handleUpdateStatus() {
-    console.log("handleUpdateStatus called")
     if (!session?.user?.id || !currentStatus) return
 
     try {
       setIsSubmitting(true)
-      console.log("handleUpdateStatus called")
-      console.log("formData:", formData)
+      console.log("Updating status with data:", {
+        ...formData,
+        remonline_status_id: Number.parseInt(formData.remonline_status_id, 10),
+        userId: session.user.id,
+      })
+
       const response = await fetch(`/api/admin/order-statuses/${currentStatus.id}`, {
         method: "PUT",
         headers: {
@@ -204,7 +207,7 @@ export function OrderStatusesList() {
       })
 
       resetForm()
-      setIsEditDialogOpen(false) // Add this line
+      setIsEditDialogOpen(false)
       fetchStatuses()
     } catch (err) {
       console.error("Error updating status:", err)
@@ -215,7 +218,6 @@ export function OrderStatusesList() {
       })
     } finally {
       setIsSubmitting(false)
-      setIsEditDialogOpen(false) // Add this line
     }
   }
 
@@ -419,100 +421,97 @@ export function OrderStatusesList() {
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open)
+          if (!open) resetForm()
+        }}
+      >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Редагувати статус замовлення</DialogTitle>
           </DialogHeader>
-          {/* Add onSubmit handler to the form */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              console.log("Edit form submitted") // Add this line
-              handleUpdateStatus()
-            }}
-          >
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-remonline_status_id" className="text-right">
-                  Код RemOnline
-                </Label>
-                <Input
-                  id="edit-remonline_status_id"
-                  name="remonline_status_id"
-                  value={formData.remonline_status_id}
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-remonline_status_id" className="text-right">
+                Код RemOnline
+              </Label>
+              <Input
+                id="edit-remonline_status_id"
+                name="remonline_status_id"
+                value={formData.remonline_status_id}
+                onChange={handleInputChange}
+                className="col-span-3"
+                type="number"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name_uk" className="text-right">
+                Назва (UK)
+              </Label>
+              <Input
+                id="edit-name_uk"
+                name="name_uk"
+                value={formData.name_uk}
+                onChange={handleInputChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name_en" className="text-right">
+                Назва (EN)
+              </Label>
+              <Input
+                id="edit-name_en"
+                name="name_en"
+                value={formData.name_en}
+                onChange={handleInputChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name_cs" className="text-right">
+                Назва (CS)
+              </Label>
+              <Input
+                id="edit-name_cs"
+                name="name_cs"
+                value={formData.name_cs}
+                onChange={handleInputChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-color" className="text-right">
+                Колір
+              </Label>
+              <div className="col-span-3 flex gap-2">
+                <select
+                  id="edit-color"
+                  name="color"
+                  value={formData.color}
                   onChange={handleInputChange}
-                  className="col-span-3"
-                  type="number"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name_uk" className="text-right">
-                  Назва (UK)
-                </Label>
-                <Input
-                  id="edit-name_uk"
-                  name="name_uk"
-                  value={formData.name_uk}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name_en" className="text-right">
-                  Назва (EN)
-                </Label>
-                <Input
-                  id="edit-name_en"
-                  name="name_en"
-                  value={formData.name_en}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name_cs" className="text-right">
-                  Назва (CS)
-                </Label>
-                <Input
-                  id="edit-name_cs"
-                  name="name_cs"
-                  value={formData.name_cs}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-color" className="text-right">
-                  Колір
-                </Label>
-                <div className="col-span-3 flex gap-2">
-                  <select
-                    id="edit-color"
-                    name="color"
-                    value={formData.color}
-                    onChange={handleInputChange}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {colorOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <Badge className={formData.color}>Приклад</Badge>
-                </div>
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {colorOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <Badge className={formData.color}>Приклад</Badge>
               </div>
             </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Скасувати</Button>
-              </DialogClose>
-              <Button type="submit" disabled={isSubmitting}>
-                Зберегти
-              </Button>
-            </DialogFooter>
-          </form>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Скасувати
+            </Button>
+            <Button onClick={handleUpdateStatus} disabled={isSubmitting}>
+              {isSubmitting ? "Збереження..." : "Зберегти"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
