@@ -210,6 +210,7 @@ async function processOrderFromWebhook(webhookData: any) {
     const createdAt = webhookData.created_at
 
     console.log(`Processing order from webhook: ${orderId}`)
+    console.log(`Webhook Data: ${JSON.stringify(webhookData, null, 2)}`)
 
     // Find the user by RemOnline client ID
     const { data: user, error: userError } = await supabase
@@ -219,6 +220,7 @@ async function processOrderFromWebhook(webhookData: any) {
       .single()
 
     if (userError) {
+      console.log("Error finding user by RemOnline ID:", userError)
       console.error("Error finding user by RemOnline ID:", userError)
 
       // If the user is not found, we might need to fetch more details from RemOnline API
@@ -226,6 +228,7 @@ async function processOrderFromWebhook(webhookData: any) {
       console.log("User not found, fetching additional details from RemOnline API...")
 
       // Fetch complete order details to get more information
+      console.log(`Fetching order details from RemOnline API for order ID: ${orderId}`)
       const orderDetails = await fetchOrderDetailsFromRemonline(orderId)
 
       if (!orderDetails.success) {
@@ -240,6 +243,7 @@ async function processOrderFromWebhook(webhookData: any) {
     // Extract device brand and model from the device name
     let deviceBrand = "Unknown"
     let deviceModel = deviceName
+    console.log(`Device Name: ${deviceName}`)
 
     // Try to extract brand from device name (e.g., "iphone 11 pro" -> "iPhone" as brand, "11 Pro" as model)
     const knownBrands = ["iphone", "samsung", "xiaomi", "huawei", "oppo", "vivo", "realme", "oneplus", "google"]
@@ -258,6 +262,7 @@ async function processOrderFromWebhook(webhookData: any) {
     const orderDetails = {
       user_id: user.id,
       remonline_id: orderId,
+      remonline_client_id: clientId,
       reference_number: orderNumber,
       device_brand: deviceBrand,
       device_model: deviceModel,
@@ -268,6 +273,7 @@ async function processOrderFromWebhook(webhookData: any) {
       updated_at: new Date().toISOString(),
     }
 
+    console.log(`Order Details: ${JSON.stringify(orderDetails, null, 2)}`)
     // Check if order already exists
     const { data: existingOrder, error: checkError } = await supabase
       .from("repair_orders")
@@ -276,6 +282,7 @@ async function processOrderFromWebhook(webhookData: any) {
       .single()
 
     if (checkError && checkError.code !== "PGRST116") {
+      console.log("Error checking existing order:", checkError)
       console.error("Error checking existing order:", checkError)
     }
 
@@ -294,7 +301,7 @@ async function processOrderFromWebhook(webhookData: any) {
       console.log(`Order updated: ${orderId}`)
     } else {
       // Create new order
-      const { error: insertError } = await supabase.from("repair_orders").insert([orderDetails])
+      const { error: insertError } = await supabase.from("repair_orders").insert([orderDetails]).select()
 
       if (insertError) {
         console.error("Error creating order:", insertError)
@@ -306,9 +313,9 @@ async function processOrderFromWebhook(webhookData: any) {
 
     // If we need more detailed information, we can fetch it from the RemOnline API
     // This is optional and can be done asynchronously
-    fetchAndUpdateOrderDetails(orderId, orderDetails).catch((error) => {
+    /*fetchAndUpdateOrderDetails(orderId, orderDetails).catch((error) => {
       console.error(`Error updating order details: ${error}`)
-    })
+    })*/
 
     return { success: true }
   } catch (error) {
@@ -325,6 +332,7 @@ async function processOrderFromWebhook(webhookData: any) {
 async function fetchAndUpdateOrderDetails(orderId: number, existingDetails: any) {
   try {
     console.log(`Fetching additional details for order ${orderId}`)
+    console.log(`Existing Details: ${JSON.stringify(existingDetails, null, 2)}`)
 
     // Fetch complete order details from RemOnline API
     const orderDetails = await fetchOrderDetailsFromRemonline(orderId)
@@ -366,6 +374,7 @@ async function fetchAndUpdateOrderDetails(orderId: number, existingDetails: any)
 async function fetchOrderDetailsFromRemonline(orderId: number) {
   try {
     // Authenticate with RemOnline API
+    console.log("Authenticating with RemOnline API...")
     const authResult = await remonline.auth()
     if (!authResult.success) {
       console.error("Failed to authenticate with RemOnline API:", authResult.message)
@@ -428,6 +437,7 @@ function extractServiceType(orderData: any): string {
   // Try to extract service type from different possible fields
   if (orderData.works && Array.isArray(orderData.works) && orderData.works.length > 0) {
     return orderData.works.map((work: any) => work.name || work.title).join(", ")
+    console.log(`Service Type (from works): ${orderData.works.map((work: any) => work.name || work.title).join(", ")}`)
   }
 
   if (orderData.service_name) {
