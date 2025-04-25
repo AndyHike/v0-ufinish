@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/use-toast"
 import { Loader2, Plus, Pencil, Trash, AlertCircle } from "lucide-react"
 import type { OrderStatus } from "@/lib/order-status-utils"
+import { clearStatusCache } from "@/lib/order-status-utils"
 
 // Color options for status badges
 const colorOptions = [
@@ -40,7 +41,7 @@ const colorOptions = [
 ]
 
 export function OrderStatusesList() {
-  const { data: session } = useSession()
+  const { data: session, status: sessionStatus } = useSession()
   const t = useTranslations("Admin")
 
   // State for statuses list
@@ -146,10 +147,23 @@ export function OrderStatusesList() {
   // Add new status
   async function handleAddStatus(e: React.FormEvent) {
     e.preventDefault()
-    console.log("handleAddStatus викликано", { session })
+    console.log("handleAddStatus викликано", { session, sessionStatus })
 
-    if (!session?.user?.id) {
-      console.log("Немає ID користувача в сесії")
+    // Перевіряємо, чи завантажилась сесія
+    if (sessionStatus === "loading") {
+      console.log("Сесія ще завантажується, чекаємо...")
+      toast({
+        title: t("pleaseWait"),
+        description: t("sessionLoading"),
+      })
+      return
+    }
+
+    // Отримуємо ID користувача з localStorage, якщо сесія недоступна
+    const userId = session?.user?.id || localStorage.getItem("userId")
+
+    if (!userId) {
+      console.log("Немає ID користувача в сесії або localStorage")
       toast({
         title: t("error"),
         description: t("notAuthenticated"),
@@ -166,7 +180,7 @@ export function OrderStatusesList() {
       console.log("Submitting form data:", {
         ...formState,
         remonline_status_id: Number.parseInt(formState.remonline_status_id, 10),
-        userId: session.user.id,
+        userId,
       })
 
       const response = await fetch("/api/admin/order-statuses", {
@@ -175,7 +189,7 @@ export function OrderStatusesList() {
         body: JSON.stringify({
           ...formState,
           remonline_status_id: Number.parseInt(formState.remonline_status_id, 10),
-          userId: session.user.id,
+          userId,
         }),
       })
 
@@ -188,6 +202,9 @@ export function OrderStatusesList() {
       if (!data.success) {
         throw new Error(data.message || "Failed to add status")
       }
+
+      // Очищаємо кеш статусів
+      clearStatusCache()
 
       toast({
         title: t("statusAdded"),
@@ -212,16 +229,29 @@ export function OrderStatusesList() {
   // Update existing status
   async function handleUpdateStatus(e: React.FormEvent) {
     e.preventDefault()
-    console.log("handleUpdateStatus викликано", { session, selectedStatus })
+    console.log("handleUpdateStatus викликано", { session, sessionStatus, selectedStatus })
 
-    if (!session?.user?.id || !selectedStatus) {
-      console.log("Немає ID користувача в сесії або не вибрано статус", {
-        hasUserId: !!session?.user?.id,
+    // Перевіряємо, чи завантажилась сесія
+    if (sessionStatus === "loading") {
+      console.log("Сесія ще завантажується, чекаємо...")
+      toast({
+        title: t("pleaseWait"),
+        description: t("sessionLoading"),
+      })
+      return
+    }
+
+    // Отримуємо ID користувача з localStorage, якщо сесія недоступна
+    const userId = session?.user?.id || localStorage.getItem("userId")
+
+    if (!userId || !selectedStatus) {
+      console.log("Немає ID користувача або не вибрано статус", {
+        hasUserId: !!userId,
         hasSelectedStatus: !!selectedStatus,
       })
       toast({
         title: t("error"),
-        description: !session?.user?.id ? t("notAuthenticated") : t("noStatusSelected"),
+        description: !userId ? t("notAuthenticated") : t("noStatusSelected"),
         variant: "destructive",
       })
       return
@@ -235,7 +265,7 @@ export function OrderStatusesList() {
       console.log("Updating status with data:", {
         ...formState,
         remonline_status_id: Number(formState.remonline_status_id),
-        userId: session.user.id,
+        userId,
       })
 
       const response = await fetch(`/api/admin/order-statuses/${selectedStatus.id}`, {
@@ -244,7 +274,7 @@ export function OrderStatusesList() {
         body: JSON.stringify({
           ...formState,
           remonline_status_id: Number(formState.remonline_status_id),
-          userId: session.user.id,
+          userId,
         }),
       })
 
@@ -257,6 +287,9 @@ export function OrderStatusesList() {
       if (!data.success) {
         throw new Error(data.message || "Failed to update status")
       }
+
+      // Очищаємо кеш статусів
+      clearStatusCache()
 
       toast({
         title: t("statusUpdated"),
@@ -280,16 +313,29 @@ export function OrderStatusesList() {
 
   // Delete status
   async function handleDeleteStatus() {
-    console.log("handleDeleteStatus викликано", { session, selectedStatus })
+    console.log("handleDeleteStatus викликано", { session, sessionStatus, selectedStatus })
 
-    if (!session?.user?.id || !selectedStatus) {
-      console.log("Немає ID користувача в сесії або не вибрано статус", {
-        hasUserId: !!session?.user?.id,
+    // Перевіряємо, чи завантажилась сесія
+    if (sessionStatus === "loading") {
+      console.log("Сесія ще завантажується, чекаємо...")
+      toast({
+        title: t("pleaseWait"),
+        description: t("sessionLoading"),
+      })
+      return
+    }
+
+    // Отримуємо ID користувача з localStorage, якщо сесія недоступна
+    const userId = session?.user?.id || localStorage.getItem("userId")
+
+    if (!userId || !selectedStatus) {
+      console.log("Немає ID користувача або не вибрано статус", {
+        hasUserId: !!userId,
         hasSelectedStatus: !!selectedStatus,
       })
       toast({
         title: t("error"),
-        description: !session?.user?.id ? t("notAuthenticated") : t("noStatusSelected"),
+        description: !userId ? t("notAuthenticated") : t("noStatusSelected"),
         variant: "destructive",
       })
       return
@@ -300,12 +346,12 @@ export function OrderStatusesList() {
       console.log("Починаємо відправку запиту на видалення статусу")
 
       // Перевіримо дані перед відправкою
-      console.log("Deleting status:", selectedStatus.id, "User ID:", session.user.id)
+      console.log("Deleting status:", selectedStatus.id, "User ID:", userId)
 
       const response = await fetch(`/api/admin/order-statuses/${selectedStatus.id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: session.user.id }),
+        body: JSON.stringify({ userId }),
       })
 
       // Перевіримо відповідь сервера
@@ -317,6 +363,9 @@ export function OrderStatusesList() {
       if (!data.success) {
         throw new Error(data.message || "Failed to delete status")
       }
+
+      // Очищаємо кеш статусів
+      clearStatusCache()
 
       toast({
         title: t("statusDeleted"),
@@ -365,6 +414,15 @@ export function OrderStatusesList() {
     )
   }
 
+  // Перевіряємо, чи користувач авторизований
+  useEffect(() => {
+    // Якщо сесія завантажена і є ID користувача, зберігаємо його в localStorage
+    if (sessionStatus === "authenticated" && session?.user?.id) {
+      localStorage.setItem("userId", session.user.id)
+      console.log("ID користувача збережено в localStorage:", session.user.id)
+    }
+  }, [session, sessionStatus])
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -388,36 +446,35 @@ export function OrderStatusesList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {statuses.length === 0 ? (
+            {statuses.map((status) => (
+              <TableRow key={status.id}>
+                <TableCell className="font-medium">{status.remonline_status_id}</TableCell>
+                <TableCell>{status.name_uk}</TableCell>
+                <TableCell>{status.name_en}</TableCell>
+                <TableCell>{status.name_cs}</TableCell>
+                <TableCell>
+                  <Badge className={status.color}>{status.name_uk}</Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleEditClick(status)}>
+                      <Pencil className="h-4 w-4 mr-1" />
+                      {t("edit")}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(status)}>
+                      <Trash className="h-4 w-4 mr-1" />
+                      {t("delete")}
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+            {statuses.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   {t("noOrderStatuses")}
                 </TableCell>
               </TableRow>
-            ) : (
-              statuses.map((status) => (
-                <TableRow key={status.id}>
-                  <TableCell className="font-medium">{status.remonline_status_id}</TableCell>
-                  <TableCell>{status.name_uk}</TableCell>
-                  <TableCell>{status.name_en}</TableCell>
-                  <TableCell>{status.name_cs}</TableCell>
-                  <TableCell>
-                    <Badge className={status.color}>{status.name_uk}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleEditClick(status)}>
-                        <Pencil className="h-4 w-4 mr-1" />
-                        {t("edit")}
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(status)}>
-                        <Trash className="h-4 w-4 mr-1" />
-                        {t("delete")}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
             )}
           </TableBody>
         </Table>
@@ -522,13 +579,7 @@ export function OrderStatusesList() {
               <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
                 {t("cancel")}
               </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                onClick={() => {
-                  console.log("Кнопка додавання натиснута")
-                }}
-              >
+              <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -638,13 +689,7 @@ export function OrderStatusesList() {
               <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
                 {t("cancel")}
               </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                onClick={() => {
-                  console.log("Кнопка збереження натиснута")
-                }}
-              >
+              <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -673,14 +718,7 @@ export function OrderStatusesList() {
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               {t("cancel")}
             </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                console.log("Кнопка видалення натиснута, викликаємо handleDeleteStatus")
-                handleDeleteStatus()
-              }}
-              disabled={isSubmitting}
-            >
+            <Button variant="destructive" onClick={handleDeleteStatus} disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

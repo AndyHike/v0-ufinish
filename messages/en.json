@@ -467,11 +467,11 @@
     "orderStatusesDescription": "Manage order statuses in your system",
     "addStatus": "Add Status",
     "addNewStatus": "Add New Order Status",
-    "addNewStatusDescription": "Add a new order status to track repairs",
+    "addNewStatusDescription": "Add a new order status to track in the system",
     "editStatus": "Edit Order Status",
-    "editStatusDescription": "Modify information for an existing order status",
+    "editStatusDescription": "Edit an existing order status",
     "deleteStatus": "Delete Order Status",
-    "deleteStatusConfirmation": "Are you sure you want to delete the \"{status}\" status? This may affect existing orders.",
+    "deleteStatusConfirmation": "Are you sure you want to delete the status \"{status}\"? This action cannot be undone.",
     "remonlineCode": "RemOnline Code",
     "nameUk": "Name (UK)",
     "nameEn": "Name (EN)",
@@ -517,7 +517,12 @@
       "orange": "Orange",
       "lime": "Lime",
       "darkGreen": "Dark Green"
-    }
+    },
+    "sessionLoading": "Session is loading, please wait...",
+    "pleaseWait": "Please wait",
+    "addNewStatusDescription": "Add a new order status to track in the system",
+    "editStatusDescription": "Edit an existing order status",
+    "deleteStatusConfirmation": "Are you sure you want to delete the status \"{status}\"? This action cannot be undone."
   },
   "About": {
     "about": "About Us",

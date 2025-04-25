@@ -431,7 +431,12 @@
       "orange": "Oranžová",
       "lime": "Limetková",
       "darkGreen": "Tmavě zelená"
-    }
+    },
+    "sessionLoading": "Relace se načítá, počkejte prosím...",
+    "pleaseWait": "Prosím, počkejte",
+    "addNewStatusDescription": "Přidejte nový stav objednávky ke sledování v systému",
+    "editStatusDescription": "Upravte existující stav objednávky",
+    "deleteStatusConfirmation": "Opravdu chcete smazat stav \"{status}\"? Tuto akci nelze vrátit zpět."
   },
   "About": {
     "about": "O nás",
