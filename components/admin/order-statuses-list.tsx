@@ -59,6 +59,7 @@ export function OrderStatusesList() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [currentStatus, setCurrentStatus] = useState<OrderStatus | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -130,6 +131,7 @@ export function OrderStatusesList() {
     if (!session?.user?.id) return
 
     try {
+      setIsSubmitting(true)
       const response = await fetch("/api/admin/order-statuses", {
         method: "POST",
         headers: {
@@ -163,6 +165,8 @@ export function OrderStatusesList() {
         description: err instanceof Error ? err.message : "Не вдалося додати статус",
         variant: "destructive",
       })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -170,6 +174,7 @@ export function OrderStatusesList() {
     if (!session?.user?.id || !currentStatus) return
 
     try {
+      setIsSubmitting(true)
       const response = await fetch(`/api/admin/order-statuses/${currentStatus.id}`, {
         method: "PUT",
         headers: {
@@ -203,6 +208,8 @@ export function OrderStatusesList() {
         description: err instanceof Error ? err.message : "Не вдалося оновити статус",
         variant: "destructive",
       })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -210,6 +217,7 @@ export function OrderStatusesList() {
     if (!session?.user?.id || !currentStatus) return
 
     try {
+      setIsSubmitting(true)
       const response = await fetch(`/api/admin/order-statuses/${currentStatus.id}`, {
         method: "DELETE",
         headers: {
@@ -240,6 +248,8 @@ export function OrderStatusesList() {
         description: err instanceof Error ? err.message : "Не вдалося видалити статус",
         variant: "destructive",
       })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -374,7 +384,9 @@ export function OrderStatusesList() {
               <DialogClose asChild>
                 <Button variant="outline">Скасувати</Button>
               </DialogClose>
-              <Button onClick={handleAddStatus}>Додати</Button>
+              <Button onClick={handleAddStatus} disabled={isSubmitting}>
+                Додати
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -430,7 +442,7 @@ export function OrderStatusesList() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Редагувати статус замовлення</DialogTitle>
           </DialogHeader>
@@ -510,7 +522,9 @@ export function OrderStatusesList() {
             <DialogClose asChild>
               <Button variant="outline">Скасувати</Button>
             </DialogClose>
-            <Button onClick={handleUpdateStatus}>Зберегти</Button>
+            <Button onClick={handleUpdateStatus} disabled={isSubmitting}>
+              Зберегти
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -530,7 +544,7 @@ export function OrderStatusesList() {
             <DialogClose asChild>
               <Button variant="outline">Скасувати</Button>
             </DialogClose>
-            <Button variant="destructive" onClick={handleDeleteStatus}>
+            <Button variant="destructive" onClick={handleDeleteStatus} disabled={isSubmitting}>
               Видалити
             </Button>
           </DialogFooter>
