@@ -7,7 +7,14 @@ import { useSession } from "next-auth/react"
 import { useTranslations } from "next-intl"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
@@ -395,6 +402,7 @@ export function OrderStatusesList() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{t("addNewStatus")}</DialogTitle>
+            <DialogDescription>{t("Admin.addNewStatusDescription")}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAddStatus}>
             <div className="grid gap-4 py-4">
@@ -508,6 +516,7 @@ export function OrderStatusesList() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{t("editStatus")}</DialogTitle>
+            <DialogDescription>{t("Admin.editStatusDescription")}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleUpdateStatus}>
             <div className="grid gap-4 py-4">
@@ -611,10 +620,11 @@ export function OrderStatusesList() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{t("deleteStatus")}</DialogTitle>
+            <DialogDescription>
+              {t("Admin.deleteStatusConfirmation", { status: selectedStatus?.nameUk || selectedStatus?.nameEn || "" })}
+            </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <p>{t("deleteStatusConfirmation", { status: selectedStatus?.name_uk })}</p>
-          </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               {t("cancel")}
