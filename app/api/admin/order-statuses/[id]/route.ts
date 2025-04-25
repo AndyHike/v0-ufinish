@@ -5,22 +5,15 @@ import { clearStatusCache } from "@/lib/order-status-utils"
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    console.log(`PUT /api/admin/order-statuses/${params.id} - Received request`)
     const supabase = createClient()
     const { id } = params
     const body = await request.json()
-    console.log("PUT /api/admin/order-statuses/[id] - Request body:", body)
     const { remonline_status_id, name_uk, name_en, name_cs, color, userId } = body
 
     // Verify admin permissions
     const { data: userData, error: userError } = await supabase.from("users").select("role").eq("id", userId).single()
 
-    if (userError) {
-      console.error("Error verifying user permissions:", userError)
-      return NextResponse.json({ success: false, message: "Error verifying user permissions" }, { status: 500 })
-    }
-
-    if (!userData || userData.role !== "admin") {
+    if (userError || !userData || userData.role !== "admin") {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 403 })
     }
 
@@ -36,11 +29,6 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       .eq("remonline_status_id", remonline_status_id)
       .neq("id", id)
       .maybeSingle()
-
-    if (checkError) {
-      console.error("Error checking for existing status:", checkError)
-      return NextResponse.json({ success: false, message: "Error checking for existing status" }, { status: 500 })
-    }
 
     if (existingStatus) {
       return NextResponse.json(
@@ -64,39 +52,24 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       .select()
       .single()
 
-    if (error) {
-      console.error("Error updating status in database:", error)
-      return NextResponse.json({ success: false, message: `Database error: ${error.message}` }, { status: 500 })
-    }
+    if (error) throw error
 
     // Clear the status cache
     clearStatusCache()
 
     // Log activity
-    try {
-      await logActivity({
-        userId,
-        entityType: "order_status",
-        entityId: id,
-        actionType: "update",
-        details: { remonline_status_id, name_uk },
-      })
-    } catch (logError) {
-      console.error("Error logging activity (non-fatal):", logError)
-      // Continue execution even if logging fails
-    }
+    await logActivity({
+      userId,
+      entityType: "order_status",
+      entityId: id,
+      actionType: "update",
+      details: { remonline_status_id, name_uk },
+    })
 
-    console.log("PUT /api/admin/order-statuses/[id] - Status updated successfully:", data)
     return NextResponse.json({ success: true, status: data })
   } catch (error) {
     console.error("Error updating order status:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Failed to update order status",
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({ success: false, message: "Failed to update order status" }, { status: 500 })
   }
 }
 

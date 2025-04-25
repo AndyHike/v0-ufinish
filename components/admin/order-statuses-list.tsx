@@ -3,36 +3,19 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useTranslations } from "next-intl"
 import { useSession } from "next-auth/react"
+import { useTranslations } from "next-intl"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/use-toast"
-import { Edit, Trash2, Plus } from "lucide-react"
+import { Loader2, Plus, Pencil, Trash, AlertCircle } from "lucide-react"
+import type { OrderStatus } from "@/lib/order-status-utils"
 
-type OrderStatus = {
-  id: number
-  remonline_status_id: number
-  name_uk: string
-  name_en: string
-  name_cs: string
-  color: string
-  created_at: string
-  updated_at: string
-}
-
+// Color options for status badges
 const colorOptions = [
   { value: "bg-blue-100 text-blue-800", label: "Синій" },
   { value: "bg-green-100 text-green-800", label: "Зелений" },
@@ -49,19 +32,22 @@ const colorOptions = [
 ]
 
 export function OrderStatusesList() {
-  const t = useTranslations("Admin")
   const { data: session } = useSession()
+  const t = useTranslations("Admin")
+
+  // State for statuses list
   const [statuses, setStatuses] = useState<OrderStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [currentStatus, setCurrentStatus] = useState<OrderStatus | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Dialog states
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatus | null>(null)
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formState, setFormState] = useState({
     remonline_status_id: "",
     name_uk: "",
     name_en: "",
@@ -69,10 +55,15 @@ export function OrderStatusesList() {
     color: "bg-gray-100 text-gray-800",
   })
 
+  // Loading states
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Fetch statuses on component mount
   useEffect(() => {
     fetchStatuses()
   }, [])
 
+  // Function to fetch statuses from API
   async function fetchStatuses() {
     try {
       setLoading(true)
@@ -94,13 +85,9 @@ export function OrderStatusesList() {
     }
   }
 
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
+  // Reset form to default values
   function resetForm() {
-    setFormData({
+    setFormState({
       remonline_status_id: "",
       name_uk: "",
       name_en: "",
@@ -109,39 +96,45 @@ export function OrderStatusesList() {
     })
   }
 
+  // Handle input changes
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+    const { name, value } = e.target
+    setFormState((prev) => ({ ...prev, [name]: value }))
+  }
+
+  // Open edit dialog and populate form with status data
   function handleEditClick(status: OrderStatus) {
-    console.log("Edit button clicked", status)
-    setCurrentStatus(status)
-    setFormData({
+    setSelectedStatus(status)
+    setFormState({
       remonline_status_id: status.remonline_status_id.toString(),
       name_uk: status.name_uk,
       name_en: status.name_en,
       name_cs: status.name_cs,
       color: status.color,
     })
-    setIsEditDialogOpen(true)
+    setEditDialogOpen(true)
   }
 
+  // Open delete dialog
   function handleDeleteClick(status: OrderStatus) {
-    console.log("Delete button clicked", status)
-    setCurrentStatus(status)
-    setIsDeleteDialogOpen(true)
+    setSelectedStatus(status)
+    setDeleteDialogOpen(true)
   }
 
-  async function handleAddStatus() {
+  // Add new status
+  async function handleAddStatus(e: React.FormEvent) {
+    e.preventDefault()
     if (!session?.user?.id) return
 
     try {
       setIsSubmitting(true)
-      console.log("Adding status with data:", formData) // Log the form data
+
       const response = await fetch("/api/admin/order-statuses", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
-          remonline_status_id: Number.parseInt(formData.remonline_status_id, 10),
+          ...formState,
+          remonline_status_id: Number.parseInt(formState.remonline_status_id, 10),
           userId: session.user.id,
         }),
       })
@@ -158,7 +151,7 @@ export function OrderStatusesList() {
       })
 
       resetForm()
-      setIsAddDialogOpen(false)
+      setAddDialogOpen(false)
       fetchStatuses()
     } catch (err) {
       console.error("Error adding status:", err)
@@ -172,25 +165,20 @@ export function OrderStatusesList() {
     }
   }
 
-  async function handleUpdateStatus() {
-    if (!session?.user?.id || !currentStatus) return
+  // Update existing status
+  async function handleUpdateStatus(e: React.FormEvent) {
+    e.preventDefault()
+    if (!session?.user?.id || !selectedStatus) return
 
     try {
       setIsSubmitting(true)
-      console.log("Updating status with data:", {
-        ...formData,
-        remonline_status_id: Number.parseInt(formData.remonline_status_id, 10),
-        userId: session.user.id,
-      })
 
-      const response = await fetch(`/api/admin/order-statuses/${currentStatus.id}`, {
+      const response = await fetch(`/api/admin/order-statuses/${selectedStatus.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
-          remonline_status_id: Number.parseInt(formData.remonline_status_id, 10),
+          ...formState,
+          remonline_status_id: Number.parseInt(formState.remonline_status_id, 10),
           userId: session.user.id,
         }),
       })
@@ -207,7 +195,7 @@ export function OrderStatusesList() {
       })
 
       resetForm()
-      setIsEditDialogOpen(false)
+      setEditDialogOpen(false)
       fetchStatuses()
     } catch (err) {
       console.error("Error updating status:", err)
@@ -221,19 +209,17 @@ export function OrderStatusesList() {
     }
   }
 
+  // Delete status
   async function handleDeleteStatus() {
-    if (!session?.user?.id || !currentStatus) return
+    if (!session?.user?.id || !selectedStatus) return
 
     try {
       setIsSubmitting(true)
-      const response = await fetch(`/api/admin/order-statuses/${currentStatus.id}`, {
+
+      const response = await fetch(`/api/admin/order-statuses/${selectedStatus.id}`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: session.user.id,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: session.user.id }),
       })
 
       const data = await response.json()
@@ -247,7 +233,7 @@ export function OrderStatusesList() {
         description: "Статус замовлення успішно видалено",
       })
 
-      setIsDeleteDialogOpen(false)
+      setDeleteDialogOpen(false)
       fetchStatuses()
     } catch (err) {
       console.error("Error deleting status:", err)
@@ -261,118 +247,39 @@ export function OrderStatusesList() {
     }
   }
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Завантаження статусів замовлень...</p>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <AlertCircle className="h-8 w-8 text-destructive mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Помилка завантаження</h3>
+        <p className="text-muted-foreground mb-4">{error}</p>
+        <Button onClick={fetchStatuses}>Спробувати знову</Button>
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold tracking-tight">Статуси замовлень</h2>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Додати статус
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Додати новий статус замовлення</DialogTitle>
-            </DialogHeader>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                console.log("Add form submitted") // Add this line
-                handleAddStatus()
-              }}
-            >
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="remonline_status_id" className="text-right">
-                    Код RemOnline
-                  </Label>
-                  <Input
-                    id="remonline_status_id"
-                    name="remonline_status_id"
-                    value={formData.remonline_status_id}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                    placeholder="3153189"
-                    type="number"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name_uk" className="text-right">
-                    Назва (UK)
-                  </Label>
-                  <Input
-                    id="name_uk"
-                    name="name_uk"
-                    value={formData.name_uk}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                    placeholder="Новий статус"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name_en" className="text-right">
-                    Назва (EN)
-                  </Label>
-                  <Input
-                    id="name_en"
-                    name="name_en"
-                    value={formData.name_en}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                    placeholder="New Status"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name_cs" className="text-right">
-                    Назва (CS)
-                  </Label>
-                  <Input
-                    id="name_cs"
-                    name="name_cs"
-                    value={formData.name_cs}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                    placeholder="Nový stav"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="color" className="text-right">
-                    Колір
-                  </Label>
-                  <div className="col-span-3 flex gap-2">
-                    <select
-                      id="color"
-                      name="color"
-                      value={formData.color}
-                      onChange={handleInputChange}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {colorOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <Badge className={formData.color}>Приклад</Badge>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Скасувати</Button>
-                </DialogClose>
-                <Button type="submit" disabled={isSubmitting}>
-                  Додати
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => setAddDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Додати статус
+        </Button>
       </div>
 
-      <div className="border rounded-md">
+      <div className="border rounded-md overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -403,13 +310,13 @@ export function OrderStatusesList() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleEditClick(status)}>
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
+                      <Button variant="ghost" size="sm" onClick={() => handleEditClick(status)}>
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Редагувати
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(status)}>
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(status)}>
+                        <Trash className="h-4 w-4 mr-1" />
+                        Видалити
                       </Button>
                     </div>
                   </TableCell>
@@ -420,85 +327,89 @@ export function OrderStatusesList() {
         </Table>
       </div>
 
-      {/* Edit Dialog */}
+      {/* Add Status Dialog */}
       <Dialog
-        open={isEditDialogOpen}
+        open={addDialogOpen}
         onOpenChange={(open) => {
-          setIsEditDialogOpen(open)
+          setAddDialogOpen(open)
           if (!open) resetForm()
         }}
       >
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Редагувати статус замовлення</DialogTitle>
+            <DialogTitle>Додати новий статус замовлення</DialogTitle>
           </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              handleUpdateStatus()
-            }}
-          >
+          <form onSubmit={handleAddStatus}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-remonline_status_id" className="text-right">
+                <Label htmlFor="remonline_status_id" className="text-right">
                   Код RemOnline
                 </Label>
                 <Input
-                  id="edit-remonline_status_id"
+                  id="remonline_status_id"
                   name="remonline_status_id"
-                  value={formData.remonline_status_id}
+                  value={formState.remonline_status_id}
                   onChange={handleInputChange}
                   className="col-span-3"
+                  placeholder="3153189"
                   type="number"
+                  required
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name_uk" className="text-right">
+                <Label htmlFor="name_uk" className="text-right">
                   Назва (UK)
                 </Label>
                 <Input
-                  id="edit-name_uk"
+                  id="name_uk"
                   name="name_uk"
-                  value={formData.name_uk}
+                  value={formState.name_uk}
                   onChange={handleInputChange}
                   className="col-span-3"
+                  placeholder="Новий"
+                  required
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name_en" className="text-right">
+                <Label htmlFor="name_en" className="text-right">
                   Назва (EN)
                 </Label>
                 <Input
-                  id="edit-name_en"
+                  id="name_en"
                   name="name_en"
-                  value={formData.name_en}
+                  value={formState.name_en}
                   onChange={handleInputChange}
                   className="col-span-3"
+                  placeholder="New"
+                  required
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name_cs" className="text-right">
+                <Label htmlFor="name_cs" className="text-right">
                   Назва (CS)
                 </Label>
                 <Input
-                  id="edit-name_cs"
+                  id="name_cs"
                   name="name_cs"
-                  value={formData.name_cs}
+                  value={formState.name_cs}
                   onChange={handleInputChange}
                   className="col-span-3"
+                  placeholder="Nový"
+                  required
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-color" className="text-right">
+                <Label htmlFor="color" className="text-right">
                   Колір
                 </Label>
                 <div className="col-span-3 flex gap-2">
                   <select
-                    id="edit-color"
+                    id="color"
                     name="color"
-                    value={formData.color}
+                    value={formState.color}
                     onChange={handleInputChange}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    required
                   >
                     {colorOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -506,39 +417,163 @@ export function OrderStatusesList() {
                       </option>
                     ))}
                   </select>
-                  <Badge className={formData.color}>Приклад</Badge>
+                  <Badge className={formState.color}>Приклад</Badge>
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
                 Скасувати
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Збереження..." : "Зберегти"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Додавання...
+                  </>
+                ) : (
+                  "Додати"
+                )}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      {/* Edit Status Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open)
+          if (!open) resetForm()
+        }}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Редагувати статус замовлення</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdateStatus}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit_remonline_status_id" className="text-right">
+                  Код RemOnline
+                </Label>
+                <Input
+                  id="edit_remonline_status_id"
+                  name="remonline_status_id"
+                  value={formState.remonline_status_id}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  type="number"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit_name_uk" className="text-right">
+                  Назва (UK)
+                </Label>
+                <Input
+                  id="edit_name_uk"
+                  name="name_uk"
+                  value={formState.name_uk}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit_name_en" className="text-right">
+                  Назва (EN)
+                </Label>
+                <Input
+                  id="edit_name_en"
+                  name="name_en"
+                  value={formState.name_en}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit_name_cs" className="text-right">
+                  Назва (CS)
+                </Label>
+                <Input
+                  id="edit_name_cs"
+                  name="name_cs"
+                  value={formState.name_cs}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit_color" className="text-right">
+                  Колір
+                </Label>
+                <div className="col-span-3 flex gap-2">
+                  <select
+                    id="edit_color"
+                    name="color"
+                    value={formState.color}
+                    onChange={handleInputChange}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    required
+                  >
+                    {colorOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <Badge className={formState.color}>Приклад</Badge>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Скасувати
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Збереження...
+                  </>
+                ) : (
+                  "Зберегти"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Status Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Видалити статус замовлення</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p>
-              Ви впевнені, що хочете видалити статус "{currentStatus?.name_uk}"? Це може вплинути на існуючі замовлення.
+              Ви впевнені, що хочете видалити статус "{selectedStatus?.name_uk}"? Це може вплинути на існуючі
+              замовлення.
             </p>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Скасувати
             </Button>
             <Button type="button" variant="destructive" onClick={handleDeleteStatus} disabled={isSubmitting}>
-              Видалити
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Видалення...
+                </>
+              ) : (
+                "Видалити"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

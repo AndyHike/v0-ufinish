@@ -1,23 +1,25 @@
 import { createClient } from "@/lib/supabase"
 
-type OrderStatus = {
+export type OrderStatus = {
   id: number
   remonline_status_id: number
   name_uk: string
   name_en: string
   name_cs: string
   color: string
+  created_at?: string
+  updated_at?: string
 }
 
-// Кеш для статусів замовлень
+// Cache for order statuses
 let statusesCache: OrderStatus[] | null = null
 let lastFetchTime = 0
-const CACHE_TTL = 5 * 60 * 1000 // 5 хвилин
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
 export async function getOrderStatuses(): Promise<OrderStatus[]> {
   const now = Date.now()
 
-  // Використовуємо кеш, якщо він є і не застарів
+  // Use cache if it exists and hasn't expired
   if (statusesCache && now - lastFetchTime < CACHE_TTL) {
     return statusesCache
   }
@@ -31,14 +33,14 @@ export async function getOrderStatuses(): Promise<OrderStatus[]> {
 
     if (error) throw error
 
-    // Оновлюємо кеш
+    // Update cache
     statusesCache = data
     lastFetchTime = now
 
     return data
   } catch (error) {
     console.error("Error fetching order statuses:", error)
-    // Повертаємо кеш, якщо він є, навіть якщо він застарів
+    // Return cache if it exists, even if it's expired
     return statusesCache || []
   }
 }
