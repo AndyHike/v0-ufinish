@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useTranslations, useLocale } from "next-intl"
-import { createClient } from "@/lib/supabase"
+import { createServerSupabaseClient } from "@/lib/supabase"
 import { format } from "date-fns"
 import { uk } from "date-fns/locale"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -79,7 +79,7 @@ export function UserOrdersTimeline() {
     setError(null)
 
     try {
-      const supabase = createClient()
+      const supabase = createServerSupabaseClient()
 
       // Fetch orders
       const { data: ordersData, error: ordersError } = await supabase

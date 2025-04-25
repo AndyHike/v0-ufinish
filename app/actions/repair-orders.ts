@@ -1,36 +1,40 @@
-// Додаємо цей файл, щоб перевірити, як саме отримуються дані замовлень
-import { createClient } from "@/lib/supabase"
+"use server"
+
+import { createServerSupabaseClient } from "@/lib/supabase"
+import { getSession } from "@/lib/auth/session"
 import { getStatusByRemOnlineId } from "@/lib/order-status-utils"
 
 export async function getUserRepairOrders() {
   try {
-    const supabase = createClient()
-
-    // Отримуємо поточного користувача
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return { success: false, message: "Не авторизовано" }
+    // Get the current user session
+    const session = await getSession()
+    if (!session || !session.user) {
+      return { success: false, message: "Unauthorized" }
     }
 
-    // Отримуємо замовлення користувача
+    const userId = session.user.id
+    const supabase = createServerSupabaseClient()
+
+    // Fetch repair orders for the current user
     const { data: orders, error } = await supabase
       .from("repair_orders")
       .select("*")
-      .eq("user_id", session.user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false })
 
     if (error) {
       console.error("Error fetching repair orders:", error)
-      return { success: false, message: "Помилка завантаження замовлень" }
+      return { success: false, message: "Failed to fetch repair orders" }
     }
 
     return { success: true, orders }
   } catch (error) {
     console.error("Error in getUserRepairOrders:", error)
-    return { success: false, message: "Помилка завантаження замовлень" }
+    return {
+      success: false,
+      message: "An unexpected error occurred",
+      details: error instanceof Error ? error.message : String(error),
+    }
   }
 }
 
