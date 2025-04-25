@@ -428,7 +428,7 @@ export function OrderStatusesList() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
                 Скасувати
               </Button>
               <Button type="submit" disabled={isSubmitting}>
@@ -537,7 +537,7 @@ export function OrderStatusesList() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
                 Скасувати
               </Button>
               <Button type="submit" disabled={isSubmitting}>
@@ -568,7 +568,7 @@ export function OrderStatusesList() {
             </p>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Скасувати
             </Button>
             <Button type="submit" variant="destructive" onClick={handleDeleteStatus} disabled={isSubmitting}>
