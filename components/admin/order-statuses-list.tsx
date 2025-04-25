@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/use-toast"
 import { Loader2, Plus, Pencil, Trash, AlertCircle } from "lucide-react"
 import type { OrderStatus } from "@/lib/order-status-utils"
-import { getOrderStatuses } from "@/lib/order-status-utils"
 
 // Color options for status badges
 const colorOptions = [
@@ -70,8 +69,14 @@ export function OrderStatusesList() {
       setLoading(true)
       setError(null)
 
-      const data = await getOrderStatuses()
-      setStatuses(data)
+      const response = await fetch("/api/admin/order-statuses")
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.message || "Failed to fetch statuses")
+      }
+
+      setStatuses(data.statuses)
     } catch (err) {
       console.error("Error fetching statuses:", err)
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -168,6 +173,12 @@ export function OrderStatusesList() {
     try {
       setIsSubmitting(true)
 
+      console.log("Updating status with data:", {
+        ...formState,
+        remonline_status_id: Number.parseInt(formState.remonline_status_id, 10),
+        userId: session.user.id,
+      })
+
       const response = await fetch(`/api/admin/order-statuses/${selectedStatus.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -205,8 +216,7 @@ export function OrderStatusesList() {
   }
 
   // Delete status
-  async function handleDeleteStatus(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleDeleteStatus() {
     if (!session?.user?.id || !selectedStatus) return
 
     try {
@@ -561,7 +571,7 @@ export function OrderStatusesList() {
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Скасувати
             </Button>
-            <Button variant="destructive" onClick={(e) => handleDeleteStatus(e)} disabled={isSubmitting}>
+            <Button variant="destructive" onClick={handleDeleteStatus} disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
