@@ -214,6 +214,7 @@ export function OrderStatusesList() {
       })
     } finally {
       setIsSubmitting(false)
+      setIsEditDialogOpen(false)
     }
   }
 
