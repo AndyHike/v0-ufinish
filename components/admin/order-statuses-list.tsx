@@ -17,18 +17,19 @@ import type { OrderStatus } from "@/lib/order-status-utils"
 
 // Color options for status badges
 const colorOptions = [
-  { value: "bg-blue-100 text-blue-800", label: "Синій" },
-  { value: "bg-green-100 text-green-800", label: "Зелений" },
-  { value: "bg-amber-100 text-amber-800", label: "Жовтий" },
-  { value: "bg-red-100 text-red-800", label: "Червоний" },
-  { value: "bg-purple-100 text-purple-800", label: "Фіолетовий" },
-  { value: "bg-pink-100 text-pink-800", label: "Рожевий" },
-  { value: "bg-indigo-100 text-indigo-800", label: "Індиго" },
-  { value: "bg-gray-100 text-gray-800", label: "Сірий" },
-  { value: "bg-teal-100 text-teal-800", label: "Бірюзовий" },
-  { value: "bg-cyan-100 text-cyan-800", label: "Блакитний" },
-  { value: "bg-orange-100 text-orange-800", label: "Помаранчевий" },
-  { value: "bg-lime-100 text-lime-800", label: "Лаймовий" },
+  { value: "bg-blue-100 text-blue-800", label: "blue" },
+  { value: "bg-green-100 text-green-800", label: "green" },
+  { value: "bg-amber-100 text-amber-800", label: "amber" },
+  { value: "bg-red-100 text-red-800", label: "red" },
+  { value: "bg-purple-100 text-purple-800", label: "purple" },
+  { value: "bg-pink-100 text-pink-800", label: "pink" },
+  { value: "bg-indigo-100 text-indigo-800", label: "indigo" },
+  { value: "bg-gray-100 text-gray-800", label: "gray" },
+  { value: "bg-teal-100 text-teal-800", label: "teal" },
+  { value: "bg-cyan-100 text-cyan-800", label: "cyan" },
+  { value: "bg-orange-100 text-orange-800", label: "orange" },
+  { value: "bg-lime-100 text-lime-800", label: "lime" },
+  { value: "bg-green-700 text-white", label: "darkGreen" },
 ]
 
 export function OrderStatusesList() {
@@ -146,8 +147,8 @@ export function OrderStatusesList() {
       }
 
       toast({
-        title: "Статус додано",
-        description: "Новий статус замовлення успішно додано",
+        title: t("statusAdded"),
+        description: t("statusAddedDescription"),
       })
 
       resetForm()
@@ -156,8 +157,8 @@ export function OrderStatusesList() {
     } catch (err) {
       console.error("Error adding status:", err)
       toast({
-        title: "Помилка",
-        description: err instanceof Error ? err.message : "Не вдалося додати статус",
+        title: t("error"),
+        description: err instanceof Error ? err.message : t("failedToAddStatus"),
         variant: "destructive",
       })
     } finally {
@@ -190,8 +191,8 @@ export function OrderStatusesList() {
       }
 
       toast({
-        title: "Статус оновлено",
-        description: "Статус замовлення успішно оновлено",
+        title: t("statusUpdated"),
+        description: t("statusUpdatedDescription"),
       })
 
       resetForm()
@@ -200,8 +201,8 @@ export function OrderStatusesList() {
     } catch (err) {
       console.error("Error updating status:", err)
       toast({
-        title: "Помилка",
-        description: err instanceof Error ? err.message : "Не вдалося оновити статус",
+        title: t("error"),
+        description: err instanceof Error ? err.message : t("failedToUpdateStatus"),
         variant: "destructive",
       })
     } finally {
@@ -229,8 +230,8 @@ export function OrderStatusesList() {
       }
 
       toast({
-        title: "Статус видалено",
-        description: "Статус замовлення успішно видалено",
+        title: t("statusDeleted"),
+        description: t("statusDeletedDescription"),
       })
 
       setDeleteDialogOpen(false)
@@ -238,8 +239,8 @@ export function OrderStatusesList() {
     } catch (err) {
       console.error("Error deleting status:", err)
       toast({
-        title: "Помилка",
-        description: err instanceof Error ? err.message : "Не вдалося видалити статус",
+        title: t("error"),
+        description: err instanceof Error ? err.message : t("failedToDeleteStatus"),
         variant: "destructive",
       })
     } finally {
@@ -247,12 +248,18 @@ export function OrderStatusesList() {
     }
   }
 
+  // Get color label translation
+  const getColorLabel = (colorValue: string) => {
+    const colorOption = colorOptions.find((option) => option.value === colorValue)
+    return colorOption ? t(`colors.${colorOption.label}`) : t("colors.gray")
+  }
+
   // Show loading state
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Завантаження статусів замовлень...</p>
+        <p className="text-muted-foreground">{t("loadingOrderStatuses")}</p>
       </div>
     )
   }
@@ -262,9 +269,9 @@ export function OrderStatusesList() {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <AlertCircle className="h-8 w-8 text-destructive mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Помилка завантаження</h3>
+        <h3 className="text-lg font-semibold mb-2">{t("loadingError")}</h3>
         <p className="text-muted-foreground mb-4">{error}</p>
-        <Button onClick={fetchStatuses}>Спробувати знову</Button>
+        <Button onClick={fetchStatuses}>{t("tryAgain")}</Button>
       </div>
     )
   }
@@ -272,10 +279,10 @@ export function OrderStatusesList() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">Статуси замовлень</h2>
+        <h2 className="text-2xl font-bold tracking-tight">{t("orderStatuses")}</h2>
         <Button onClick={() => setAddDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          Додати статус
+          {t("addStatus")}
         </Button>
       </div>
 
@@ -283,19 +290,19 @@ export function OrderStatusesList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Код RemOnline</TableHead>
-              <TableHead>Назва (UK)</TableHead>
-              <TableHead>Назва (EN)</TableHead>
-              <TableHead>Назва (CS)</TableHead>
-              <TableHead>Колір</TableHead>
-              <TableHead className="text-right">Дії</TableHead>
+              <TableHead>{t("remonlineCode")}</TableHead>
+              <TableHead>{t("nameUk")}</TableHead>
+              <TableHead>{t("nameEn")}</TableHead>
+              <TableHead>{t("nameCs")}</TableHead>
+              <TableHead>{t("color")}</TableHead>
+              <TableHead className="text-right">{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {statuses.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  Немає статусів замовлень
+                  {t("noOrderStatuses")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -312,11 +319,11 @@ export function OrderStatusesList() {
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm" onClick={() => handleEditClick(status)}>
                         <Pencil className="h-4 w-4 mr-1" />
-                        Редагувати
+                        {t("edit")}
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(status)}>
                         <Trash className="h-4 w-4 mr-1" />
-                        Видалити
+                        {t("delete")}
                       </Button>
                     </div>
                   </TableCell>
@@ -337,13 +344,13 @@ export function OrderStatusesList() {
       >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Додати новий статус замовлення</DialogTitle>
+            <DialogTitle>{t("addNewStatus")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAddStatus}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="remonline_status_id" className="text-right">
-                  Код RemOnline
+                  {t("remonlineCode")}
                 </Label>
                 <Input
                   id="remonline_status_id"
@@ -358,7 +365,7 @@ export function OrderStatusesList() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name_uk" className="text-right">
-                  Назва (UK)
+                  {t("nameUk")}
                 </Label>
                 <Input
                   id="name_uk"
@@ -366,13 +373,13 @@ export function OrderStatusesList() {
                   value={formState.name_uk}
                   onChange={handleInputChange}
                   className="col-span-3"
-                  placeholder="Новий"
+                  placeholder={t("newStatusPlaceholderUk")}
                   required
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name_en" className="text-right">
-                  Назва (EN)
+                  {t("nameEn")}
                 </Label>
                 <Input
                   id="name_en"
@@ -380,13 +387,13 @@ export function OrderStatusesList() {
                   value={formState.name_en}
                   onChange={handleInputChange}
                   className="col-span-3"
-                  placeholder="New"
+                  placeholder={t("newStatusPlaceholderEn")}
                   required
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name_cs" className="text-right">
-                  Назва (CS)
+                  {t("nameCs")}
                 </Label>
                 <Input
                   id="name_cs"
@@ -394,13 +401,13 @@ export function OrderStatusesList() {
                   value={formState.name_cs}
                   onChange={handleInputChange}
                   className="col-span-3"
-                  placeholder="Nový"
+                  placeholder={t("newStatusPlaceholderCs")}
                   required
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="color" className="text-right">
-                  Колір
+                  {t("color")}
                 </Label>
                 <div className="col-span-3 flex gap-2">
                   <select
@@ -413,26 +420,26 @@ export function OrderStatusesList() {
                   >
                     {colorOptions.map((option) => (
                       <option key={option.value} value={option.value}>
-                        {option.label}
+                        {t(`colors.${option.label}`)}
                       </option>
                     ))}
                   </select>
-                  <Badge className={formState.color}>Приклад</Badge>
+                  <Badge className={formState.color}>{t("example")}</Badge>
                 </div>
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
-                Скасувати
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Додавання...
+                    {t("adding")}
                   </>
                 ) : (
-                  "Додати"
+                  t("add")
                 )}
               </Button>
             </DialogFooter>
@@ -450,13 +457,13 @@ export function OrderStatusesList() {
       >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Редагувати статус замовлення</DialogTitle>
+            <DialogTitle>{t("editStatus")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleUpdateStatus}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit_remonline_status_id" className="text-right">
-                  Код RemOnline
+                  {t("remonlineCode")}
                 </Label>
                 <Input
                   id="edit_remonline_status_id"
@@ -470,7 +477,7 @@ export function OrderStatusesList() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit_name_uk" className="text-right">
-                  Назва (UK)
+                  {t("nameUk")}
                 </Label>
                 <Input
                   id="edit_name_uk"
@@ -483,7 +490,7 @@ export function OrderStatusesList() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit_name_en" className="text-right">
-                  Назва (EN)
+                  {t("nameEn")}
                 </Label>
                 <Input
                   id="edit_name_en"
@@ -496,7 +503,7 @@ export function OrderStatusesList() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit_name_cs" className="text-right">
-                  Назва (CS)
+                  {t("nameCs")}
                 </Label>
                 <Input
                   id="edit_name_cs"
@@ -509,7 +516,7 @@ export function OrderStatusesList() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit_color" className="text-right">
-                  Колір
+                  {t("color")}
                 </Label>
                 <div className="col-span-3 flex gap-2">
                   <select
@@ -522,26 +529,26 @@ export function OrderStatusesList() {
                   >
                     {colorOptions.map((option) => (
                       <option key={option.value} value={option.value}>
-                        {option.label}
+                        {t(`colors.${option.label}`)}
                       </option>
                     ))}
                   </select>
-                  <Badge className={formState.color}>Приклад</Badge>
+                  <Badge className={formState.color}>{t("example")}</Badge>
                 </div>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
-                Скасувати
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Збереження...
+                    {t("saving")}
                   </>
                 ) : (
-                  "Зберегти"
+                  t("save")
                 )}
               </Button>
             </DialogFooter>
@@ -553,26 +560,23 @@ export function OrderStatusesList() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Видалити статус замовлення</DialogTitle>
+            <DialogTitle>{t("deleteStatus")}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p>
-              Ви впевнені, що хочете видалити статус "{selectedStatus?.name_uk}"? Це може вплинути на існуючі
-              замовлення.
-            </p>
+            <p>{t("deleteStatusConfirmation", { status: selectedStatus?.name_uk })}</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Скасувати
+              {t("cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDeleteStatus} disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Видалення...
+                  {t("deleting")}
                 </>
               ) : (
-                "Видалити"
+                t("delete")
               )}
             </Button>
           </DialogFooter>
