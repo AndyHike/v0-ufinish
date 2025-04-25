@@ -1,14 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getUserRepairOrders } from "@/app/actions/repair-orders"
+import { getUserRepairOrdersWithStatusNames } from "@/app/actions/repair-orders"
 import { useTranslations, useLocale } from "next-intl"
 import { cn } from "@/lib/utils"
 import { ArrowRight, Clock, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
-import { getStatusByRemOnlineId } from "@/lib/order-status-utils"
 
 type RepairOrder = {
   id: string
@@ -17,6 +16,8 @@ type RepairOrder = {
   device_model: string
   service_type: string
   status: string
+  statusName: string // Додаємо поле для назви статусу
+  statusColor: string // Додаємо поле для кольору статусу
   price: number | null
   created_at: string
 }
@@ -30,39 +31,18 @@ export function UserOrders() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("all")
-  const [statusColors, setStatusColors] = useState<Record<string, { name: string; color: string }>>({})
 
-  // Оновлена функція для завантаження статусів замовлень
-  async function loadStatusColors(orders: RepairOrder[]) {
-    const uniqueStatuses = [...new Set(orders.map((order) => order.status))]
-    const statusMap: Record<string, { name: string; color: string }> = {}
-
-    for (const statusCode of uniqueStatuses) {
-      // Перетворюємо рядок статусу на число, оскільки тепер ми працюємо з цифровими кодами
-      const remonlineId = Number.parseInt(statusCode, 10)
-      if (!isNaN(remonlineId)) {
-        statusMap[statusCode] = await getStatusByRemOnlineId(remonlineId, locale)
-      } else {
-        statusMap[statusCode] = { name: statusCode, color: "text-gray-600" }
-      }
-    }
-
-    setStatusColors(statusMap)
-  }
-
-  // Завантаження замовлень
+  // Завантаження замовлень з перетвореними статусами
   useEffect(() => {
     async function fetchOrders() {
       try {
         setLoading(true)
         setError(null)
-        const result = await getUserRepairOrders()
+        const result = await getUserRepairOrdersWithStatusNames(locale)
 
         if (result.success && result.orders) {
           setOrders(result.orders)
           setFilteredOrders(result.orders)
-          // Завантажуємо статуси
-          await loadStatusColors(result.orders)
         } else {
           setError(result.message || t("repairHistory.errorFetching"))
         }
@@ -90,7 +70,8 @@ export function UserOrders() {
           order.device_brand.toLowerCase().includes(query) ||
           order.device_model.toLowerCase().includes(query) ||
           order.reference_number.toLowerCase().includes(query) ||
-          order.service_type.toLowerCase().includes(query),
+          order.service_type.toLowerCase().includes(query) ||
+          order.statusName.toLowerCase().includes(query),
       )
     }
 
@@ -123,11 +104,6 @@ export function UserOrders() {
     } catch (e) {
       return dateString
     }
-  }
-
-  // Отримання кольору статусу з бази даних
-  function getStatusColor(status: string): string {
-    return statusColors[status]?.color || "text-gray-600"
   }
 
   return (
@@ -230,9 +206,7 @@ export function UserOrders() {
                     <td className="py-4 px-4 text-muted-foreground">{order.reference_number}</td>
                     <td className="py-4 px-4 text-muted-foreground">{order.service_type}</td>
                     <td className="py-4 px-4">
-                      <span className={cn("font-medium", getStatusColor(order.status))}>
-                        {statusColors[order.status]?.name || order.status}
-                      </span>
+                      <span className={cn("font-medium", order.statusColor)}>{order.statusName}</span>
                     </td>
                     <td className="py-4 px-4 text-muted-foreground">
                       <div className="flex items-center gap-2">

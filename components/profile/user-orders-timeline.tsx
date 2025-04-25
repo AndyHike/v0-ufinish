@@ -28,7 +28,9 @@ type OrderStatusHistory = {
   id: string
   order_id: string
   old_status: string
+  old_status_name?: string
   new_status: string
+  new_status_name?: string
   changed_by: string
   changed_at: string
   created_at: string
@@ -41,6 +43,8 @@ type RepairOrder = {
   device_model: string
   service_type: string
   status: string
+  status_name?: string
+  status_color?: string
   price: number | null
   created_at: string
   updated_at: string
@@ -55,45 +59,21 @@ export function UserOrdersTimeline() {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
-  const [statusColors, setStatusColors] = useState<Record<string, { name: string; color: string }>>({})
 
   useEffect(() => {
     fetchOrders()
-  }, [])
+  }, [locale])
 
-  // Оновлена функція для завантаження статусів замовлень
-  async function loadStatusColors(orders: RepairOrder[]) {
-    const uniqueStatuses = [...new Set(orders.map((order) => order.status))]
-    const statusMap: Record<string, { name: string; color: string }> = {}
-
-    // Додаємо всі унікальні статуси з історії
-    const historyStatuses = new Set<string>()
-    orders.forEach((order) => {
-      if (order.statusHistory) {
-        order.statusHistory.forEach((history) => {
-          historyStatuses.add(history.old_status)
-          historyStatuses.add(history.new_status)
-        })
-      }
-    })
-
-    // Об'єднуємо всі унікальні статуси
-    const allUniqueStatuses = new Set([...uniqueStatuses, ...historyStatuses])
-
-    for (const statusCode of allUniqueStatuses) {
-      // Перетворюємо рядок статусу на число, оскільки тепер ми працюємо з цифровими кодами
-      const remonlineId = Number.parseInt(statusCode, 10)
-      if (!isNaN(remonlineId)) {
-        statusMap[statusCode] = await getStatusByRemOnlineId(remonlineId, locale)
-      } else {
-        statusMap[statusCode] = { name: statusCode, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" }
-      }
+  // Функція для отримання інформації про статус
+  async function getStatusInfo(statusCode: string, locale: string) {
+    const statusId = Number.parseInt(statusCode, 10)
+    if (!isNaN(statusId)) {
+      return await getStatusByRemOnlineId(statusId, locale)
     }
-
-    setStatusColors(statusMap)
+    return { name: statusCode, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" }
   }
 
-  // Завантаження замовлень
+  // Завантаження замовлень з перетвореними статусами
   async function fetchOrders() {
     setLoading(true)
     setError(null)
@@ -112,6 +92,10 @@ export function UserOrdersTimeline() {
       // For each order, fetch its status history
       const ordersWithHistory = await Promise.all(
         ordersData.map(async (order) => {
+          // Отримуємо інформацію про статус замовлення
+          const statusInfo = await getStatusInfo(order.status, locale)
+
+          // Отримуємо історію статусів
           const { data: historyData, error: historyError } = await supabase
             .from("order_status_history")
             .select("*")
@@ -120,17 +104,38 @@ export function UserOrdersTimeline() {
 
           if (historyError) {
             console.error(`Error fetching history for order ${order.id}:`, historyError)
-            return { ...order, statusHistory: [] }
+            return {
+              ...order,
+              status_name: statusInfo.name,
+              status_color: statusInfo.color,
+              statusHistory: [],
+            }
           }
 
-          return { ...order, statusHistory: historyData || [] }
+          // Перетворюємо статуси в історії
+          const historyWithNames = await Promise.all(
+            (historyData || []).map(async (history) => {
+              const oldStatusInfo = await getStatusInfo(history.old_status, locale)
+              const newStatusInfo = await getStatusInfo(history.new_status, locale)
+
+              return {
+                ...history,
+                old_status_name: oldStatusInfo.name,
+                new_status_name: newStatusInfo.name,
+              }
+            }),
+          )
+
+          return {
+            ...order,
+            status_name: statusInfo.name,
+            status_color: statusInfo.color,
+            statusHistory: historyWithNames,
+          }
         }),
       )
 
       setOrders(ordersWithHistory)
-
-      // Завантажуємо статуси
-      await loadStatusColors(ordersWithHistory)
     } catch (err) {
       console.error("Error fetching orders:", err)
       setError(err instanceof Error ? err.message : "Помилка завантаження замовлень")
@@ -162,11 +167,6 @@ export function UserOrdersTimeline() {
       default:
         return <Clock className="h-5 w-5 text-gray-500" />
     }
-  }
-
-  // Отримання кольору статусу з бази даних
-  function getStatusColor(status: string) {
-    return statusColors[status]?.color || "bg-gray-100 text-gray-800 hover:bg-gray-200"
   }
 
   function formatDate(dateString: string) {
@@ -202,7 +202,7 @@ export function UserOrdersTimeline() {
         order.reference_number.toLowerCase().includes(query) ||
         order.device_brand.toLowerCase().includes(query) ||
         order.device_model.toLowerCase().includes(query) ||
-        statusColors[order.status]?.name.toLowerCase().includes(query)
+        (order.status_name && order.status_name.toLowerCase().includes(query))
       )
     }
 
@@ -277,9 +277,9 @@ export function UserOrdersTimeline() {
                     </CardTitle>
                     <CardDescription>Замовлення №: {order.reference_number}</CardDescription>
                   </div>
-                  <Badge className={getStatusColor(order.status)}>
+                  <Badge className={order.status_color || "bg-gray-100"}>
                     {getStatusIcon(order.status)}
-                    <span className="ml-1">{statusColors[order.status]?.name || order.status}</span>
+                    <span className="ml-1">{order.status_name || order.status}</span>
                   </Badge>
                 </div>
               </CardHeader>
@@ -307,11 +307,11 @@ export function UserOrdersTimeline() {
                             <div className="flex-1">
                               <div className="flex items-center">
                                 <span className="text-sm font-medium">
-                                  {statusColors[history.old_status]?.name || history.old_status}
+                                  {history.old_status_name || history.old_status}
                                 </span>
                                 <ArrowRight className="h-3 w-3 mx-2 text-muted-foreground" />
                                 <span className="text-sm font-medium">
-                                  {statusColors[history.new_status]?.name || history.new_status}
+                                  {history.new_status_name || history.new_status}
                                 </span>
                               </div>
                               <div className="text-xs text-muted-foreground mt-1">
