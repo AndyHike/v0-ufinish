@@ -10,7 +10,17 @@ if (!REMONLINE_ORDER_WEBHOOK_SECRET) {
   console.warn("REMONLINE_ORDER_WEBHOOK_SECRET is not set. Webhook verification will be skipped.")
 }
 
-// Define a schema for the RemOnline webhook payload for orders based on the example
+// Define a schema for the RemOnline client data
+const remonlineClientSchema = z.object({
+  id: z.number(),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.array(z.string()).optional(),
+  address: z.string().optional(),
+})
+
+// Define a schema for the RemOnline webhook payload
 const remonlineOrderWebhookSchema = z.object({
   id: z.string(),
   created_at: z.string(),
@@ -168,9 +178,9 @@ export async function POST(request: NextRequest) {
     const orderData = parsedPayload.data
     const eventType = orderData.event_name
     const orderId = orderData.context.object_id
+    const clientId = orderData.metadata.client.id
 
     // Extract metadata from the webhook payload
-    const clientId = orderData.metadata.client.id
     const orderNumber = orderData.metadata.order.name
     const statusId = orderData.metadata.status.id
     const deviceName = orderData.metadata.asset?.name || "Unknown Device"
@@ -242,6 +252,9 @@ async function processOrderFromWebhook(webhookData: any) {
     }
 
     console.log(`Found user with ID: ${user.id}`)
+
+    // Log the user object to inspect its properties
+    console.log(`User object: ${JSON.stringify(user, null, 2)}`)
 
     // Extract device brand and model from the device name
     let deviceBrand = "Unknown"
