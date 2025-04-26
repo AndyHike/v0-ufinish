@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Очищення сесії</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: #111;
+        }
+        p {
+            margin-bottom: 1.5rem;
+        }
+        .status {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+        }
+        .loading {
+            background-color: #e8f4fd;
+            border: 1px solid #b3d7ff;
+            color: #0066cc;
+        }
+        .success {
+            background-color: #e6f7e6;
+            border: 1px solid #c3e6c3;
+            color: #2c662d;
+        }
+        .error {
+            background-color: #fde8e8;
+            border: 1px solid #f5c2c2;
+            color: #cc0000;
+        }
+        .button {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .primary {
+            background-color: #0070f3;
+            color: white;
+            border: none;
+        }
+        .primary:hover {
+            background-color: #0051cc;
+        }
+        .secondary {
+            background-color: white;
+            color: #333;
+            border: 1px solid #d1d1d1;
+        }
+        .secondary:hover {
+            background-color: #f5f5f5;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Очищення сесії</h1>
+        <p>Ця сторінка допоможе вирішити проблеми з доступом до сайту, очистивши вашу сесію.</p>
+        
+        <div id="status-container" class="status loading">
+            <p id="status-message">Очищення сесії...</p>
+        </div>
+        
+        <div class="button-group">
+            <a href="/" class="button secondary">На головну</a>
+            <button id="retry-button" class="button primary" style="display: none;">Спробувати ще раз</button>
+        </div>
+    </div>
+
+    <script>
+        // Функція для оновлення статусу
+        function updateStatus(type, message) {
+            const container = document.getElementById('status-container');
+            const messageEl = document.getElementById('status-message');
+            
+            // Оновлюємо клас і повідомлення
+            container.className = `status ${type}`;
+            messageEl.textContent = message;
+            
+            // Показуємо кнопку "Спробувати ще раз" тільки при помилці
+            document.getElementById('retry-button').style.display = type === 'error' ? 'block' : 'none';
+        }
+
+        // Функція для очищення сесії
+        async function clearSession() {
+            try {
+                updateStatus('loading', 'Очищення сесії...');
+                
+                // Спочатку спробуємо використати API
+                try {
+                    const response = await fetch('/api/auth/clear-session');
+                    if (response.ok) {
+                        updateStatus('success', 'Сесію успішно очищено. Ви будете перенаправлені на головну сторінку.');
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 2000);
+                        return;
+                    }
+                } catch (apiError) {
+                    console.error('API error:', apiError);
+                    // Продовжуємо виконання, якщо API не спрацював
+                }
+                
+                // Якщо API не спрацював, очищаємо cookie через JavaScript
+                document.cookie.split(';').forEach(function(c) {
+                    document.cookie = c.trim().split('=')[0] + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+                });
+                
+                updateStatus('success', 'Сесію успішно очищено через JavaScript. Ви будете перенаправлені на головну сторінку.');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            } catch (error) {
+                console.error('Failed to clear session:', error);
+                updateStatus('error', 'Не вдалося очистити сесію. Спробуйте очистити cookies вручну в налаштуваннях браузера або натисніть "Спробувати ще раз".');
+            }
+        }
+
+        // Додаємо обробник події для кнопки "Спробувати ще раз"
+        document.getElementById('retry-button').addEventListener('click', clearSession);
+        
+        // Автоматично запускаємо очищення сесії при завантаженні сторінки
+        window.addEventListener('load', clearSession);
+    </script>
+</body>
+</html>
