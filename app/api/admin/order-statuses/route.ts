@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
+import { clearStatusCache } from "@/lib/order-status-utils"
 
 export async function GET() {
   try {
@@ -15,7 +16,13 @@ export async function GET() {
       return NextResponse.json({ success: false, message: "Failed to fetch order statuses" }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, statuses })
+    // Додаємо заголовок Cache-Control до відповіді
+    return new NextResponse(JSON.stringify({ success: true, statuses }), {
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    })
   } catch (error) {
     console.error("Unexpected error in GET /api/admin/order-statuses:", error)
     return NextResponse.json({ success: false, message: "An unexpected error occurred" }, { status: 500 })
@@ -71,7 +78,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: "Failed to create order status" }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, status: data })
+    // Очищаємо кеш статусів
+    clearStatusCache()
+
+    // Додаємо заголовок Cache-Control до відповіді
+    return new NextResponse(JSON.stringify({ success: true, status: data }), {
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    })
   } catch (error) {
     console.error("Unexpected error in POST /api/admin/order-statuses:", error)
     return NextResponse.json({ success: false, message: "An unexpected error occurred" }, { status: 500 })

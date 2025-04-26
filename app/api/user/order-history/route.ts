@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase"
-import { getStatusByRemOnlineId } from "@/lib/order-status-utils"
+import { getStatusByRemOnlineId, clearStatusCache } from "@/lib/order-status-utils"
 import { getSession } from "@/lib/auth/session"
 
 export async function GET(request: Request) {
   try {
+    // Очищуємо кеш статусів при кожному запиті
+    clearStatusCache()
+
     // Отримуємо параметри запиту
     const url = new URL(request.url)
     const locale = url.searchParams.get("locale") || "uk"
+    const forceRefresh = url.searchParams.get("forceRefresh") === "true"
 
     // Отримуємо сесію користувача
     const session = await getSession()
@@ -33,8 +37,8 @@ export async function GET(request: Request) {
     // Для кожного замовлення отримуємо історію статусів та перетворюємо статуси
     const ordersWithHistory = await Promise.all(
       ordersData.map(async (order) => {
-        // Отримуємо інформацію про статус замовлення
-        const statusInfo = await getStatusByRemOnlineId(Number.parseInt(order.status, 10), locale)
+        // Отримуємо інформацію про статус замовлення з примусовим оновленням
+        const statusInfo = await getStatusByRemOnlineId(Number.parseInt(order.status, 10), locale, forceRefresh)
 
         // Отримуємо історію статусів
         const { data: historyData, error: historyError } = await supabase
@@ -61,10 +65,10 @@ export async function GET(request: Request) {
 
             const [oldStatusInfo, newStatusInfo] = await Promise.all([
               !isNaN(oldStatusId)
-                ? getStatusByRemOnlineId(oldStatusId, locale)
+                ? getStatusByRemOnlineId(oldStatusId, locale, forceRefresh)
                 : { name: history.old_status, color: "bg-gray-100" },
               !isNaN(newStatusId)
-                ? getStatusByRemOnlineId(newStatusId, locale)
+                ? getStatusByRemOnlineId(newStatusId, locale, forceRefresh)
                 : { name: history.new_status, color: "bg-gray-100" },
             ])
 
@@ -87,7 +91,13 @@ export async function GET(request: Request) {
       }),
     )
 
-    return NextResponse.json({ success: true, orders: ordersWithHistory })
+    // Додаємо заголовок Cache-Control
+    return new NextResponse(JSON.stringify({ success: true, orders: ordersWithHistory }), {
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    })
   } catch (error) {
     console.error("Error in order history API:", error)
     return NextResponse.json(

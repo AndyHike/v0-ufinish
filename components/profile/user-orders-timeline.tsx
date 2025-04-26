@@ -7,7 +7,6 @@ import { uk } from "date-fns/locale"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   CheckCircle2,
@@ -17,10 +16,11 @@ import {
   Calendar,
   Tag,
   ArrowRight,
-  RefreshCcw,
+  RefreshCw,
   Search,
   ChevronRight,
 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 type OrderStatusHistory = {
   id: string
@@ -60,6 +60,7 @@ export function UserOrdersTimeline() {
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [isClient, setIsClient] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   // Важливо: встановлюємо isClient в true тільки на клієнті
   useEffect(() => {
@@ -74,15 +75,26 @@ export function UserOrdersTimeline() {
   }, [locale, isClient])
 
   // Функція для отримання замовлень
-  async function fetchOrders() {
+  async function fetchOrders(forceRefresh = false) {
     if (!isClient) return
 
-    setLoading(true)
+    if (forceRefresh) {
+      setRefreshing(true)
+    } else {
+      setLoading(true)
+    }
     setError(null)
 
     try {
-      // Використовуємо fetch для отримання даних
-      const response = await fetch(`/api/user/order-history?locale=${locale}`)
+      // Використовуємо fetch для отримання даних з параметром forceRefresh
+      const response = await fetch(`/api/user/order-history?locale=${locale}&forceRefresh=${forceRefresh}`, {
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+        cache: "no-store",
+      })
+
       const data = await response.json()
 
       if (data.success && data.orders) {
@@ -95,7 +107,13 @@ export function UserOrdersTimeline() {
       setError(err instanceof Error ? err.message : "Помилка завантаження замовлень")
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
+  }
+
+  // Додаємо функцію для примусового оновлення
+  function handleRefresh() {
+    fetchOrders(true)
   }
 
   function getStatusIcon(statusCode: string) {
@@ -111,7 +129,7 @@ export function UserOrdersTimeline() {
       case 3153189: // Новий
         return <Clock className="h-5 w-5 text-blue-500" />
       case 3153184: // В роботі
-        return <RefreshCcw className="h-5 w-5 text-amber-500" />
+        return <RefreshCw className="h-5 w-5 text-amber-500" />
       case 3153185: // Готовий
         return <CheckCircle2 className="h-5 w-5 text-green-500" />
       case 3153186: // Виданий
@@ -188,8 +206,8 @@ export function UserOrdersTimeline() {
         <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
         <h3 className="text-lg font-semibold mb-2">Помилка завантаження</h3>
         <p className="text-muted-foreground mb-4">{error}</p>
-        <Button onClick={fetchOrders} variant="outline">
-          <RefreshCcw className="mr-2 h-4 w-4" />
+        <Button onClick={handleRefresh} variant="outline">
+          <RefreshCw className="mr-2 h-4 w-4" />
           Спробувати знову
         </Button>
       </div>
@@ -199,7 +217,7 @@ export function UserOrdersTimeline() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
+        <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="all">Всі замовлення</TabsTrigger>
             <TabsTrigger value="active">Активні замовлення</TabsTrigger>
@@ -207,15 +225,22 @@ export function UserOrdersTimeline() {
           </TabsList>
         </Tabs>
 
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <input
-            type="search"
-            placeholder="Пошук замовлень..."
-            className="pl-8 h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" className="h-10" onClick={handleRefresh} disabled={refreshing}>
+            <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
+            {refreshing ? "Оновлення..." : "Оновити"}
+          </Button>
+
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <input
+              type="search"
+              placeholder="Пошук замовлень..."
+              className="pl-8 h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
@@ -241,10 +266,12 @@ export function UserOrdersTimeline() {
                     </CardTitle>
                     <CardDescription>Замовлення №: {order.reference_number}</CardDescription>
                   </div>
-                  <Badge className={order.status_color || "bg-gray-100"}>
+                  <span
+                    className={cn("font-medium px-2 py-1 rounded-full text-xs", order.status_color || "bg-gray-100")}
+                  >
                     {getStatusIcon(order.status)}
                     <span className="ml-1">{order.status_name || order.status}</span>
-                  </Badge>
+                  </span>
                 </div>
               </CardHeader>
               <CardContent>
@@ -270,13 +297,23 @@ export function UserOrdersTimeline() {
                             <div className="mr-2 mt-0.5">{getStatusIcon(history.new_status)}</div>
                             <div className="flex-1">
                               <div className="flex items-center">
-                                <Badge className={history.old_status_color || "bg-gray-100"}>
+                                <span
+                                  className={cn(
+                                    "font-medium px-2 py-0.5 rounded-full text-xs",
+                                    history.old_status_color || "bg-gray-100",
+                                  )}
+                                >
                                   {history.old_status_name || history.old_status}
-                                </Badge>
+                                </span>
                                 <ArrowRight className="h-3 w-3 mx-2 text-muted-foreground" />
-                                <Badge className={history.new_status_color || "bg-gray-100"}>
+                                <span
+                                  className={cn(
+                                    "font-medium px-2 py-0.5 rounded-full text-xs",
+                                    history.new_status_color || "bg-gray-100",
+                                  )}
+                                >
                                   {history.new_status_name || history.new_status}
-                                </Badge>
+                                </span>
                               </div>
                               <div className="text-xs text-muted-foreground mt-1">
                                 {formatDate(history.changed_at)} • {history.changed_by}

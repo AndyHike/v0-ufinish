@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase"
-import { getStatusByRemOnlineId } from "@/lib/order-status-utils"
+import { getStatusByRemOnlineId, clearStatusCache } from "@/lib/order-status-utils"
 import { getSession } from "@/lib/auth/session"
 
 export async function GET(request: Request) {
   try {
+    // Очищуємо кеш статусів при кожному запиті замовлень
+    clearStatusCache()
+
     // Отримуємо параметри запиту
     const url = new URL(request.url)
     const locale = url.searchParams.get("locale") || "uk"
+    const forceRefresh = url.searchParams.get("forceRefresh") === "true"
 
     // Отримуємо сесію користувача
     const session = await getSession()
@@ -35,22 +39,29 @@ export async function GET(request: Request) {
       orders.map(async (order) => {
         const statusId = Number.parseInt(order.status, 10)
         if (!isNaN(statusId)) {
-          const statusInfo = await getStatusByRemOnlineId(statusId, locale)
+          // Примусово оновлюємо статуси з бази даних
+          const statusInfo = await getStatusByRemOnlineId(statusId, locale, forceRefresh)
           return {
             ...order,
             statusName: statusInfo.name,
-            statusColor: statusInfo.color, // Тепер це буде bg-* клас
+            statusColor: statusInfo.color,
           }
         }
         return {
           ...order,
           statusName: order.status,
-          statusColor: "bg-gray-100", // Змінюємо на bg-* клас
+          statusColor: "bg-gray-100",
         }
       }),
     )
 
-    return NextResponse.json({ success: true, orders: ordersWithStatusNames })
+    // Додаємо заголовок Cache-Control
+    return new NextResponse(JSON.stringify({ success: true, orders: ordersWithStatusNames }), {
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    })
   } catch (error) {
     console.error("Error in getUserRepairOrders API:", error)
     return NextResponse.json(

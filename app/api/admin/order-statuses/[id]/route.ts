@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
+import { clearStatusCache } from "@/lib/order-status-utils"
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -53,7 +54,16 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ success: false, message: "Failed to update order status" }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, status: data })
+    // Очищаємо кеш статусів
+    clearStatusCache()
+
+    // Додаємо заголовок Cache-Control до відповіді
+    return new NextResponse(JSON.stringify({ success: true, status: data }), {
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    })
   } catch (error) {
     console.error("Unexpected error in PUT /api/admin/order-statuses/[id]:", error)
     return NextResponse.json({ success: false, message: "An unexpected error occurred" }, { status: 500 })
@@ -74,7 +84,16 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       return NextResponse.json({ success: false, message: "Failed to delete order status" }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true })
+    // Очищаємо кеш статусів
+    clearStatusCache()
+
+    // Додаємо заголовок Cache-Control до відповіді
+    return new NextResponse(JSON.stringify({ success: true }), {
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    })
   } catch (error) {
     console.error("Unexpected error in DELETE /api/admin/order-statuses/[id]:", error)
     return NextResponse.json({ success: false, message: "An unexpected error occurred" }, { status: 500 })

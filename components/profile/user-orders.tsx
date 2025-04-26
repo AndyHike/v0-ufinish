@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useTranslations, useLocale } from "next-intl"
 import { cn } from "@/lib/utils"
-import { ArrowRight, Clock, Search } from "lucide-react"
+import { ArrowRight, Clock, Search, RefreshCw } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
@@ -31,6 +31,7 @@ export function UserOrders() {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("all")
   const [isClient, setIsClient] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   // Важливо: встановлюємо isClient в true тільки на клієнті
   useEffect(() => {
@@ -44,14 +45,29 @@ export function UserOrders() {
     }
   }, [t, locale, isClient])
 
-  async function fetchOrders() {
+  async function fetchOrders(forceRefresh = false) {
     if (!isClient) return
 
     try {
-      setLoading(true)
+      if (forceRefresh) {
+        setRefreshing(true)
+      } else {
+        setLoading(true)
+      }
+
       setError(null)
 
-      const response = await fetch(`/api/user/repair-orders?locale=${locale}`)
+      // Додаємо параметр для примусового оновлення статусів
+      const response = await fetch(`/api/user/repair-orders?locale=${locale}&forceRefresh=${forceRefresh}`, {
+        // Додаємо заголовок для уникнення кешування
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+        // Додаємо унікальний параметр для уникнення кешування
+        cache: "no-store",
+      })
+
       const data = await response.json()
 
       if (data.success && data.orders) {
@@ -65,7 +81,13 @@ export function UserOrders() {
       setError(t("repairHistory.errorFetching"))
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
+  }
+
+  // Додаємо функцію для примусового оновлення
+  function handleRefresh() {
+    fetchOrders(true)
   }
 
   // Фільтрація замовлень
@@ -139,50 +161,58 @@ export function UserOrders() {
   return (
     <div className="w-full">
       <div className="flex flex-col space-y-4">
-        {/* Tabs */}
-        <div className="flex border-b">
-          <button
-            className={cn(
-              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
-              activeTab === "all"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-            onClick={() => setActiveTab("all")}
-          >
-            Всі замовлення
-          </button>
-          <button
-            className={cn(
-              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
-              activeTab === "active"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-            onClick={() => setActiveTab("active")}
-          >
-            Активні замовлення
-          </button>
-          <button
-            className={cn(
-              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
-              activeTab === "completed"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-            onClick={() => setActiveTab("completed")}
-          >
-            Завершені замовлення
-          </button>
-          <div className="ml-auto relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Пошук замовлень..."
-              className="pl-9 h-9 w-[200px] text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        {/* Tabs and Controls */}
+        <div className="flex justify-between items-center">
+          <div className="flex border-b">
+            <button
+              className={cn(
+                "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+                activeTab === "all"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
+              onClick={() => setActiveTab("all")}
+            >
+              Всі замовлення
+            </button>
+            <button
+              className={cn(
+                "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+                activeTab === "active"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
+              onClick={() => setActiveTab("active")}
+            >
+              Активні замовлення
+            </button>
+            <button
+              className={cn(
+                "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+                activeTab === "completed"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
+              onClick={() => setActiveTab("completed")}
+            >
+              Завершені замовлення
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" className="h-9" onClick={handleRefresh} disabled={refreshing}>
+              <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
+              {refreshing ? "Оновлення..." : "Оновити"}
+            </Button>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Пошук замовлень..."
+                className="pl-9 h-9 w-[200px] text-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
         </div>
 
@@ -202,7 +232,7 @@ export function UserOrders() {
         ) : error ? (
           <div className="text-center py-8">
             <p className="text-red-500 mb-2">{error}</p>
-            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+            <Button variant="outline" size="sm" onClick={() => fetchOrders(true)}>
               Спробувати знову
             </Button>
           </div>

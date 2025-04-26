@@ -14,16 +14,17 @@ export type OrderStatus = {
 // Cache for order statuses
 let statusesCache: OrderStatus[] | null = null
 let lastFetchTime = 0
-const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+const CACHE_TTL = 30 * 1000 // Зменшуємо до 30 секунд для тестування
 
-export async function getOrderStatuses(): Promise<OrderStatus[]> {
+export async function getOrderStatuses(forceRefresh = false): Promise<OrderStatus[]> {
   const now = Date.now()
 
-  // Use cache if it exists and hasn't expired
-  if (statusesCache && now - lastFetchTime < CACHE_TTL) {
+  // Use cache if it exists and hasn't expired, and we're not forcing a refresh
+  if (statusesCache && now - lastFetchTime < CACHE_TTL && !forceRefresh) {
     return statusesCache
   }
 
+  console.log("Fetching fresh statuses from database")
   try {
     const supabase = createClient()
     const { data, error } = await supabase
@@ -45,13 +46,14 @@ export async function getOrderStatuses(): Promise<OrderStatus[]> {
   }
 }
 
-// Змінюємо функцію getStatusByRemOnlineId, щоб вона повертала оригінальний колір фону
+// Змінюємо функцію getStatusByRemOnlineId, щоб вона примусово оновлювала дані
 export async function getStatusByRemOnlineId(
   remonlineStatusId: number,
   locale = "uk",
+  forceRefresh = false,
 ): Promise<{ name: string; color: string }> {
   try {
-    const statuses = await getOrderStatuses()
+    const statuses = await getOrderStatuses(forceRefresh)
     const status = statuses.find((s) => s.remonline_status_id === remonlineStatusId)
 
     if (!status) {
