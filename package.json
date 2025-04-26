@@ -73,9 +73,7 @@
     "uuid": "latest",
     "libphonenumber-js": "latest",
     "react-phone-number-input": "latest",
-    "cookie": "latest",
-    "fs": "latest",
-    "path": "latest"
+    "cookie": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

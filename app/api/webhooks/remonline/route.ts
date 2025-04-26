@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase"
 import { hash } from "@/lib/auth/utils"
 import { z } from "zod"
 import remonline from "@/lib/api/remonline"
-import { clearUserSessionsByUserId } from "@/app/actions/session"
 
 // This is the secret key that RemOnline will use to authenticate the webhook
 // You should set this in your environment variables and configure it in RemOnline
@@ -191,7 +190,7 @@ async function handleClientEvent(clientData: any) {
     // Check if user exists
     const { data: existingUser, error: selectError } = await supabase
       .from("users")
-      .select("id, email")
+      .select("id")
       .eq("email", clientData.email.toLowerCase())
       .single()
 
@@ -202,7 +201,7 @@ async function handleClientEvent(clientData: any) {
 
     if (existingUser) {
       // Update existing user
-      await updateExistingUser(supabase, existingUser.id, existingUser.email, clientData)
+      await updateExistingUser(supabase, existingUser.id, clientData)
     } else {
       // Create new user
       await createNewUser(supabase, clientData)
@@ -293,34 +292,26 @@ async function createNewUser(supabase: any, clientData: any) {
   }
 }
 
-// Змінюємо функцію updateExistingUser, щоб очищати сесії тільки при зміні критичних даних
-async function updateExistingUser(supabase: any, userId: string, currentEmail: string, clientData: any) {
+// Змінюємо функцію updateExistingUser, щоб НЕ видаляти сесії користувача
+async function updateExistingUser(supabase: any, userId: string, clientData: any) {
   try {
     // Extract client data
-    const newEmail = clientData.email?.toLowerCase()
+    const email = clientData.email?.toLowerCase()
     const firstName = clientData.first_name || ""
     const lastName = clientData.last_name || ""
     const phone = clientData.phone && clientData.phone.length > 0 ? clientData.phone[0] : null
     const address = clientData.address || ""
 
-    if (!newEmail) {
+    if (!email) {
       console.error("Client from RemOnline has no email, cannot update user")
       return
-    }
-
-    // Перевіряємо, чи змінився email
-    const emailChanged = currentEmail.toLowerCase() !== newEmail.toLowerCase()
-
-    // Логуємо зміну email для відстеження
-    if (emailChanged) {
-      console.log(`Email changed for user ${userId}: ${currentEmail} -> ${newEmail}`)
     }
 
     // Update user
     const { error: userError } = await supabase
       .from("users")
       .update({
-        email: newEmail, // Оновлюємо email в users
+        email, // Оновлюємо email в users
         first_name: firstName,
         last_name: lastName,
         name: `${firstName} ${lastName}`.trim(),
@@ -329,7 +320,7 @@ async function updateExistingUser(supabase: any, userId: string, currentEmail: s
       .eq("id", userId)
 
     console.log("Supabase update user data:", {
-      email: newEmail,
+      email,
       name: `${firstName} ${lastName}`.trim(),
       remonline_id: clientData.id,
     })
@@ -346,7 +337,7 @@ async function updateExistingUser(supabase: any, userId: string, currentEmail: s
         first_name: firstName,
         last_name: lastName,
         phone,
-        email: newEmail, // Обов'язково оновлюємо email в profiles
+        email, // Обов'язково оновлюємо email в profiles
         address, // Оновлюємо address в profiles
         updated_at: new Date().toISOString(),
       })
@@ -355,7 +346,7 @@ async function updateExistingUser(supabase: any, userId: string, currentEmail: s
     console.log("Supabase update profile data:", {
       name: `${firstName} ${lastName}`.trim(),
       phone,
-      email: newEmail,
+      email,
       address,
     })
 
@@ -365,11 +356,8 @@ async function updateExistingUser(supabase: any, userId: string, currentEmail: s
 
     console.log(`User updated from RemOnline webhook: ${userId}`)
 
-    // Очищаємо сесії тільки якщо змінився email
-    if (emailChanged) {
-      console.log(`Clearing sessions for user ${userId} due to email change`)
-      await clearUserSessionsByUserId(userId)
-    }
+    // ВАЖЛИВО: Видаляємо виклик clearUserSessionsByUserId, щоб не видаляти сесії користувача
+    // await clearUserSessionsByUserId(userId)
   } catch (error) {
     console.error("Error in updateExistingUser:", error)
   }
