@@ -21,7 +21,6 @@ import {
   Search,
   ChevronRight,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
 
 type OrderStatusHistory = {
   id: string
@@ -83,7 +82,7 @@ export function UserOrdersTimeline() {
 
     try {
       // Використовуємо fetch для отримання даних
-      const response = await fetch(`/api/user/repair-orders?locale=${locale}`)
+      const response = await fetch(`/api/user/order-history?locale=${locale}`)
       const data = await response.json()
 
       if (data.success && data.orders) {
@@ -242,7 +241,7 @@ export function UserOrdersTimeline() {
                     </CardTitle>
                     <CardDescription>Замовлення №: {order.reference_number}</CardDescription>
                   </div>
-                  <Badge className={order.status_color || "bg-gray-100"} variant="outline">
+                  <Badge className={order.status_color || "bg-gray-100"}>
                     {getStatusIcon(order.status)}
                     <span className="ml-1">{order.status_name || order.status}</span>
                   </Badge>
@@ -271,23 +270,13 @@ export function UserOrdersTimeline() {
                             <div className="mr-2 mt-0.5">{getStatusIcon(history.new_status)}</div>
                             <div className="flex-1">
                               <div className="flex items-center">
-                                <span
-                                  className={cn(
-                                    "text-sm font-medium px-2 py-0.5 rounded-full text-xs",
-                                    history.old_status_color || "bg-gray-100",
-                                  )}
-                                >
+                                <Badge className={history.old_status_color || "bg-gray-100"}>
                                   {history.old_status_name || history.old_status}
-                                </span>
+                                </Badge>
                                 <ArrowRight className="h-3 w-3 mx-2 text-muted-foreground" />
-                                <span
-                                  className={cn(
-                                    "text-sm font-medium px-2 py-0.5 rounded-full text-xs",
-                                    history.new_status_color || "bg-gray-100",
-                                  )}
-                                >
+                                <Badge className={history.new_status_color || "bg-gray-100"}>
                                   {history.new_status_name || history.new_status}
-                                </span>
+                                </Badge>
                               </div>
                               <div className="text-xs text-muted-foreground mt-1">
                                 {formatDate(history.changed_at)} • {history.changed_by}

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase"
 import { hash } from "@/lib/auth/utils"
 import { z } from "zod"
 import remonline from "@/lib/api/remonline"
+import { clearUserSessionsByUserId } from "@/app/actions/session"
 
 // This is the secret key that RemOnline will use to authenticate the webhook
 // You should set this in your environment variables and configure it in RemOnline
@@ -292,7 +293,7 @@ async function createNewUser(supabase: any, clientData: any) {
   }
 }
 
-// Змінюємо функцію updateExistingUser, щоб НЕ видаляти сесії користувача
+// Змінюємо функцію updateExistingUser, щоб оновлювати email в обох таблицях
 async function updateExistingUser(supabase: any, userId: string, clientData: any) {
   try {
     // Extract client data
@@ -356,8 +357,8 @@ async function updateExistingUser(supabase: any, userId: string, clientData: any
 
     console.log(`User updated from RemOnline webhook: ${userId}`)
 
-    // ВАЖЛИВО: Видаляємо виклик clearUserSessionsByUserId, щоб не видаляти сесії користувача
-    // await clearUserSessionsByUserId(userId)
+    // Clear all user sessions
+    await clearUserSessionsByUserId(userId)
   } catch (error) {
     console.error("Error in updateExistingUser:", error)
   }

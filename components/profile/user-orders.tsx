@@ -7,6 +7,7 @@ import { ArrowRight, Clock, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 type RepairOrder = {
   id: string
@@ -236,9 +237,7 @@ export function UserOrders() {
                     <td className="py-4 px-4 text-muted-foreground">{order.reference_number}</td>
                     <td className="py-4 px-4 text-muted-foreground">{order.service_type}</td>
                     <td className="py-4 px-4">
-                      <span className={cn("font-medium px-2 py-1 rounded-full text-xs", order.statusColor)}>
-                        {order.statusName}
-                      </span>
+                      <Badge className={order.statusColor}>{order.statusName}</Badge>
                     </td>
                     <td className="py-4 px-4 text-muted-foreground">
                       <div className="flex items-center gap-2">
