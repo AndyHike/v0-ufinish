@@ -10,7 +10,7 @@ import { syncUserProfile } from "@/lib/user/profile-sync"
 
 export default async function ProfilePage() {
   // Отримуємо переклади з простору імен "Profile"
-  const profileT = await getTranslations("Profile")
+  const profileT = await useTranslations("Profile")
   const locale = await getLocale()
   const session = await getSession()
 
