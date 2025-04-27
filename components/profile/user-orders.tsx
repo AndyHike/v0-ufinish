@@ -54,29 +54,70 @@ type RepairOrder = {
   statusHistory?: OrderStatusHistory[]
 }
 
-// Функція для отримання кольору статусу з покращеним дизайном
+// Замінимо функцію getStatusColorClass на більш сучасну версію з кращими візуальними ефектами
+
 function getStatusColorClass(statusColor: string): string {
-  // Базові кольори з градієнтами для кращого вигляду
+  // Сучасні кольори з градієнтами, тінями та покращеним дизайном
   const colorMap: Record<string, string> = {
-    "bg-green-100 text-green-800": "bg-gradient-to-r from-green-50 to-green-100 text-green-800 border border-green-200",
-    "bg-blue-100 text-blue-800": "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 border border-blue-200",
-    "bg-amber-100 text-amber-800": "bg-gradient-to-r from-amber-50 to-amber-100 text-amber-800 border border-amber-200",
-    "bg-red-100 text-red-800": "bg-gradient-to-r from-red-50 to-red-100 text-red-800 border border-red-200",
+    "bg-green-100 text-green-800":
+      "bg-gradient-to-r from-green-50 to-green-100 text-green-800 border border-green-200 shadow-sm hover:shadow-md transition-all duration-200 hover:from-green-100 hover:to-green-50",
+    "bg-blue-100 text-blue-800":
+      "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 border border-blue-200 shadow-sm hover:shadow-md transition-all duration-200 hover:from-blue-100 hover:to-blue-50",
+    "bg-amber-100 text-amber-800":
+      "bg-gradient-to-r from-amber-50 to-amber-100 text-amber-800 border border-amber-200 shadow-sm hover:shadow-md transition-all duration-200 hover:from-amber-100 hover:to-amber-50",
+    "bg-red-100 text-red-800":
+      "bg-gradient-to-r from-red-50 to-red-100 text-red-800 border border-red-200 shadow-sm hover:shadow-md transition-all duration-200 hover:from-red-100 hover:to-red-50",
     "bg-purple-100 text-purple-800":
-      "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border border-purple-200",
-    "bg-pink-100 text-pink-800": "bg-gradient-to-r from-pink-50 to-pink-100 text-pink-800 border border-pink-200",
+      "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border border-purple-200 shadow-sm hover:shadow-md transition-all duration-200 hover:from-purple-100 hover:to-purple-50",
+    "bg-pink-100 text-pink-800":
+      "bg-gradient-to-r from-pink-50 to-pink-100 text-pink-800 border border-pink-200 shadow-sm hover:shadow-md transition-all duration-200 hover:from-pink-100 hover:to-pink-50",
     "bg-indigo-100 text-indigo-800":
-      "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-800 border border-indigo-200",
-    "bg-gray-100 text-gray-800": "bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 border border-gray-200",
-    "bg-teal-100 text-teal-800": "bg-gradient-to-r from-teal-50 to-teal-100 text-teal-800 border border-teal-200",
-    "bg-cyan-100 text-cyan-800": "bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-800 border border-cyan-200",
+      "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-800 border border-indigo-200 shadow-sm hover:shadow-md transition-all duration-200 hover:from-indigo-100 hover:to-indigo-50",
+    "bg-gray-100 text-gray-800":
+      "bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 hover:from-gray-100 hover:to-gray-50",
+    "bg-teal-100 text-teal-800":
+      "bg-gradient-to-r from-teal-50 to-teal-100 text-teal-800 border border-teal-200 shadow-sm hover:shadow-md transition-all duration-200 hover:from-teal-100 hover:to-teal-50",
+    "bg-cyan-100 text-cyan-800":
+      "bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-800 border border-cyan-200 shadow-sm hover:shadow-md transition-all duration-200 hover:from-cyan-100 hover:to-cyan-50",
     "bg-orange-100 text-orange-800":
-      "bg-gradient-to-r from-orange-50 to-orange-100 text-orange-800 border border-orange-200",
-    "bg-lime-100 text-lime-800": "bg-gradient-to-r from-lime-50 to-lime-100 text-lime-800 border border-lime-200",
+      "bg-gradient-to-r from-orange-50 to-orange-100 text-orange-800 border border-orange-200 shadow-sm hover:shadow-md transition-all duration-200 hover:from-orange-100 hover:to-orange-50",
+    "bg-lime-100 text-lime-800":
+      "bg-gradient-to-r from-lime-50 to-lime-100 text-lime-800 border border-lime-200 shadow-sm hover:shadow-md transition-all duration-200 hover:from-lime-100 hover:to-lime-50",
   }
 
-  // Повертаємо покращений клас кольору або оригінальний, якщо немає відповідності
-  return colorMap[statusColor] || statusColor
+  // Якщо колір не знайдено в мапі, повертаємо базовий стиль з градієнтом
+  if (!colorMap[statusColor]) {
+    return "bg-gradient-to-r from-slate-50 to-slate-100 text-slate-800 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200"
+  }
+
+  return colorMap[statusColor]
+}
+
+// Також оновимо функцію getStatusIcon для кращого відображення іконок
+function getStatusIcon(statusName: string) {
+  const statusLower = statusName.toLowerCase()
+
+  if (
+    statusLower.includes("завершено") ||
+    statusLower.includes("готов") ||
+    statusLower.includes("видан") ||
+    statusLower.includes("dokončeno") ||
+    statusLower.includes("completed") ||
+    statusLower.includes("done") ||
+    statusLower.includes("ready")
+  ) {
+    return <CheckCircle2 className="h-4 w-4 animate-pulse" />
+  } else if (
+    statusLower.includes("процес") ||
+    statusLower.includes("робот") ||
+    statusLower.includes("zpracování") ||
+    statusLower.includes("process") ||
+    statusLower.includes("work")
+  ) {
+    return <Loader2 className="h-4 w-4 animate-spin" />
+  } else {
+    return <AlertCircle className="h-4 w-4" />
+  }
 }
 
 export function UserOrders() {
@@ -227,31 +268,6 @@ export function UserOrders() {
   }
 
   // Отримання іконки для статусу
-  function getStatusIcon(statusName: string) {
-    const statusLower = statusName.toLowerCase()
-
-    if (
-      statusLower.includes("завершено") ||
-      statusLower.includes("готов") ||
-      statusLower.includes("видан") ||
-      statusLower.includes("dokončeno") ||
-      statusLower.includes("completed") ||
-      statusLower.includes("done") ||
-      statusLower.includes("ready")
-    ) {
-      return <CheckCircle2 className="h-4 w-4" />
-    } else if (
-      statusLower.includes("процес") ||
-      statusLower.includes("робот") ||
-      statusLower.includes("zpracování") ||
-      statusLower.includes("process") ||
-      statusLower.includes("work")
-    ) {
-      return <Loader2 className="h-4 w-4" />
-    } else {
-      return <AlertCircle className="h-4 w-4" />
-    }
-  }
 
   // Якщо ми на сервері або ще не на клієнті, показуємо скелетон
   if (!isClient) {
@@ -394,12 +410,13 @@ export function UserOrders() {
                         </td>
                         <td className="py-3 px-4">
                           <Badge
-                            className={cn("font-medium text-xs shadow-sm", getStatusColorClass(order.statusColor))}
+                            className={cn(
+                              "font-medium text-xs py-1 px-2.5 rounded-full flex items-center gap-1.5",
+                              getStatusColorClass(order.statusColor),
+                            )}
                           >
-                            <span className="flex items-center">
-                              {getStatusIcon(order.statusName)}
-                              <span className="ml-1">{order.statusName}</span>
-                            </span>
+                            {getStatusIcon(order.statusName)}
+                            <span>{order.statusName}</span>
                           </Badge>
                         </td>
                         <td className="py-3 px-4 text-sm">
@@ -445,9 +462,13 @@ export function UserOrders() {
                                     <div className="text-muted-foreground">{t("currentStatus")}:</div>
                                     <div>
                                       <Badge
-                                        className={cn("font-medium text-xs", getStatusColorClass(order.statusColor))}
+                                        className={cn(
+                                          "font-medium text-xs py-1 px-2.5 rounded-full flex items-center gap-1.5",
+                                          getStatusColorClass(order.statusColor),
+                                        )}
                                       >
-                                        {order.statusName}
+                                        {getStatusIcon(order.statusName)}
+                                        <span>{order.statusName}</span>
                                       </Badge>
                                     </div>
                                     <div className="text-muted-foreground">{t("price")}:</div>
@@ -466,11 +487,12 @@ export function UserOrders() {
                                             <div className="flex items-center">
                                               <Badge
                                                 className={cn(
-                                                  "font-medium text-xs",
+                                                  "font-medium text-xs py-1 px-2.5 rounded-full flex items-center gap-1.5",
                                                   getStatusColorClass(history.new_status_color || "bg-gray-100"),
                                                 )}
                                               >
-                                                {history.new_status_name || history.new_status}
+                                                {getStatusIcon(history.new_status_name || history.new_status)}
+                                                <span>{history.new_status_name || history.new_status}</span>
                                               </Badge>
                                               <span className="text-xs text-muted-foreground ml-2">
                                                 {history.changed_by}
