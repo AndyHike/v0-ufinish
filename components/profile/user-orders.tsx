@@ -503,7 +503,7 @@ export function UserOrders() {
                     <div className="flex justify-end mt-2">
                       <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground">
                         <Info className="h-3.5 w-3.5 mr-1" />
-                        {t("details")}
+                        {t("showDetails")}
                       </Button>
                     </div>
                   </div>
