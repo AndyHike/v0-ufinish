@@ -9,7 +9,7 @@ import { NextAuthProvider } from "@/components/providers/session-provider"
 const inter = Inter({ subsets: ["latin", "cyrillic"] })
 
 export const metadata: Metadata = {
-  title: "Ремонт мобільних телефонів",
+  title: "DeviceHelp",
   description: "Професійний ремонт мобільних телефонів",
     generator: 'v0.dev'
 }

@@ -14,7 +14,7 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-2">
               <Smartphone className="h-5 w-5" />
-              <span className="font-semibold">{t("siteTitle")}</span>
+              <span className="font-semibold">DeviceHelp</span>
             </div>
             <p className="mt-4 text-sm text-muted-foreground">{t("description")}</p>
           </div>
@@ -46,6 +46,16 @@ export function Footer() {
                   {t("contact")}
                 </Link>
               </li>
+              <li>
+                <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
+                  {t("terms")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
+                  {t("privacy")}
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
@@ -53,7 +63,7 @@ export function Footer() {
             <ul className="grid gap-3">
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Phone className="h-4 w-4" />
-                <span>+380 12 345 6789</span>
+                <span>+420 775 848 259</span>
               </li>
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4" />
@@ -85,7 +95,7 @@ export function Footer() {
         </div>
         <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
           <p>
-            &copy; {new Date().getFullYear()} {t("siteTitle")}. {t("allRightsReserved")}
+            &copy; {new Date().getFullYear()} DeviceHelp. {t("allRightsReserved")}
           </p>
         </div>
       </div>

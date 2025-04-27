@@ -21,7 +21,9 @@
     "contactUs": "Contact Us",
     "address": "123 Main St, New York, USA",
     "followUs": "Follow Us",
-    "allRightsReserved": "All rights reserved."
+    "allRightsReserved": "All rights reserved.",
+    "terms": "Terms and Conditions",
+    "privacy": "Privacy Policy"
   },
   "UserNav": {
     "login": "Login",
@@ -617,5 +619,13 @@
     "editingNotAvailable": "Profile editing is currently unavailable",
     "device": "Device",
     "service": "Service"
+  },
+  "Terms": {
+    "title": "Terms and Conditions",
+    "contentPlaceholder": "Content will be added later."
+  },
+  "Privacy": {
+    "title": "Privacy Policy",
+    "contentPlaceholder": "Content will be added later."
   }
 }

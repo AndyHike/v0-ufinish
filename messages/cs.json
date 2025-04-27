@@ -21,7 +21,9 @@
     "contactUs": "Kontaktujte nás",
     "address": "Václavské náměstí 1, Praha, Česká republika",
     "followUs": "Sledujte nás",
-    "allRightsReserved": "Všechna práva vyhrazena."
+    "allRightsReserved": "Všechna práva vyhrazena.",
+    "terms": "Obchodní podmínky",
+    "privacy": "Ochrana osobních údajů"
   },
   "UserNav": {
     "login": "Přihlásit se",
@@ -565,5 +567,13 @@
     "editingNotAvailable": "Úprava profilu není momentálně k dispozici",
     "device": "Zařízení",
     "service": "Služba"
+  },
+  "Terms": {
+    "title": "Obchodní podmínky",
+    "contentPlaceholder": "Obsah bude přidán později."
+  },
+  "Privacy": {
+    "title": "Ochrana osobních údajů",
+    "contentPlaceholder": "Obsah bude přidán později."
   }
 }

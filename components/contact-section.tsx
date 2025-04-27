@@ -48,7 +48,7 @@ export function ContactSection() {
               <Phone className="mt-1 h-5 w-5 text-primary" />
               <div>
                 <h3 className="font-semibold">{t("phone")}</h3>
-                <p className="text-sm text-muted-foreground">+380 12 345 6789</p>
+                <p className="text-sm text-muted-foreground">+420 775 848 259</p>
               </div>
             </div>
             <div className="flex items-start space-x-4">
@@ -68,7 +68,7 @@ export function ContactSection() {
             <div className="aspect-video overflow-hidden rounded-lg">
               <iframe
                 title={t("mapTitle")}
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d325518.68780316407!2d30.252511957059642!3d50.4016990487754!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40d4cf4ee15a4505%3A0x764931d2170146fe!2sKyiv%2C%20Ukraine%2C%2002000!5e0!3m2!1sen!2sus!4v1650000000000!5m2!1sen!2sus"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d20472.97391809471!2d14.4194684!3d50.0755381!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b94ea69e1a1e1%3A0x7c93c7aaef9e8b!2zUHJhaGEgMiwgxIxlc2tv!5e0!3m2!1scs!2scz!4v1650000000000!5m2!1scs!2scz"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}

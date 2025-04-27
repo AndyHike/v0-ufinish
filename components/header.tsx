@@ -75,7 +75,7 @@ export function Header({ user }) {
           </Sheet>
           <Link href={`/${locale}`} className="flex items-center gap-2">
             <Smartphone className="h-5 w-5" />
-            <span className="hidden font-semibold md:inline-block">{t("siteTitle")}</span>
+            <span className="hidden font-semibold md:inline-block">DeviceHelp</span>
           </Link>
         </div>
         <nav className="hidden md:flex md:gap-6">
