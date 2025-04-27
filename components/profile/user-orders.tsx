@@ -80,7 +80,7 @@ function getStatusColorClass(statusColor: string): string {
 }
 
 export function UserOrders() {
-  const t = useTranslations("Profile")
+  const t = useTranslations("Profile.repairHistory")
   const commonT = useTranslations("Common")
   const locale = useLocale()
   const [orders, setOrders] = useState<RepairOrder[]>([])
@@ -131,11 +131,11 @@ export function UserOrders() {
         setOrders(data.orders)
         setFilteredOrders(data.orders)
       } else {
-        setError(data.message || t("repairHistory.errorFetching"))
+        setError(data.message || t("errorFetching"))
       }
     } catch (err) {
       console.error("Error fetching repair orders:", err)
-      setError(t("repairHistory.errorFetching"))
+      setError(t("errorFetching"))
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -266,8 +266,8 @@ export function UserOrders() {
     <div className="w-full">
       <Card className="shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle>{t("repairHistory.title")}</CardTitle>
-          <CardDescription>{t("repairHistory.description")}</CardDescription>
+          <CardTitle>{t("title")}</CardTitle>
+          <CardDescription>{t("description")}</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {/* Фільтри та пошук */}
@@ -279,7 +279,7 @@ export function UserOrders() {
                 className={activeTab === "all" ? "bg-primary/10 border-primary/50" : ""}
                 onClick={() => setActiveTab("all")}
               >
-                {t("repairHistory.allTab")}
+                {t("allTab")}
               </Button>
               <Button
                 variant="outline"
@@ -287,7 +287,7 @@ export function UserOrders() {
                 className={activeTab === "active" ? "bg-primary/10 border-primary/50" : ""}
                 onClick={() => setActiveTab("active")}
               >
-                {t("repairHistory.activeTab")}
+                {t("activeTab")}
               </Button>
               <Button
                 variant="outline"
@@ -295,19 +295,19 @@ export function UserOrders() {
                 className={activeTab === "completed" ? "bg-primary/10 border-primary/50" : ""}
                 onClick={() => setActiveTab("completed")}
               >
-                {t("repairHistory.completedTab")}
+                {t("completedTab")}
               </Button>
             </div>
             <div className="flex items-center space-x-2">
               <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
                 <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
-                {refreshing ? t("repairHistory.refreshing") : t("repairHistory.refresh")}
+                {refreshing ? t("refreshing") : t("refresh")}
               </Button>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder={t("repairHistory.search")}
+                  placeholder={t("search")}
                   className="pl-9 h-9 w-[150px] text-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -329,7 +329,7 @@ export function UserOrders() {
               <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-2" />
               <p className="text-destructive font-medium mb-2">{error}</p>
               <Button variant="outline" size="sm" onClick={() => fetchOrders(true)}>
-                {t("repairHistory.tryAgain")}
+                {t("tryAgain")}
               </Button>
             </div>
           ) : filteredOrders.length === 0 ? (
@@ -337,35 +337,29 @@ export function UserOrders() {
               <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mx-auto mb-3">
                 <Calendar className="h-6 w-6 text-muted-foreground" />
               </div>
-              <p className="text-muted-foreground font-medium">
-                {searchQuery ? t("repairHistory.noSearchResults") : t("repairHistory.noOrders")}
-              </p>
+              <p className="text-muted-foreground font-medium">{searchQuery ? t("noSearchResults") : t("noOrders")}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b bg-muted/30">
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">{t("idColumn")}</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">{t("dateColumn")}</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">
-                      {t("repairHistory.idColumn")}
+                      {t("deviceColumn")}
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">
-                      {t("repairHistory.dateColumn")}
+                      {t("serviceColumn")}
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">
-                      {t("repairHistory.deviceColumn")}
+                      {t("statusColumn")}
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">
-                      {t("repairHistory.serviceColumn")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">
-                      {t("repairHistory.statusColumn")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">
-                      {t("repairHistory.priceColumn")}
+                      {t("priceColumn")}
                     </th>
                     <th className="text-center py-3 px-4 font-medium text-muted-foreground text-sm w-10">
-                      {t("repairHistory.detailsColumn")}
+                      {t("detailsColumn")}
                     </th>
                   </tr>
                 </thead>
@@ -410,7 +404,7 @@ export function UserOrders() {
                         <td className="py-3 px-4 text-sm">
                           <div className="flex items-center">
                             <Tag className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                            {order.price ? `${order.price} ${t("repairHistory.currency")}` : "-"}
+                            {order.price ? `${order.price} ${t("currency")}` : "-"}
                           </div>
                         </td>
                         <td className="py-3 px-4 text-center">
@@ -425,7 +419,7 @@ export function UserOrders() {
                             ) : (
                               <ChevronDown className="h-4 w-4" />
                             )}
-                            <span className="sr-only">{t("repairHistory.showDetails")}</span>
+                            <span className="sr-only">{t("showDetails")}</span>
                           </Button>
                         </td>
                       </tr>
@@ -435,19 +429,19 @@ export function UserOrders() {
                             <div className="space-y-4">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                  <h4 className="text-sm font-medium">{t("repairHistory.orderDetails")}</h4>
+                                  <h4 className="text-sm font-medium">{t("orderDetails")}</h4>
                                   <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <div className="text-muted-foreground">{t("repairHistory.orderId")}:</div>
+                                    <div className="text-muted-foreground">{t("orderId")}:</div>
                                     <div>{order.reference_number}</div>
-                                    <div className="text-muted-foreground">{t("repairHistory.creationDate")}:</div>
+                                    <div className="text-muted-foreground">{t("creationDate")}:</div>
                                     <div>{formatDateTime(order.created_at)}</div>
-                                    <div className="text-muted-foreground">{t("repairHistory.device")}:</div>
+                                    <div className="text-muted-foreground">{t("device")}:</div>
                                     <div>
                                       {order.device_brand} {order.device_model}
                                     </div>
-                                    <div className="text-muted-foreground">{t("repairHistory.service")}:</div>
+                                    <div className="text-muted-foreground">{t("service")}:</div>
                                     <div>{order.service_type}</div>
-                                    <div className="text-muted-foreground">{t("repairHistory.currentStatus")}:</div>
+                                    <div className="text-muted-foreground">{t("currentStatus")}:</div>
                                     <div>
                                       <Badge
                                         className={cn("font-medium text-xs", getStatusColorClass(order.statusColor))}
@@ -455,18 +449,14 @@ export function UserOrders() {
                                         {order.statusName}
                                       </Badge>
                                     </div>
-                                    <div className="text-muted-foreground">{t("repairHistory.price")}:</div>
-                                    <div>
-                                      {order.price
-                                        ? `${order.price} ${t("repairHistory.currency")}`
-                                        : t("repairHistory.notSpecified")}
-                                    </div>
+                                    <div className="text-muted-foreground">{t("price")}:</div>
+                                    <div>{order.price ? `${order.price} ${t("currency")}` : t("notSpecified")}</div>
                                   </div>
                                 </div>
 
                                 {order.statusHistory && order.statusHistory.length > 0 && (
                                   <div className="space-y-2">
-                                    <h4 className="text-sm font-medium">{t("repairHistory.statusHistory")}</h4>
+                                    <h4 className="text-sm font-medium">{t("statusHistory")}</h4>
                                     <div className="space-y-3 relative before:absolute before:left-1.5 before:top-2 before:h-[calc(100%-16px)] before:w-px before:bg-border">
                                       {order.statusHistory.map((history, index) => (
                                         <div key={history.id} className="flex items-start pl-6 relative">
