@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { getTranslations } from "next-intl/server"
+import { getTranslations, getLocale } from "next-intl/server"
 import { getSession } from "@/lib/auth/session"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UserProfile } from "@/components/profile/user-profile"
@@ -10,6 +10,7 @@ import { syncUserProfile } from "@/lib/user/profile-sync"
 
 export default async function ProfilePage() {
   const t = await getTranslations("Profile")
+  const locale = await getLocale()
   const session = await getSession()
 
   if (!session || !session.user) {
@@ -56,13 +57,13 @@ export default async function ProfilePage() {
           <TabsTrigger value="discounts">{t("myDiscounts")}</TabsTrigger>
         </TabsList>
         <TabsContent value="profile" className="space-y-4">
-          <UserProfile user={userData} />
+          <UserProfile user={userData} locale={locale} />
         </TabsContent>
         <TabsContent value="orders" className="space-y-4">
           <UserOrders />
         </TabsContent>
         <TabsContent value="discounts" className="space-y-4">
-          <UserDiscounts />
+          <UserDiscounts discounts={[]} />
         </TabsContent>
       </Tabs>
     </div>

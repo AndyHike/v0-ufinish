@@ -20,9 +20,10 @@ interface UserProfileProps {
     role?: string
     created_at?: string
   }
+  locale?: string
 }
 
-export function UserProfile({ user }: UserProfileProps) {
+export function UserProfile({ user, locale = "uk" }: UserProfileProps) {
   // Використовуємо переклади
   const t = useTranslations("Profile")
 
@@ -34,7 +35,7 @@ export function UserProfile({ user }: UserProfileProps) {
   // Format date
   const formatDate = (dateString?: string) => {
     if (!dateString) return t("notSpecified")
-    return new Date(dateString).toLocaleDateString("uk-UA", {
+    return new Date(dateString).toLocaleDateString(locale, {
       day: "numeric",
       month: "long",
       year: "numeric",

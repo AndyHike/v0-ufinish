@@ -1,7 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/format-currency"
 
 interface Discount {
@@ -13,7 +13,7 @@ interface Discount {
   expiresAt: string | null
 }
 
-export function UserDiscounts({ discounts }: { discounts: Discount[] }) {
+export function UserDiscounts({ discounts = [] }: { discounts?: Discount[] }) {
   const t = useTranslations("Profile")
 
   if (!discounts || discounts.length === 0) {
@@ -21,9 +21,13 @@ export function UserDiscounts({ discounts }: { discounts: Discount[] }) {
       <Card>
         <CardHeader>
           <CardTitle>{t("myDiscounts")}</CardTitle>
+          <CardDescription>{t("viewDiscounts")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-500">{t("noDiscountsYet")}</p>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-muted-foreground">{t("noDiscountsYet")}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t("discountsWillBeAvailable")}</p>
+          </div>
         </CardContent>
       </Card>
     )
@@ -33,6 +37,7 @@ export function UserDiscounts({ discounts }: { discounts: Discount[] }) {
     <Card>
       <CardHeader>
         <CardTitle>{t("myDiscounts")}</CardTitle>
+        <CardDescription>{t("viewDiscounts")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

@@ -58,6 +58,7 @@ function formatDate(dateString: string) {
 
 export function UserOrdersTimeline() {
   const t = useTranslations("Profile")
+  const tRepairHistory = useTranslations("Profile.repairHistory")
   const tCommon = useTranslations("Common")
   const locale = useLocale() // Отримуємо поточну локаль
   const [orders, setOrders] = useState<RepairOrder[]>([])
@@ -107,11 +108,11 @@ export function UserOrdersTimeline() {
       if (data.success && data.orders) {
         setOrders(data.orders)
       } else {
-        setError(data.message || t("repairHistory.errorFetching"))
+        setError(data.message || tRepairHistory("errorFetching"))
       }
     } catch (err) {
       console.error("Error fetching orders:", err)
-      setError(err instanceof Error ? err.message : t("repairHistory.errorFetching"))
+      setError(err instanceof Error ? err.message : tRepairHistory("errorFetching"))
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -203,11 +204,11 @@ export function UserOrdersTimeline() {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center">
         <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
-        <h3 className="text-lg font-semibold mb-2">{t("repairHistory.loadingError")}</h3>
+        <h3 className="text-lg font-semibold mb-2">{tRepairHistory("loadingError")}</h3>
         <p className="text-muted-foreground mb-4">{error}</p>
         <Button onClick={handleRefresh} variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" />
-          {t("repairHistory.tryAgain")}
+          {tRepairHistory("tryAgain")}
         </Button>
       </div>
     )
@@ -227,12 +228,13 @@ export function UserOrdersTimeline() {
 
 function UserOrdersTimelineComponent({ events }: { events: TimelineEvent[] }) {
   const t = useTranslations("Profile")
+  const tRepairHistory = useTranslations("Profile.repairHistory")
   const tCommon = useTranslations("Common")
 
   if (!events || events.length === 0) {
     return (
       <div className="text-center py-10">
-        <p className="text-gray-500">{t("repairHistory.noOrders")}</p>
+        <p className="text-gray-500">{tRepairHistory("noOrders")}</p>
       </div>
     )
   }
@@ -255,7 +257,7 @@ function UserOrdersTimelineComponent({ events }: { events: TimelineEvent[] }) {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <p className="font-medium">
-                    {t("repairHistory.orderNumber")}: {event.id}
+                    {tRepairHistory("orderNumber")}: {event.id}
                   </p>
                   <p className="text-sm text-gray-500">{formatDate(event.date)}</p>
                 </div>

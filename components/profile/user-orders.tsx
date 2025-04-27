@@ -81,6 +81,7 @@ function getStatusColorClass(statusColor: string): string {
 
 export function UserOrders() {
   const t = useTranslations("Profile.repairHistory")
+  const profileT = useTranslations("Profile")
   const commonT = useTranslations("Common")
   const locale = useLocale()
   const [orders, setOrders] = useState<RepairOrder[]>([])
