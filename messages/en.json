@@ -554,22 +554,9 @@
     "backToHome": "Back to Home",
     "learnMore": "Learn More",
     "contactUs": "Contact Us",
-    "viewAll": "View All",
-    "orderStatuses": {
-      "new": "New",
-      "in progress": "In Progress",
-      "waiting for parts": "Waiting for Parts",
-      "waiting for client": "Waiting for Client",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "on hold": "On Hold",
-      "dokončeno": "Completed"
-    }
+    "viewAll": "View All"
   },
   "Profile": {
-    "userProfile": "User Profile",
-    "manageProfileAndOrders": "Manage your profile and view repair history.",
-    "profile": "Profile",
     "repairHistory": {
       "title": "Repair History",
       "description": "View your repair history and status",
@@ -577,30 +564,6 @@
       "errorFetching": "Error loading repair history",
       "tryAgain": "Try again",
       "orderNumber": "Order #"
-    },
-    "myDiscounts": "My Discounts",
-    "viewRepairHistory": "View the history of your repairs and their status.",
-    "all": "All",
-    "active": "Active",
-    "completed": "Completed",
-    "refresh": "Refresh",
-    "search": "Search...",
-    "id": "ID",
-    "date": "Date",
-    "device": "Device",
-    "service": "Service",
-    "status": "Status",
-    "price": "Price",
-    "details": "Details",
-    "orderDetails": "Order Details",
-    "orderID": "Order ID",
-    "creationDate": "Creation Date",
-    "currentStatus": "Current Status",
-    "value": "Value",
-    "notSpecified": "Not Specified",
-    "noOrdersYet": "You don't have any orders yet",
-    "welcomeDiscount": "Welcome discount for new clients",
-    "expiresOn": "Expires on",
-    "noDiscountsYet": "You don't have any discounts yet"
+    }
   }
 }

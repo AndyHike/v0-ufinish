@@ -1,51 +1,70 @@
-import { getTranslations } from "next-intl/server"
-import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
-import { authOptions } from "@/lib/auth"
-import { getUserRepairOrders } from "@/app/actions/repair-orders"
-import UserProfile from "@/components/profile/user-profile"
-import UserOrders from "@/components/profile/user-orders"
-import UserDiscounts from "@/components/profile/user-discounts"
-import { PageHeader } from "@/components/page-header"
+import { getSession } from "@/lib/auth/session"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { UserProfile } from "@/components/profile/user-profile"
+import { UserOrders } from "@/components/profile/user-orders"
+import { UserDiscounts } from "@/components/profile/user-discounts"
+import { createClient } from "@/lib/supabase"
+import { syncUserProfile } from "@/lib/user/profile-sync"
 
 export default async function ProfilePage() {
-  const t = await getTranslations("Profile")
-  const session = await getServerSession(authOptions)
+  const session = await getSession()
 
-  if (!session) {
+  if (!session || !session.user) {
     redirect("/auth/signin")
   }
 
-  const orders = await getUserRepairOrders(session.user.id)
+  // Sync user profile data
+  await syncUserProfile(session.user.id)
 
-  // Mock discounts data - in a real app, you would fetch this from your database
-  const discounts = [
-    {
-      id: "1",
-      code: "WELCOME10",
-      description: t("welcomeDiscount"),
-      amount: 10,
-      isPercentage: true,
-      expiresAt: null,
-    },
-    // Add more discounts as needed
-  ]
+  // Get user profile data from database
+  const supabase = createClient()
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("first_name, last_name, phone, address, created_at")
+    .eq("id", session.user.id)
+    .single()
+
+  console.log("Profile data from database:", profile)
+  console.log("Profile error:", profileError)
+
+  // If profile data is missing, get from users table
+  const userData = {
+    ...session.user,
+    first_name: profile?.first_name || session.user.first_name || null,
+    last_name: profile?.last_name || session.user.last_name || null,
+    phone: profile?.phone || session.user.phone || null,
+    address: profile?.address || null,
+    created_at: profile?.created_at || new Date().toISOString(),
+  }
+
+  console.log("User data being passed to profile component:", userData)
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <PageHeader heading={t("userProfile")} text={t("manageProfileAndOrders")} />
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-        <div className="md:col-span-1">
-          <UserProfile user={session.user} />
-          <div className="mt-6">
-            <UserDiscounts discounts={discounts} />
-          </div>
-        </div>
-        <div className="md:col-span-2">
-          <UserOrders orders={orders} />
-        </div>
+    <div className="container py-4 sm:py-10 px-4 sm:px-6">
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Особистий кабінет</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          Керуйте своїм профілем та переглядайте історію ремонтів.
+        </p>
       </div>
+
+      <Tabs defaultValue="profile" className="space-y-4">
+        <TabsList className="w-full grid grid-cols-3">
+          <TabsTrigger value="profile">Профіль</TabsTrigger>
+          <TabsTrigger value="orders">Історія ремонтів</TabsTrigger>
+          <TabsTrigger value="discounts">Мої знижки</TabsTrigger>
+        </TabsList>
+        <TabsContent value="profile" className="space-y-4">
+          <UserProfile user={userData} />
+        </TabsContent>
+        <TabsContent value="orders" className="space-y-4">
+          <UserOrders />
+        </TabsContent>
+        <TabsContent value="discounts" className="space-y-4">
+          <UserDiscounts />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
