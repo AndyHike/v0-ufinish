@@ -1,16 +1,11 @@
 import { redirect } from "next/navigation"
-import { getTranslations, getLocale } from "next-intl/server"
+import { getLocale } from "next-intl/server"
 import { getSession } from "@/lib/auth/session"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { UserProfile } from "@/components/profile/user-profile"
-import { UserOrders } from "@/components/profile/user-orders"
-import { UserDiscounts } from "@/components/profile/user-discounts"
 import { createClient } from "@/lib/supabase"
 import { syncUserProfile } from "@/lib/user/profile-sync"
+import ProfileContent from "./profile-content"
 
 export default async function ProfilePage() {
-  // Отримуємо переклади з простору імен "Profile"
-  const profileT = await useTranslations("Profile")
   const locale = await getLocale()
   const session = await getSession()
 
@@ -44,29 +39,5 @@ export default async function ProfilePage() {
 
   console.log("User data being passed to profile component:", userData)
 
-  return (
-    <div className="container py-4 sm:py-10 px-4 sm:px-6">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{profileT("userProfile")}</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">{profileT("manageProfileAndOrders")}</p>
-      </div>
-
-      <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="profile">{profileT("profile")}</TabsTrigger>
-          <TabsTrigger value="orders">{profileT("repairHistory.title")}</TabsTrigger>
-          <TabsTrigger value="discounts">{profileT("myDiscounts")}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="profile" className="space-y-4">
-          <UserProfile user={userData} locale={locale} />
-        </TabsContent>
-        <TabsContent value="orders" className="space-y-4">
-          <UserOrders />
-        </TabsContent>
-        <TabsContent value="discounts" className="space-y-4">
-          <UserDiscounts discounts={[]} />
-        </TabsContent>
-      </Tabs>
-    </div>
-  )
+  return <ProfileContent userData={userData} locale={locale} />
 }
