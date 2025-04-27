@@ -66,8 +66,6 @@
     "crypto": "latest",
     "@supabase/auth-helpers-nextjs": "latest",
     "@hello-pangea/dnd": "latest",
-    "@formatjs/intl-localematcher": "latest",
-    "negotiator": "latest",
     "papaparse": "latest",
     "react-csv": "latest",
     "uuid": "latest",

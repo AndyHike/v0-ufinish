@@ -3,23 +3,29 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase"
 
-// Hardcode the locales and defaultLocale to avoid importing from i18n.js
-const locales = ["uk", "cs", "en"]
+// Список підтримуваних локалей
+const locales = ["uk", "en", "cs"]
 const defaultLocale = "uk"
 
-// Create the next-intl middleware
+// Створюємо middleware для next-intl
 const intlMiddleware = createMiddleware({
   locales,
   defaultLocale,
-  localePrefix: "always",
+  localePrefix: "as-needed",
 })
 
 export default async function middleware(request: NextRequest) {
+  // Перевіряємо, чи це запит до API
+  if (request.nextUrl.pathname.startsWith("/api")) {
+    return NextResponse.next()
+  }
+
+  // Для всіх інших запитів використовуємо next-intl middleware
   const pathname = request.nextUrl.pathname
 
   // Add exceptions for API routes and webhooks
   // This will prevent redirects for webhook requests
-  if (pathname.startsWith("/api/") || pathname.includes("/webhooks/") || pathname.startsWith("/app/api/")) {
+  if (pathname.includes("/webhooks/") || pathname.startsWith("/app/api/")) {
     return NextResponse.next()
   }
 
@@ -82,11 +88,6 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Update matcher to exclude API routes and webhooks
-  matcher: [
-    // Include all paths that don't start with api, _next, webhooks, or have a file extension
-    "/((?!api|_next|webhooks|.*\\..*).*)",
-    // Include root path
-    "/",
-  ],
+  // Виключаємо статичні файли та API маршрути
+  matcher: ["/((?!api|_next|.*\\..*).*)"],
 }

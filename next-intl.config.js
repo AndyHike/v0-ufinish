@@ -1,8 +1,5 @@
-const locales = ["uk", "cs", "en"]
-const defaultLocale = "uk"
-
 module.exports = {
-  locales,
-  defaultLocale,
+  locales: ["uk", "en", "cs"],
+  defaultLocale: "uk",
   localeDetection: true,
 }
