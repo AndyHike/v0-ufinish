@@ -13,7 +13,6 @@ interface Discount {
   expiresAt: string | null
 }
 
-// Змінюємо з default export на named export
 export function UserDiscounts({ discounts }: { discounts: Discount[] }) {
   const t = useTranslations("Profile")
 
@@ -63,5 +62,4 @@ export function UserDiscounts({ discounts }: { discounts: Discount[] }) {
   )
 }
 
-// Додаємо також default export для зворотної сумісності
 export default UserDiscounts

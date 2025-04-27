@@ -22,8 +22,7 @@ interface UserProfileProps {
   }
 }
 
-// Змінюємо з named export на default export
-export default function UserProfile({ user }: UserProfileProps) {
+export function UserProfile({ user }: UserProfileProps) {
   // Використовуємо переклади
   const t = useTranslations("Profile")
 
@@ -150,5 +149,4 @@ export default function UserProfile({ user }: UserProfileProps) {
   )
 }
 
-// Додаємо також named export для зворотної сумісності
-export { UserProfile }
+export default UserProfile

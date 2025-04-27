@@ -78,8 +78,7 @@ function getStatusColorClass(statusColor: string): string {
   return colorMap[statusColor] || statusColor
 }
 
-// Змінюємо з named export на default export
-export default function UserOrders() {
+export function UserOrders() {
   const t = useTranslations("Profile.repairHistory")
   const commonT = useTranslations("Common")
   const locale = useLocale()
@@ -502,5 +501,4 @@ export default function UserOrders() {
   )
 }
 
-// Додаємо також named export для зворотної сумісності
-export { UserOrders }
+export default UserOrders
