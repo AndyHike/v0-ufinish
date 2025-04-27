@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react"
 import { useTranslations, useLocale } from "next-intl"
 import { cn } from "@/lib/utils"
-import { ArrowRight, Clock, Search, RefreshCw } from "lucide-react"
+import { Clock, Search, RefreshCw, ChevronRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 
 type RepairOrder = {
   id: string
@@ -32,6 +34,7 @@ export function UserOrders() {
   const [activeTab, setActiveTab] = useState("all")
   const [isClient, setIsClient] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
 
   // Важливо: встановлюємо isClient в true тільки на клієнті
   useEffect(() => {
@@ -161,12 +164,13 @@ export function UserOrders() {
   return (
     <div className="w-full">
       <div className="flex flex-col space-y-4">
-        {/* Tabs and Controls */}
-        <div className="flex justify-between items-center">
-          <div className="flex border-b">
+        {/* Tabs - мобільна версія */}
+        <div className="flex flex-col space-y-3">
+          {/* Фільтри замовлень */}
+          <div className="flex border-b overflow-x-auto no-scrollbar">
             <button
               className={cn(
-                "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+                "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
                 activeTab === "all"
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground",
@@ -177,7 +181,7 @@ export function UserOrders() {
             </button>
             <button
               className={cn(
-                "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+                "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
                 activeTab === "active"
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground",
@@ -188,7 +192,7 @@ export function UserOrders() {
             </button>
             <button
               className={cn(
-                "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+                "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
                 activeTab === "completed"
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground",
@@ -198,35 +202,55 @@ export function UserOrders() {
               Завершені замовлення
             </button>
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Кнопки дій */}
+          <div className="flex items-center justify-between">
             <Button variant="ghost" size="sm" className="h-9" onClick={handleRefresh} disabled={refreshing}>
               <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
               {refreshing ? "Оновлення..." : "Оновити"}
             </Button>
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Пошук замовлень..."
-                className="pl-9 h-9 w-[200px] text-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+
+            <div className="flex items-center">
+              {showSearch ? (
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Пошук замовлень..."
+                    className="pl-9 h-9 w-[200px] text-sm"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onBlur={() => {
+                      if (!searchQuery) setShowSearch(false)
+                    }}
+                    autoFocus
+                  />
+                </div>
+              ) : (
+                <Button variant="ghost" size="sm" onClick={() => setShowSearch(true)}>
+                  <Search className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Table */}
+        {/* Список замовлень - мобільна версія */}
         {loading ? (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center justify-between p-4 border-b">
-                <Skeleton className="h-5 w-[150px]" />
-                <Skeleton className="h-5 w-[80px]" />
-                <Skeleton className="h-5 w-[120px]" />
-                <Skeleton className="h-5 w-[80px]" />
-                <Skeleton className="h-5 w-[120px]" />
-              </div>
+              <Card key={i} className="overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex flex-col space-y-3">
+                    <div className="flex justify-between">
+                      <Skeleton className="h-5 w-[120px]" />
+                      <Skeleton className="h-5 w-[80px]" />
+                    </div>
+                    <Skeleton className="h-4 w-[150px]" />
+                    <Skeleton className="h-4 w-[100px]" />
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : error ? (
@@ -241,48 +265,41 @@ export function UserOrders() {
             {searchQuery ? "Немає результатів пошуку" : "У вас ще немає історії ремонтів"}
           </div>
         ) : (
-          <div className="border rounded-sm overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-muted/30 text-xs uppercase">
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Пристрій</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Замовлення №</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Послуга</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Статус</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Дата</th>
-                  <th className="w-10"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {filteredOrders.map((order) => (
-                  <tr
-                    key={order.id}
-                    className="hover:bg-muted/20 transition-colors cursor-pointer"
-                    onClick={() => console.log(`View order details for ${order.id}`)}
-                  >
-                    <td className="py-4 px-4 font-medium">
-                      {order.device_brand} {order.device_model}
-                    </td>
-                    <td className="py-4 px-4 text-muted-foreground">{order.reference_number}</td>
-                    <td className="py-4 px-4 text-muted-foreground">{order.service_type}</td>
-                    <td className="py-4 px-4">
-                      <span className={cn("font-medium px-2 py-1 rounded-full text-xs", order.statusColor)}>
-                        {order.statusName}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-3.5 w-3.5" />
+          <div className="space-y-3">
+            {filteredOrders.map((order) => (
+              <Card
+                key={order.id}
+                className="overflow-hidden cursor-pointer hover:bg-muted/10 transition-colors"
+                onClick={() => console.log(`View order details for ${order.id}`)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex flex-col space-y-3">
+                    {/* Верхній рядок: пристрій та статус */}
+                    <div className="flex justify-between items-start">
+                      <div className="font-medium">
+                        {order.device_brand} {order.device_model}
+                      </div>
+                      <Badge className={cn("font-medium text-xs", order.statusColor)}>{order.statusName}</Badge>
+                    </div>
+
+                    {/* Номер замовлення */}
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <span className="mr-1">Замовлення №:</span>
+                      <span className="font-medium">{order.reference_number}</span>
+                    </div>
+
+                    {/* Дата */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Clock className="h-3.5 w-3.5 mr-1" />
                         {formatDate(order.created_at)}
                       </div>
-                    </td>
-                    <td className="py-4 px-2 text-right">
-                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
       </div>

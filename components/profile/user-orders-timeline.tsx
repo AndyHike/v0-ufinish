@@ -4,10 +4,10 @@ import { useState, useEffect } from "react"
 import { useTranslations, useLocale } from "next-intl"
 import { format } from "date-fns"
 import { uk } from "date-fns/locale"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   CheckCircle2,
   Clock,
@@ -19,6 +19,7 @@ import {
   RefreshCw,
   Search,
   ChevronRight,
+  X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -61,6 +62,7 @@ export function UserOrdersTimeline() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isClient, setIsClient] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
 
   // Важливо: встановлюємо isClient в true тільки на клієнті
   useEffect(() => {
@@ -143,7 +145,7 @@ export function UserOrdersTimeline() {
 
   function formatDate(dateString: string) {
     try {
-      return format(new Date(dateString), "d MMMM yyyy, HH:mm", { locale: uk })
+      return format(new Date(dateString), "d MMM yyyy", { locale: uk })
     } catch (e) {
       return dateString
     }
@@ -216,30 +218,81 @@ export function UserOrdersTimeline() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">Всі замовлення</TabsTrigger>
-            <TabsTrigger value="active">Активні замовлення</TabsTrigger>
-            <TabsTrigger value="completed">Завершені замовлення</TabsTrigger>
-          </TabsList>
-        </Tabs>
+      {/* Фільтри та пошук - мобільна версія */}
+      <div className="flex flex-col space-y-3">
+        {/* Фільтри замовлень */}
+        <div className="flex border-b overflow-x-auto no-scrollbar">
+          <button
+            className={cn(
+              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
+              activeTab === "all"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+            onClick={() => setActiveTab("all")}
+          >
+            Всі замовлення
+          </button>
+          <button
+            className={cn(
+              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
+              activeTab === "active"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+            onClick={() => setActiveTab("active")}
+          >
+            Активні замовлення
+          </button>
+          <button
+            className={cn(
+              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
+              activeTab === "completed"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+            onClick={() => setActiveTab("completed")}
+          >
+            Завершені замовлення
+          </button>
+        </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="h-10" onClick={handleRefresh} disabled={refreshing}>
+        {/* Кнопки дій */}
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" size="sm" className="h-9" onClick={handleRefresh} disabled={refreshing}>
             <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
             {refreshing ? "Оновлення..." : "Оновити"}
           </Button>
 
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <input
-              type="search"
-              placeholder="Пошук замовлень..."
-              className="pl-8 h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="flex items-center">
+            {showSearch ? (
+              <div className="relative flex items-center">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Пошук замовлень..."
+                  className="pl-9 pr-9 h-9 w-[200px] text-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 h-9 w-9 p-0"
+                  onClick={() => {
+                    setSearchQuery("")
+                    setShowSearch(false)
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={() => setShowSearch(true)}>
+                <Search className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -255,16 +308,16 @@ export function UserOrdersTimeline() {
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {filteredOrders.map((order) => (
             <Card key={order.id} className="overflow-hidden">
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-2 px-4 pt-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-lg font-semibold">
+                    <CardTitle className="text-base font-semibold">
                       {order.device_brand} {order.device_model}
                     </CardTitle>
-                    <CardDescription>Замовлення №: {order.reference_number}</CardDescription>
+                    <CardDescription className="text-xs">№: {order.reference_number}</CardDescription>
                   </div>
                   <span
                     className={cn("font-medium px-2 py-1 rounded-full text-xs", order.status_color || "bg-gray-100")}
@@ -274,60 +327,64 @@ export function UserOrdersTimeline() {
                   </span>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center text-sm">
-                    <Tag className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="text-muted-foreground mr-2">Послуга:</span>
-                    <span>{order.service_type}</span>
+              <CardContent className="px-4 pb-4 pt-0">
+                <div className="space-y-3">
+                  <div className="flex items-center text-xs">
+                    <Tag className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                    <span className="text-muted-foreground mr-1.5">Послуга:</span>
+                    <span className="truncate">{order.service_type}</span>
                   </div>
 
-                  <div className="flex items-center text-sm">
-                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="text-muted-foreground mr-2">Створено:</span>
+                  <div className="flex items-center text-xs">
+                    <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                    <span className="text-muted-foreground mr-1.5">Створено:</span>
                     <span>{formatDate(order.created_at)}</span>
                   </div>
 
                   {order.statusHistory && order.statusHistory.length > 0 && (
-                    <div className="mt-4 pt-4 border-t">
-                      <h4 className="text-sm font-medium mb-3">Історія статусів</h4>
-                      <div className="space-y-3">
-                        {order.statusHistory.map((history) => (
+                    <div className="mt-3 pt-3 border-t">
+                      <h4 className="text-xs font-medium mb-2">Історія статусів</h4>
+                      <div className="space-y-2">
+                        {order.statusHistory.slice(0, 2).map((history) => (
                           <div key={history.id} className="flex items-start">
-                            <div className="mr-2 mt-0.5">{getStatusIcon(history.new_status)}</div>
+                            <div className="mr-1.5 mt-0.5">{getStatusIcon(history.new_status)}</div>
                             <div className="flex-1">
-                              <div className="flex items-center">
+                              <div className="flex flex-wrap items-center gap-1.5">
                                 <span
                                   className={cn(
-                                    "font-medium px-2 py-0.5 rounded-full text-xs",
+                                    "font-medium px-1.5 py-0.5 rounded-full text-xs",
                                     history.old_status_color || "bg-gray-100",
                                   )}
                                 >
                                   {history.old_status_name || history.old_status}
                                 </span>
-                                <ArrowRight className="h-3 w-3 mx-2 text-muted-foreground" />
+                                <ArrowRight className="h-3 w-3 text-muted-foreground" />
                                 <span
                                   className={cn(
-                                    "font-medium px-2 py-0.5 rounded-full text-xs",
+                                    "font-medium px-1.5 py-0.5 rounded-full text-xs",
                                     history.new_status_color || "bg-gray-100",
                                   )}
                                 >
                                   {history.new_status_name || history.new_status}
                                 </span>
                               </div>
-                              <div className="text-xs text-muted-foreground mt-1">
-                                {formatDate(history.changed_at)} • {history.changed_by}
-                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">{formatDate(history.changed_at)}</div>
                             </div>
                           </div>
                         ))}
+                        {order.statusHistory.length > 2 && (
+                          <div className="text-xs text-muted-foreground text-center mt-1">
+                            + ще {order.statusHistory.length - 2}{" "}
+                            {order.statusHistory.length - 2 === 1 ? "запис" : "записів"}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
 
-                  <div className="flex justify-end mt-4">
-                    <Button variant="ghost" size="sm" className="text-xs">
-                      Деталі замовлення
+                  <div className="flex justify-end mt-2">
+                    <Button variant="ghost" size="sm" className="text-xs h-7 px-2">
+                      Деталі
                       <ChevronRight className="ml-1 h-3 w-3" />
                     </Button>
                   </div>

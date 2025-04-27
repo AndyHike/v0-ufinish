@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 import { getSession } from "@/lib/auth/session"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UserProfile } from "@/components/profile/user-profile"
-import { UserOrders } from "@/components/profile/user-orders"
+import { UserOrdersTimeline } from "@/components/profile/user-orders-timeline"
 import { UserDiscounts } from "@/components/profile/user-discounts"
 import { createClient } from "@/lib/supabase"
 import { syncUserProfile } from "@/lib/user/profile-sync"
@@ -41,14 +41,16 @@ export default async function ProfilePage() {
   console.log("User data being passed to profile component:", userData)
 
   return (
-    <div className="container py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Особистий кабінет</h1>
-        <p className="text-muted-foreground">Керуйте своїм профілем та переглядайте історію ремонтів.</p>
+    <div className="container py-4 sm:py-10 px-4 sm:px-6">
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Особистий кабінет</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          Керуйте своїм профілем та переглядайте історію ремонтів.
+        </p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList>
+        <TabsList className="w-full grid grid-cols-3">
           <TabsTrigger value="profile">Профіль</TabsTrigger>
           <TabsTrigger value="orders">Історія ремонтів</TabsTrigger>
           <TabsTrigger value="discounts">Мої знижки</TabsTrigger>
@@ -57,7 +59,7 @@ export default async function ProfilePage() {
           <UserProfile user={userData} />
         </TabsContent>
         <TabsContent value="orders" className="space-y-4">
-          <UserOrders />
+          <UserOrdersTimeline />
         </TabsContent>
         <TabsContent value="discounts" className="space-y-4">
           <UserDiscounts />
