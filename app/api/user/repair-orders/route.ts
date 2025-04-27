@@ -1,76 +1,120 @@
-import { NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/lib/supabase"
-import { getStatusByRemOnlineId, clearStatusCache } from "@/lib/order-status-utils"
+import { type NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/auth/session"
+import { createClient } from "@/lib/supabase"
+import { getStatusColor } from "@/lib/order-status-utils"
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    // Очищуємо кеш статусів при кожному запиті замовлень
-    clearStatusCache()
-
-    // Отримуємо параметри запиту
-    const url = new URL(request.url)
-    const locale = url.searchParams.get("locale") || "uk"
-    const forceRefresh = url.searchParams.get("forceRefresh") === "true"
-
-    // Отримуємо сесію користувача
     const session = await getSession()
+
     if (!session || !session.user) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
     }
 
     const userId = session.user.id
-    const supabase = createServerSupabaseClient()
+    const locale = request.nextUrl.searchParams.get("locale") || "en"
+    const forceRefresh = request.nextUrl.searchParams.get("forceRefresh") === "true"
 
-    // Отримуємо замовлення користувача
-    const { data: orders, error } = await supabase
+    // Get user's repair orders from database
+    const supabase = createClient()
+
+    // Get order statuses for translation
+    const { data: orderStatuses, error: statusesError } = await supabase
+      .from("order_statuses")
+      .select("id, name_uk, name_en, name_cs, color")
+
+    if (statusesError) {
+      console.error("Error fetching order statuses:", statusesError)
+      return NextResponse.json({ success: false, message: "Error fetching order statuses" }, { status: 500 })
+    }
+
+    // Get user's repair orders
+    const { data: orders, error: ordersError } = await supabase
       .from("repair_orders")
-      .select("*")
+      .select(`
+        id, 
+        reference_number, 
+        device_brand, 
+        device_model, 
+        service_type, 
+        status, 
+        price, 
+        created_at,
+        status_history (
+          id,
+          order_id,
+          old_status,
+          new_status,
+          changed_by,
+          changed_at,
+          created_at
+        )
+      `)
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
 
-    if (error) {
-      console.error("Error fetching repair orders:", error)
-      return NextResponse.json({ success: false, message: "Failed to fetch repair orders" }, { status: 500 })
+    if (ordersError) {
+      console.error("Error fetching repair orders:", ordersError)
+      return NextResponse.json({ success: false, message: "Error fetching repair orders" }, { status: 500 })
     }
 
-    // Змінюємо API для отримання замовлень, щоб повертати колір фону
-    const ordersWithStatusNames = await Promise.all(
-      orders.map(async (order) => {
-        const statusId = Number.parseInt(order.status, 10)
-        if (!isNaN(statusId)) {
-          // Примусово оновлюємо статуси з бази даних
-          const statusInfo = await getStatusByRemOnlineId(statusId, locale, forceRefresh)
-          return {
-            ...order,
-            statusName: statusInfo.name,
-            statusColor: statusInfo.color,
-          }
-        }
-        return {
-          ...order,
-          statusName: order.status,
-          statusColor: "bg-gray-100",
-        }
-      }),
-    )
+    // Map status IDs to names and colors based on locale
+    const formattedOrders = orders.map((order) => {
+      const statusObj = orderStatuses.find((s) => s.id === order.status)
+      let statusName = "Unknown"
 
-    // Додаємо заголовок Cache-Control
-    return new NextResponse(JSON.stringify({ success: true, orders: ordersWithStatusNames }), {
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store, max-age=0",
-      },
+      if (statusObj) {
+        if (locale === "uk") statusName = statusObj.name_uk
+        else if (locale === "cs") statusName = statusObj.name_cs
+        else statusName = statusObj.name_en
+      }
+
+      const statusColor = statusObj ? getStatusColor(statusObj.color) : "bg-gray-100 text-gray-800"
+
+      // Format status history
+      const statusHistory = order.status_history
+        ? order.status_history.map((history) => {
+            const oldStatusObj = orderStatuses.find((s) => s.id === history.old_status)
+            const newStatusObj = orderStatuses.find((s) => s.id === history.new_status)
+
+            let oldStatusName = "Unknown"
+            let newStatusName = "Unknown"
+
+            if (oldStatusObj) {
+              if (locale === "uk") oldStatusName = oldStatusObj.name_uk
+              else if (locale === "cs") oldStatusName = oldStatusObj.name_cs
+              else oldStatusName = oldStatusObj.name_en
+            }
+
+            if (newStatusObj) {
+              if (locale === "uk") newStatusName = newStatusObj.name_uk
+              else if (locale === "cs") newStatusName = newStatusObj.name_cs
+              else newStatusName = newStatusObj.name_en
+            }
+
+            return {
+              ...history,
+              old_status_name: oldStatusName,
+              new_status_name: newStatusName,
+              old_status_color: oldStatusObj ? getStatusColor(oldStatusObj.color) : "bg-gray-100 text-gray-800",
+              new_status_color: newStatusObj ? getStatusColor(newStatusObj.color) : "bg-gray-100 text-gray-800",
+            }
+          })
+        : []
+
+      return {
+        ...order,
+        statusName,
+        statusColor,
+        statusHistory: statusHistory.sort(
+          (a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime(),
+        ),
+      }
     })
+
+    return NextResponse.json({ success: true, orders: formattedOrders })
   } catch (error) {
-    console.error("Error in getUserRepairOrders API:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        message: "An unexpected error occurred",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    )
+    console.error("Error in repair orders API:", error)
+    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 })
   }
 }
