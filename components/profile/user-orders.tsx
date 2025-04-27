@@ -1,3 +1,4 @@
+// Оновлюємо компонент для використання перекладів та покращеного дизайну статусів
 "use client"
 
 import React from "react"
@@ -53,8 +54,34 @@ type RepairOrder = {
   statusHistory?: OrderStatusHistory[]
 }
 
+// Функція для отримання кольору статусу з покращеним дизайном
+function getStatusColorClass(statusColor: string): string {
+  // Базові кольори з градієнтами для кращого вигляду
+  const colorMap: Record<string, string> = {
+    "bg-green-100 text-green-800": "bg-gradient-to-r from-green-50 to-green-100 text-green-800 border border-green-200",
+    "bg-blue-100 text-blue-800": "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 border border-blue-200",
+    "bg-amber-100 text-amber-800": "bg-gradient-to-r from-amber-50 to-amber-100 text-amber-800 border border-amber-200",
+    "bg-red-100 text-red-800": "bg-gradient-to-r from-red-50 to-red-100 text-red-800 border border-red-200",
+    "bg-purple-100 text-purple-800":
+      "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border border-purple-200",
+    "bg-pink-100 text-pink-800": "bg-gradient-to-r from-pink-50 to-pink-100 text-pink-800 border border-pink-200",
+    "bg-indigo-100 text-indigo-800":
+      "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-800 border border-indigo-200",
+    "bg-gray-100 text-gray-800": "bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 border border-gray-200",
+    "bg-teal-100 text-teal-800": "bg-gradient-to-r from-teal-50 to-teal-100 text-teal-800 border border-teal-200",
+    "bg-cyan-100 text-cyan-800": "bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-800 border border-cyan-200",
+    "bg-orange-100 text-orange-800":
+      "bg-gradient-to-r from-orange-50 to-orange-100 text-orange-800 border border-orange-200",
+    "bg-lime-100 text-lime-800": "bg-gradient-to-r from-lime-50 to-lime-100 text-lime-800 border border-lime-200",
+  }
+
+  // Повертаємо покращений клас кольору або оригінальний, якщо немає відповідності
+  return colorMap[statusColor] || statusColor
+}
+
 export function UserOrders() {
-  const t = useTranslations("Profile")
+  const t = useTranslations("Profile.repairHistory")
+  const commonT = useTranslations("Common")
   const locale = useLocale()
   const [orders, setOrders] = useState<RepairOrder[]>([])
   const [filteredOrders, setFilteredOrders] = useState<RepairOrder[]>([])
@@ -104,11 +131,11 @@ export function UserOrders() {
         setOrders(data.orders)
         setFilteredOrders(data.orders)
       } else {
-        setError(data.message || t("repairHistory.errorFetching"))
+        setError(data.message || t("errorFetching"))
       }
     } catch (err) {
       console.error("Error fetching repair orders:", err)
-      setError(t("repairHistory.errorFetching"))
+      setError(t("errorFetching"))
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -173,7 +200,7 @@ export function UserOrders() {
   function formatDate(dateString: string) {
     try {
       const date = new Date(dateString)
-      return new Intl.DateTimeFormat("uk-UA", {
+      return new Intl.DateTimeFormat(locale, {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -186,7 +213,7 @@ export function UserOrders() {
   function formatDateTime(dateString: string) {
     try {
       const date = new Date(dateString)
-      return new Intl.DateTimeFormat("uk-UA", {
+      return new Intl.DateTimeFormat(locale, {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -200,13 +227,25 @@ export function UserOrders() {
 
   // Отримання іконки для статусу
   function getStatusIcon(statusName: string) {
+    const statusLower = statusName.toLowerCase()
+
     if (
-      statusName.toLowerCase().includes("завершено") ||
-      statusName.toLowerCase().includes("готов") ||
-      statusName.toLowerCase().includes("видан")
+      statusLower.includes("завершено") ||
+      statusLower.includes("готов") ||
+      statusLower.includes("видан") ||
+      statusLower.includes("dokončeno") ||
+      statusLower.includes("completed") ||
+      statusLower.includes("done") ||
+      statusLower.includes("ready")
     ) {
       return <CheckCircle2 className="h-4 w-4" />
-    } else if (statusName.toLowerCase().includes("процес") || statusName.toLowerCase().includes("робот")) {
+    } else if (
+      statusLower.includes("процес") ||
+      statusLower.includes("робот") ||
+      statusLower.includes("zpracování") ||
+      statusLower.includes("process") ||
+      statusLower.includes("work")
+    ) {
       return <Loader2 className="h-4 w-4" />
     } else {
       return <AlertCircle className="h-4 w-4" />
@@ -227,8 +266,8 @@ export function UserOrders() {
     <div className="w-full">
       <Card className="shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle>Історія ремонтів</CardTitle>
-          <CardDescription>Переглядайте історію ваших ремонтів та їх статус.</CardDescription>
+          <CardTitle>{t("title")}</CardTitle>
+          <CardDescription>{t("description")}</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {/* Фільтри та пошук */}
@@ -240,7 +279,7 @@ export function UserOrders() {
                 className={activeTab === "all" ? "bg-primary/10 border-primary/50" : ""}
                 onClick={() => setActiveTab("all")}
               >
-                Всі
+                {t("allTab")}
               </Button>
               <Button
                 variant="outline"
@@ -248,7 +287,7 @@ export function UserOrders() {
                 className={activeTab === "active" ? "bg-primary/10 border-primary/50" : ""}
                 onClick={() => setActiveTab("active")}
               >
-                Активні
+                {t("activeTab")}
               </Button>
               <Button
                 variant="outline"
@@ -256,19 +295,19 @@ export function UserOrders() {
                 className={activeTab === "completed" ? "bg-primary/10 border-primary/50" : ""}
                 onClick={() => setActiveTab("completed")}
               >
-                Завершені
+                {t("completedTab")}
               </Button>
             </div>
             <div className="flex items-center space-x-2">
               <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
                 <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
-                {refreshing ? "Оновлення..." : "Оновити"}
+                {refreshing ? t("refreshing") : t("refresh")}
               </Button>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Пошук..."
+                  placeholder={t("search")}
                   className="pl-9 h-9 w-[150px] text-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -290,7 +329,7 @@ export function UserOrders() {
               <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-2" />
               <p className="text-destructive font-medium mb-2">{error}</p>
               <Button variant="outline" size="sm" onClick={() => fetchOrders(true)}>
-                Спробувати знову
+                {t("tryAgain")}
               </Button>
             </div>
           ) : filteredOrders.length === 0 ? (
@@ -298,22 +337,30 @@ export function UserOrders() {
               <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mx-auto mb-3">
                 <Calendar className="h-6 w-6 text-muted-foreground" />
               </div>
-              <p className="text-muted-foreground font-medium">
-                {searchQuery ? "Немає результатів пошуку" : "У вас ще немає історії ремонтів"}
-              </p>
+              <p className="text-muted-foreground font-medium">{searchQuery ? t("noSearchResults") : t("noOrders")}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b bg-muted/30">
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">ID</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Дата</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Пристрій</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Послуга</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Статус</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Ціна</th>
-                    <th className="text-center py-3 px-4 font-medium text-muted-foreground text-sm w-10">Деталі</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">{t("idColumn")}</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">{t("dateColumn")}</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">
+                      {t("deviceColumn")}
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">
+                      {t("serviceColumn")}
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">
+                      {t("statusColumn")}
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">
+                      {t("priceColumn")}
+                    </th>
+                    <th className="text-center py-3 px-4 font-medium text-muted-foreground text-sm w-10">
+                      {t("detailsColumn")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -345,7 +392,9 @@ export function UserOrders() {
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <Badge className={cn("font-medium text-xs", order.statusColor)}>
+                          <Badge
+                            className={cn("font-medium text-xs shadow-sm", getStatusColorClass(order.statusColor))}
+                          >
                             <span className="flex items-center">
                               {getStatusIcon(order.statusName)}
                               <span className="ml-1">{order.statusName}</span>
@@ -355,7 +404,7 @@ export function UserOrders() {
                         <td className="py-3 px-4 text-sm">
                           <div className="flex items-center">
                             <Tag className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                            {order.price ? `${order.price} грн` : "-"}
+                            {order.price ? `${order.price} ${t("currency")}` : "-"}
                           </div>
                         </td>
                         <td className="py-3 px-4 text-center">
@@ -370,7 +419,7 @@ export function UserOrders() {
                             ) : (
                               <ChevronDown className="h-4 w-4" />
                             )}
-                            <span className="sr-only">Показати деталі</span>
+                            <span className="sr-only">{t("showDetails")}</span>
                           </Button>
                         </td>
                       </tr>
@@ -380,32 +429,34 @@ export function UserOrders() {
                             <div className="space-y-4">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                  <h4 className="text-sm font-medium">Деталі замовлення</h4>
+                                  <h4 className="text-sm font-medium">{t("orderDetails")}</h4>
                                   <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <div className="text-muted-foreground">ID замовлення:</div>
+                                    <div className="text-muted-foreground">{t("orderId")}:</div>
                                     <div>{order.reference_number}</div>
-                                    <div className="text-muted-foreground">Дата створення:</div>
+                                    <div className="text-muted-foreground">{t("creationDate")}:</div>
                                     <div>{formatDateTime(order.created_at)}</div>
-                                    <div className="text-muted-foreground">Пристрій:</div>
+                                    <div className="text-muted-foreground">{t("device")}:</div>
                                     <div>
                                       {order.device_brand} {order.device_model}
                                     </div>
-                                    <div className="text-muted-foreground">Послуга:</div>
+                                    <div className="text-muted-foreground">{t("service")}:</div>
                                     <div>{order.service_type}</div>
-                                    <div className="text-muted-foreground">Поточний статус:</div>
+                                    <div className="text-muted-foreground">{t("currentStatus")}:</div>
                                     <div>
-                                      <Badge className={cn("font-medium text-xs", order.statusColor)}>
+                                      <Badge
+                                        className={cn("font-medium text-xs", getStatusColorClass(order.statusColor))}
+                                      >
                                         {order.statusName}
                                       </Badge>
                                     </div>
-                                    <div className="text-muted-foreground">Вартість:</div>
-                                    <div>{order.price ? `${order.price} грн` : "Не вказано"}</div>
+                                    <div className="text-muted-foreground">{t("price")}:</div>
+                                    <div>{order.price ? `${order.price} ${t("currency")}` : t("notSpecified")}</div>
                                   </div>
                                 </div>
 
                                 {order.statusHistory && order.statusHistory.length > 0 && (
                                   <div className="space-y-2">
-                                    <h4 className="text-sm font-medium">Історія статусів</h4>
+                                    <h4 className="text-sm font-medium">{t("statusHistory")}</h4>
                                     <div className="space-y-3 relative before:absolute before:left-1.5 before:top-2 before:h-[calc(100%-16px)] before:w-px before:bg-border">
                                       {order.statusHistory.map((history, index) => (
                                         <div key={history.id} className="flex items-start pl-6 relative">
@@ -415,7 +466,7 @@ export function UserOrders() {
                                               <Badge
                                                 className={cn(
                                                   "font-medium text-xs",
-                                                  history.new_status_color || "bg-gray-100",
+                                                  getStatusColorClass(history.new_status_color || "bg-gray-100"),
                                                 )}
                                               >
                                                 {history.new_status_name || history.new_status}
@@ -450,3 +501,5 @@ export function UserOrders() {
     </div>
   )
 }
+
+export default UserOrders

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import { getSession } from "@/lib/auth/session"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UserProfile } from "@/components/profile/user-profile"
@@ -8,6 +9,7 @@ import { createClient } from "@/lib/supabase"
 import { syncUserProfile } from "@/lib/user/profile-sync"
 
 export default async function ProfilePage() {
+  const t = await getTranslations("Profile")
   const session = await getSession()
 
   if (!session || !session.user) {
@@ -43,17 +45,15 @@ export default async function ProfilePage() {
   return (
     <div className="container py-4 sm:py-10 px-4 sm:px-6">
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Особистий кабінет</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Керуйте своїм профілем та переглядайте історію ремонтів.
-        </p>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t("userProfile")}</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">{t("manageProfileAndOrders")}</p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
         <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="profile">Профіль</TabsTrigger>
-          <TabsTrigger value="orders">Історія ремонтів</TabsTrigger>
-          <TabsTrigger value="discounts">Мої знижки</TabsTrigger>
+          <TabsTrigger value="profile">{t("profile")}</TabsTrigger>
+          <TabsTrigger value="orders">{t("repairHistory.title")}</TabsTrigger>
+          <TabsTrigger value="discounts">{t("myDiscounts")}</TabsTrigger>
         </TabsList>
         <TabsContent value="profile" className="space-y-4">
           <UserProfile user={userData} />

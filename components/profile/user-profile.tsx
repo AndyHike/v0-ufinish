@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import { useTranslations } from "next-intl"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CalendarDays, Mail, Phone, UserIcon, MapPin } from "lucide-react"
@@ -22,6 +23,9 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ user }: UserProfileProps) {
+  // Використовуємо переклади
+  const t = useTranslations("Profile")
+
   // Debug log to see what user data we have
   useEffect(() => {
     console.log("User profile data in component:", user)
@@ -29,7 +33,7 @@ export function UserProfile({ user }: UserProfileProps) {
 
   // Format date
   const formatDate = (dateString?: string) => {
-    if (!dateString) return "Не вказано"
+    if (!dateString) return t("notSpecified")
     return new Date(dateString).toLocaleDateString("uk-UA", {
       day: "numeric",
       month: "long",
@@ -38,13 +42,13 @@ export function UserProfile({ user }: UserProfileProps) {
   }
 
   // Get full name from first_name and last_name, fallback to name
-  const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || user?.name || "Не вказано"
+  const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || user?.name || t("notSpecified")
 
   // Get avatar URL from either avatar_url or image
   const avatarUrl =
     user?.avatar_url ||
     user?.image ||
-    `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(fullName !== "Не вказано" ? fullName : "User")}`
+    `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(fullName !== t("notSpecified") ? fullName : "User")}`
 
   // Get initials for avatar
   const getInitials = () => {
@@ -73,12 +77,12 @@ export function UserProfile({ user }: UserProfileProps) {
             <CardDescription className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
               <span className="flex items-center justify-center sm:justify-start">
                 <Mail className="mr-1 h-4 w-4" />
-                {user?.email || "Не вказано"}
+                {user?.email || t("notSpecified")}
               </span>
               <span className="hidden sm:inline">•</span>
               <span className="flex items-center justify-center sm:justify-start">
                 <Phone className="mr-1 h-4 w-4" />
-                {user?.phone || "Не вказано"}
+                {user?.phone || t("notSpecified")}
               </span>
             </CardDescription>
           </div>
@@ -88,36 +92,40 @@ export function UserProfile({ user }: UserProfileProps) {
         <div className="grid gap-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">Ім'я</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">{t("firstName")}</h3>
               <div className="flex items-center space-x-2">
                 <UserIcon className="h-4 w-4 text-muted-foreground" />
-                <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{user?.first_name || "Не вказано"}</div>
+                <div className="rounded-md border px-3 py-2 w-full bg-muted/30">
+                  {user?.first_name || t("notSpecified")}
+                </div>
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">Прізвище</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">{t("lastName")}</h3>
               <div className="flex items-center space-x-2">
                 <UserIcon className="h-4 w-4 text-muted-foreground" />
-                <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{user?.last_name || "Не вказано"}</div>
+                <div className="rounded-md border px-3 py-2 w-full bg-muted/30">
+                  {user?.last_name || t("notSpecified")}
+                </div>
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">{t("email")}</h3>
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{user?.email || "Не вказано"}</div>
+                <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{user?.email || t("notSpecified")}</div>
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">Телефон</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">{t("phone")}</h3>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{user?.phone || "Не вказано"}</div>
+                <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{user?.phone || t("notSpecified")}</div>
               </div>
             </div>
             {user?.address && (
               <div className="space-y-2 sm:col-span-2">
-                <h3 className="text-sm font-medium text-muted-foreground">Адреса</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">{t("address")}</h3>
                 <div className="flex items-center space-x-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{user?.address}</div>
@@ -125,7 +133,7 @@ export function UserProfile({ user }: UserProfileProps) {
               </div>
             )}
             <div className="space-y-2 sm:col-span-2">
-              <h3 className="text-sm font-medium text-muted-foreground">Дата реєстрації</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">{t("registrationDate")}</h3>
               <div className="flex items-center space-x-2">
                 <CalendarDays className="h-4 w-4 text-muted-foreground" />
                 <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{formatDate(user?.created_at)}</div>
@@ -133,10 +141,12 @@ export function UserProfile({ user }: UserProfileProps) {
             </div>
           </div>
           <div className="text-sm text-muted-foreground mt-4 text-center">
-            <p>Редагування профілю наразі недоступне. Зв'яжіться з адміністратором для внесення змін.</p>
+            <p>{t("editingNotAvailable")}</p>
           </div>
         </div>
       </CardContent>
     </Card>
   )
 }
+
+export default UserProfile
