@@ -9,7 +9,8 @@ import { createClient } from "@/lib/supabase"
 import { syncUserProfile } from "@/lib/user/profile-sync"
 
 export default async function ProfilePage() {
-  const t = await getTranslations("Profile")
+  // Отримуємо переклади з простору імен "Profile"
+  const profileT = await getTranslations("Profile")
   const locale = await getLocale()
   const session = await getSession()
 
@@ -46,15 +47,15 @@ export default async function ProfilePage() {
   return (
     <div className="container py-4 sm:py-10 px-4 sm:px-6">
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t("userProfile")}</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">{t("manageProfileAndOrders")}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{profileT("userProfile")}</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">{profileT("manageProfileAndOrders")}</p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
         <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="profile">{t("profile")}</TabsTrigger>
-          <TabsTrigger value="orders">{t("repairHistory.title")}</TabsTrigger>
-          <TabsTrigger value="discounts">{t("myDiscounts")}</TabsTrigger>
+          <TabsTrigger value="profile">{profileT("profile")}</TabsTrigger>
+          <TabsTrigger value="orders">{profileT("repairHistory.title")}</TabsTrigger>
+          <TabsTrigger value="discounts">{profileT("myDiscounts")}</TabsTrigger>
         </TabsList>
         <TabsContent value="profile" className="space-y-4">
           <UserProfile user={userData} locale={locale} />

@@ -482,6 +482,9 @@
     "userProfile": "Profil uživatele",
     "manageProfileAndOrders": "Spravujte svůj profil a objednávky",
     "profile": "Profil",
+    "repairHistory": {
+      "title": "Historie oprav"
+    },
     "myDiscounts": "Moje slevy",
     "viewRepairHistory": "Prohlížejte historii vašich oprav a jejich stav.",
     "all": "Všechny",
