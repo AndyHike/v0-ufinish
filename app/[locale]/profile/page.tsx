@@ -9,8 +9,8 @@ import { createClient } from "@/lib/supabase"
 import { syncUserProfile } from "@/lib/user/profile-sync"
 
 export default async function ProfilePage() {
+  const t = await getTranslations("Profile")
   const locale = await getLocale()
-  const t = await getTranslations()
   const session = await getSession()
 
   if (!session || !session.user) {
@@ -28,6 +28,9 @@ export default async function ProfilePage() {
     .eq("id", session.user.id)
     .single()
 
+  console.log("Profile data from database:", profile)
+  console.log("Profile error:", profileError)
+
   // If profile data is missing, get from users table
   const userData = {
     ...session.user,
@@ -38,18 +41,20 @@ export default async function ProfilePage() {
     created_at: profile?.created_at || new Date().toISOString(),
   }
 
+  console.log("User data being passed to profile component:", userData)
+
   return (
     <div className="container py-4 sm:py-10 px-4 sm:px-6">
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t("Profile.userProfile")}</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">{t("Profile.manageProfileAndOrders")}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t("userProfile")}</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">{t("manageProfileAndOrders")}</p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
         <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="profile">{t("Profile.profile")}</TabsTrigger>
-          <TabsTrigger value="orders">{t("Profile.repairHistory.title")}</TabsTrigger>
-          <TabsTrigger value="discounts">{t("Profile.myDiscounts")}</TabsTrigger>
+          <TabsTrigger value="profile">{t("profile")}</TabsTrigger>
+          <TabsTrigger value="orders">{t("repairHistory.title")}</TabsTrigger>
+          <TabsTrigger value="discounts">{t("myDiscounts")}</TabsTrigger>
         </TabsList>
         <TabsContent value="profile" className="space-y-4">
           <UserProfile user={userData} locale={locale} />
