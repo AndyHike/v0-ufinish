@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useTranslations, useLocale } from "next-intl"
 import { cn } from "@/lib/utils"
-import { Clock, Search, RefreshCw, ChevronDown, ChevronUp } from "lucide-react"
+import { Search, RefreshCw } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
@@ -155,8 +155,8 @@ export function UserOrders() {
     try {
       const date = new Date(dateString)
       return new Intl.DateTimeFormat("uk-UA", {
-        day: "numeric",
-        month: "short",
+        day: "2-digit",
+        month: "2-digit",
         year: "numeric",
       }).format(date)
     } catch (e) {
@@ -181,159 +181,140 @@ export function UserOrders() {
   return (
     <div className="w-full">
       <div className="flex flex-col space-y-4">
-        {/* Фільтри замовлень */}
-        <div className="flex border-b overflow-x-auto no-scrollbar">
-          <button
-            className={cn(
-              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
-              activeTab === "all"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-            onClick={() => setActiveTab("all")}
-          >
-            Всі замовлення
-          </button>
-          <button
-            className={cn(
-              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
-              activeTab === "active"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-            onClick={() => setActiveTab("active")}
-          >
-            Активні замовлення
-          </button>
-          <button
-            className={cn(
-              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
-              activeTab === "completed"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-            onClick={() => setActiveTab("completed")}
-          >
-            Завершені замовлення
-          </button>
-        </div>
-
-        {/* Пошук та оновлення */}
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" size="sm" className="h-9" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
-            {refreshing ? "Оновлення..." : "Оновити"}
-          </Button>
-
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Пошук замовлень..."
-              className="pl-9 h-9 w-[200px] text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+          <div className="p-4 pb-2">
+            <h2 className="text-xl font-semibold">Історія ремонтів</h2>
+            <p className="text-sm text-muted-foreground">Переглядайте історію ваших ремонтів та їх статус.</p>
           </div>
-        </div>
 
-        {/* Список замовлень */}
-        {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="border rounded-md p-4">
-                <div className="flex justify-between items-center">
-                  <Skeleton className="h-5 w-[120px]" />
-                  <Skeleton className="h-5 w-[80px]" />
-                </div>
-                <div className="mt-2">
-                  <Skeleton className="h-4 w-[150px]" />
-                </div>
+          {/* Фільтри та пошук */}
+          <div className="px-4 py-2 flex flex-wrap items-center justify-between gap-2 border-b">
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className={activeTab === "all" ? "bg-muted" : ""}
+                onClick={() => setActiveTab("all")}
+              >
+                Всі
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className={activeTab === "active" ? "bg-muted" : ""}
+                onClick={() => setActiveTab("active")}
+              >
+                Активні
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className={activeTab === "completed" ? "bg-muted" : ""}
+                onClick={() => setActiveTab("completed")}
+              >
+                Завершені
+              </Button>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
+                <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
+                {refreshing ? "Оновлення..." : "Оновити"}
+              </Button>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Пошук..."
+                  className="pl-9 h-9 w-[150px] text-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
-            ))}
+            </div>
           </div>
-        ) : error ? (
-          <div className="text-center py-8">
-            <p className="text-red-500 mb-2">{error}</p>
-            <Button variant="outline" size="sm" onClick={() => fetchOrders(true)}>
-              Спробувати знову
-            </Button>
-          </div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            {searchQuery ? "Немає результатів пошуку" : "У вас ще немає історії ремонтів"}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredOrders.map((order) => (
-              <div key={order.id} className="border rounded-md overflow-hidden transition-all duration-200">
-                {/* Основна інформація про замовлення */}
-                <div className="p-4 cursor-pointer hover:bg-muted/10" onClick={() => toggleOrderDetails(order.id)}>
-                  <div className="flex justify-between items-center">
-                    <div className="font-medium">
-                      {order.device_brand} {order.device_model}
-                    </div>
-                    <Badge className={cn("font-medium text-xs", order.statusColor)}>{order.statusName}</Badge>
-                  </div>
 
-                  <div className="flex justify-between items-center mt-2">
-                    <div className="text-sm text-muted-foreground">Замовлення №: {order.reference_number}</div>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Clock className="h-3.5 w-3.5 mr-1" />
-                      {formatDate(order.created_at)}
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end mt-1">
-                    {expandedOrder === order.id ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Розгорнуті деталі замовлення */}
-                {expandedOrder === order.id && (
-                  <div className="px-4 pb-4 pt-0 border-t">
-                    <div className="pt-3 space-y-3">
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Послуга: </span>
-                        {order.service_type}
-                      </div>
-
-                      {order.price && (
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Вартість: </span>
-                          {order.price} грн
-                        </div>
-                      )}
-
-                      {/* Історія статусів */}
-                      {order.statusHistory && order.statusHistory.length > 0 && (
-                        <div className="mt-3 pt-3 border-t">
-                          <h4 className="text-sm font-medium mb-2">Історія статусів:</h4>
-                          <div className="space-y-2">
-                            {order.statusHistory.map((history) => (
-                              <div key={history.id} className="text-sm">
-                                <div className="flex items-center">
-                                  <Badge className={cn("mr-2", history.new_status_color || "bg-gray-100")}>
+          {/* Таблиця замовлень */}
+          {loading ? (
+            <div className="p-4">
+              <Skeleton className="h-8 w-full mb-4" />
+              <Skeleton className="h-12 w-full mb-2" />
+              <Skeleton className="h-12 w-full mb-2" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <p className="text-red-500 mb-2">{error}</p>
+              <Button variant="outline" size="sm" onClick={() => fetchOrders(true)}>
+                Спробувати знову
+              </Button>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {searchQuery ? "Немає результатів пошуку" : "У вас ще немає історії ремонтів"}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/30">
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">ID</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Дата</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Пристрій</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Послуга</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Статус</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Ціна</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredOrders.map((order) => (
+                    <>
+                      <tr
+                        key={order.id}
+                        className={cn(
+                          "border-b hover:bg-muted/20 transition-colors cursor-pointer",
+                          expandedOrder === order.id && "bg-muted/10",
+                        )}
+                        onClick={() => toggleOrderDetails(order.id)}
+                      >
+                        <td className="py-3 px-4 text-sm">{order.reference_number}</td>
+                        <td className="py-3 px-4 text-sm">{formatDate(order.created_at)}</td>
+                        <td className="py-3 px-4 text-sm">
+                          {order.device_brand} {order.device_model}
+                        </td>
+                        <td className="py-3 px-4 text-sm">{order.service_type}</td>
+                        <td className="py-3 px-4">
+                          <Badge className={cn("font-medium text-xs", order.statusColor)}>{order.statusName}</Badge>
+                        </td>
+                        <td className="py-3 px-4 text-sm">{order.price ? `${order.price} грн` : "-"}</td>
+                      </tr>
+                      {expandedOrder === order.id && order.statusHistory && order.statusHistory.length > 0 && (
+                        <tr className="bg-muted/5">
+                          <td colSpan={6} className="py-3 px-4">
+                            <div className="text-sm font-medium mb-2">Історія змін статусів:</div>
+                            <div className="space-y-2 pl-2">
+                              {order.statusHistory.map((history) => (
+                                <div key={history.id} className="flex items-center gap-2 text-sm">
+                                  <span className="text-muted-foreground">{formatDate(history.changed_at)}</span>
+                                  <span className="text-muted-foreground">→</span>
+                                  <Badge
+                                    className={cn("font-medium text-xs", history.new_status_color || "bg-gray-100")}
+                                  >
                                     {history.new_status_name || history.new_status}
                                   </Badge>
-                                  <span className="text-muted-foreground">{formatDate(history.changed_at)}</span>
+                                  <span className="text-muted-foreground ml-1">({history.changed_by})</span>
                                 </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                    </>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
