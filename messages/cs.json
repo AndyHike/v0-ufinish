@@ -468,7 +468,17 @@
     "backToHome": "Na головну",
     "learnMore": "Дізнатися більше",
     "contactUs": "Зв'язатися з нами",
-    "viewAll": "Переглянути все"
+    "viewAll": "Переглянути все",
+    "orderStatuses": {
+      "new": "Nový",
+      "in progress": "Zpracovává se",
+      "waiting for parts": "Čeká na díly",
+      "waiting for client": "Čeká na klienta",
+      "completed": "Dokončeno",
+      "cancelled": "Zrušeno",
+      "on hold": "Pozastaveno",
+      "dokončeno": "Dokončeno"
+    }
   },
   "Profile": {
     "repairHistory": {
@@ -478,6 +488,34 @@
       "errorFetching": "Chyba při načítání historie oprav",
       "tryAgain": "Zkusit znovu",
       "orderNumber": "Objednávka č."
-    }
+    },
+    "userProfile": "Uživatelský profil",
+    "manageProfileAndOrders": "Spravujte svůj profil a prohlížejte historii oprav.",
+    "profile": "Profil",
+    "repairHistory": "Historie oprav",
+    "myDiscounts": "Moje slevy",
+    "viewRepairHistory": "Prohlížejte historii vašich oprav a jejich stav.",
+    "all": "Všechny",
+    "active": "Aktivní",
+    "completed": "Dokončené",
+    "refresh": "Obnovit",
+    "search": "Hledat...",
+    "id": "ID",
+    "date": "Datum",
+    "device": "Zařízení",
+    "service": "Služba",
+    "status": "Stav",
+    "price": "Cena",
+    "details": "Detaily",
+    "orderDetails": "Detaily objednávky",
+    "orderID": "ID objednávky",
+    "creationDate": "Datum vytvoření",
+    "currentStatus": "Aktuální stav",
+    "value": "Hodnota",
+    "notSpecified": "Neuvedeno",
+    "noOrdersYet": "Zatím nemáte žádné objednávky",
+    "welcomeDiscount": "Uvítací sleva pro nové klienty",
+    "expiresOn": "Platí do",
+    "noDiscountsYet": "Zatím nemáte žádné slevy"
   }
 }
