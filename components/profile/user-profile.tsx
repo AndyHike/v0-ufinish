@@ -35,9 +35,10 @@ export function UserProfile({ user, locale = "uk" }: UserProfileProps) {
   // Format date
   const formatDate = (dateString?: string) => {
     if (!dateString) return t("notSpecified")
-    return new Date(dateString).toLocaleDateString(locale, {
-      day: "numeric",
-      month: "long",
+    const date = new Date(dateString)
+    return date.toLocaleDateString(locale, {
+      day: "2-digit",
+      month: "2-digit",
       year: "numeric",
     })
   }

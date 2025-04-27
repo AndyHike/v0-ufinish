@@ -218,6 +218,14 @@ export function UserOrders() {
     setSelectedOrder(null)
   }
 
+  // Функція для обробки зміни пошукового запиту
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault() // Запобігаємо стандартній поведінці
+    setSearchQuery(e.target.value)
+    // Зберігаємо фокус на полі вводу
+    e.target.focus()
+  }
+
   // Фільтрація замовлень
   useEffect(() => {
     if (!isClient) return
@@ -424,7 +432,8 @@ export function UserOrders() {
                     placeholder={t("search")}
                     className="pl-9 h-9 text-sm w-full"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleSearchChange}
+                    onBlur={(e) => e.target.focus()} // Повертаємо фокус при втраті
                   />
                 </div>
                 <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing} className="shrink-0">
@@ -569,7 +578,8 @@ export function UserOrders() {
                     placeholder={t("search")}
                     className="pl-9 h-9 w-[150px] text-sm"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleSearchChange}
+                    onBlur={(e) => e.target.focus()} // Повертаємо фокус при втраті
                   />
                 </div>
               </div>
