@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 import { getSession } from "@/lib/auth/session"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UserProfile } from "@/components/profile/user-profile"
-import { UserOrdersTimeline } from "@/components/profile/user-orders-timeline"
+import { UserOrders } from "@/components/profile/user-orders"
 import { UserDiscounts } from "@/components/profile/user-discounts"
 import { createClient } from "@/lib/supabase"
 import { syncUserProfile } from "@/lib/user/profile-sync"
@@ -59,7 +59,7 @@ export default async function ProfilePage() {
           <UserProfile user={userData} />
         </TabsContent>
         <TabsContent value="orders" className="space-y-4">
-          <UserOrdersTimeline />
+          <UserOrders />
         </TabsContent>
         <TabsContent value="discounts" className="space-y-4">
           <UserDiscounts />
