@@ -1,13 +1,29 @@
 "use client"
 
+import React from "react"
+
 import { useEffect, useState } from "react"
 import { useTranslations, useLocale } from "next-intl"
 import { cn } from "@/lib/utils"
-import { Search, RefreshCw } from "lucide-react"
+import {
+  Search,
+  RefreshCw,
+  Calendar,
+  Smartphone,
+  PenToolIcon as Tool,
+  Tag,
+  Clock,
+  ChevronDown,
+  ChevronUp,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+} from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 type OrderStatusHistory = {
   id: string
@@ -105,7 +121,10 @@ export function UserOrders() {
   }
 
   // Функція для розгортання/згортання деталей замовлення
-  function toggleOrderDetails(orderId: string) {
+  function toggleOrderDetails(orderId: string, e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+
     if (expandedOrder === orderId) {
       setExpandedOrder(null)
     } else {
@@ -164,36 +183,61 @@ export function UserOrders() {
     }
   }
 
+  function formatDateTime(dateString: string) {
+    try {
+      const date = new Date(dateString)
+      return new Intl.DateTimeFormat("uk-UA", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(date)
+    } catch (e) {
+      return dateString
+    }
+  }
+
+  // Отримання іконки для статусу
+  function getStatusIcon(statusName: string) {
+    if (
+      statusName.toLowerCase().includes("завершено") ||
+      statusName.toLowerCase().includes("готов") ||
+      statusName.toLowerCase().includes("видан")
+    ) {
+      return <CheckCircle2 className="h-4 w-4" />
+    } else if (statusName.toLowerCase().includes("процес") || statusName.toLowerCase().includes("робот")) {
+      return <Loader2 className="h-4 w-4" />
+    } else {
+      return <AlertCircle className="h-4 w-4" />
+    }
+  }
+
   // Якщо ми на сервері або ще не на клієнті, показуємо скелетон
   if (!isClient) {
     return (
-      <div className="space-y-2">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-center justify-between p-4 border-b">
-            <Skeleton className="h-5 w-[150px]" />
-            <Skeleton className="h-5 w-[80px]" />
-          </div>
-        ))}
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-64 w-full rounded-md" />
       </div>
     )
   }
 
   return (
     <div className="w-full">
-      <div className="flex flex-col space-y-4">
-        <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-          <div className="p-4 pb-2">
-            <h2 className="text-xl font-semibold">Історія ремонтів</h2>
-            <p className="text-sm text-muted-foreground">Переглядайте історію ваших ремонтів та їх статус.</p>
-          </div>
-
+      <Card className="shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle>Історія ремонтів</CardTitle>
+          <CardDescription>Переглядайте історію ваших ремонтів та їх статус.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
           {/* Фільтри та пошук */}
-          <div className="px-4 py-2 flex flex-wrap items-center justify-between gap-2 border-b">
+          <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-2 border-b">
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
                 size="sm"
-                className={activeTab === "all" ? "bg-muted" : ""}
+                className={activeTab === "all" ? "bg-primary/10 border-primary/50" : ""}
                 onClick={() => setActiveTab("all")}
               >
                 Всі
@@ -201,7 +245,7 @@ export function UserOrders() {
               <Button
                 variant="outline"
                 size="sm"
-                className={activeTab === "active" ? "bg-muted" : ""}
+                className={activeTab === "active" ? "bg-primary/10 border-primary/50" : ""}
                 onClick={() => setActiveTab("active")}
               >
                 Активні
@@ -209,7 +253,7 @@ export function UserOrders() {
               <Button
                 variant="outline"
                 size="sm"
-                className={activeTab === "completed" ? "bg-muted" : ""}
+                className={activeTab === "completed" ? "bg-primary/10 border-primary/50" : ""}
                 onClick={() => setActiveTab("completed")}
               >
                 Завершені
@@ -243,14 +287,20 @@ export function UserOrders() {
             </div>
           ) : error ? (
             <div className="text-center py-8">
-              <p className="text-red-500 mb-2">{error}</p>
+              <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-2" />
+              <p className="text-destructive font-medium mb-2">{error}</p>
               <Button variant="outline" size="sm" onClick={() => fetchOrders(true)}>
                 Спробувати знову
               </Button>
             </div>
           ) : filteredOrders.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {searchQuery ? "Немає результатів пошуку" : "У вас ще немає історії ремонтів"}
+            <div className="text-center py-12">
+              <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                <Calendar className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground font-medium">
+                {searchQuery ? "Немає результатів пошуку" : "У вас ще немає історії ремонтів"}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -263,59 +313,140 @@ export function UserOrders() {
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Послуга</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Статус</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Ціна</th>
+                    <th className="text-center py-3 px-4 font-medium text-muted-foreground text-sm w-10">Деталі</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredOrders.map((order) => (
-                    <>
+                    <React.Fragment key={order.id}>
                       <tr
-                        key={order.id}
                         className={cn(
-                          "border-b hover:bg-muted/20 transition-colors cursor-pointer",
+                          "border-b hover:bg-muted/20 transition-colors",
                           expandedOrder === order.id && "bg-muted/10",
                         )}
-                        onClick={() => toggleOrderDetails(order.id)}
                       >
-                        <td className="py-3 px-4 text-sm">{order.reference_number}</td>
-                        <td className="py-3 px-4 text-sm">{formatDate(order.created_at)}</td>
+                        <td className="py-3 px-4 text-sm font-medium">{order.reference_number}</td>
                         <td className="py-3 px-4 text-sm">
-                          {order.device_brand} {order.device_model}
+                          <div className="flex items-center">
+                            <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                            {formatDate(order.created_at)}
+                          </div>
                         </td>
-                        <td className="py-3 px-4 text-sm">{order.service_type}</td>
+                        <td className="py-3 px-4 text-sm">
+                          <div className="flex items-center">
+                            <Smartphone className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                            {order.device_brand} {order.device_model}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-sm">
+                          <div className="flex items-center">
+                            <Tool className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                            {order.service_type}
+                          </div>
+                        </td>
                         <td className="py-3 px-4">
-                          <Badge className={cn("font-medium text-xs", order.statusColor)}>{order.statusName}</Badge>
+                          <Badge className={cn("font-medium text-xs", order.statusColor)}>
+                            <span className="flex items-center">
+                              {getStatusIcon(order.statusName)}
+                              <span className="ml-1">{order.statusName}</span>
+                            </span>
+                          </Badge>
                         </td>
-                        <td className="py-3 px-4 text-sm">{order.price ? `${order.price} грн` : "-"}</td>
+                        <td className="py-3 px-4 text-sm">
+                          <div className="flex items-center">
+                            <Tag className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                            {order.price ? `${order.price} грн` : "-"}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 rounded-full"
+                            onClick={(e) => toggleOrderDetails(order.id, e)}
+                          >
+                            {expandedOrder === order.id ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                            <span className="sr-only">Показати деталі</span>
+                          </Button>
+                        </td>
                       </tr>
-                      {expandedOrder === order.id && order.statusHistory && order.statusHistory.length > 0 && (
+                      {expandedOrder === order.id && (
                         <tr className="bg-muted/5">
-                          <td colSpan={6} className="py-3 px-4">
-                            <div className="text-sm font-medium mb-2">Історія змін статусів:</div>
-                            <div className="space-y-2 pl-2">
-                              {order.statusHistory.map((history) => (
-                                <div key={history.id} className="flex items-center gap-2 text-sm">
-                                  <span className="text-muted-foreground">{formatDate(history.changed_at)}</span>
-                                  <span className="text-muted-foreground">→</span>
-                                  <Badge
-                                    className={cn("font-medium text-xs", history.new_status_color || "bg-gray-100")}
-                                  >
-                                    {history.new_status_name || history.new_status}
-                                  </Badge>
-                                  <span className="text-muted-foreground ml-1">({history.changed_by})</span>
+                          <td colSpan={7} className="py-4 px-6">
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <h4 className="text-sm font-medium">Деталі замовлення</h4>
+                                  <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <div className="text-muted-foreground">ID замовлення:</div>
+                                    <div>{order.reference_number}</div>
+                                    <div className="text-muted-foreground">Дата створення:</div>
+                                    <div>{formatDateTime(order.created_at)}</div>
+                                    <div className="text-muted-foreground">Пристрій:</div>
+                                    <div>
+                                      {order.device_brand} {order.device_model}
+                                    </div>
+                                    <div className="text-muted-foreground">Послуга:</div>
+                                    <div>{order.service_type}</div>
+                                    <div className="text-muted-foreground">Поточний статус:</div>
+                                    <div>
+                                      <Badge className={cn("font-medium text-xs", order.statusColor)}>
+                                        {order.statusName}
+                                      </Badge>
+                                    </div>
+                                    <div className="text-muted-foreground">Вартість:</div>
+                                    <div>{order.price ? `${order.price} грн` : "Не вказано"}</div>
+                                  </div>
                                 </div>
-                              ))}
+
+                                {order.statusHistory && order.statusHistory.length > 0 && (
+                                  <div className="space-y-2">
+                                    <h4 className="text-sm font-medium">Історія статусів</h4>
+                                    <div className="space-y-3 relative before:absolute before:left-1.5 before:top-2 before:h-[calc(100%-16px)] before:w-px before:bg-border">
+                                      {order.statusHistory.map((history, index) => (
+                                        <div key={history.id} className="flex items-start pl-6 relative">
+                                          <div className="absolute left-0 top-1 h-3 w-3 rounded-full bg-primary"></div>
+                                          <div className="flex-1">
+                                            <div className="flex items-center">
+                                              <Badge
+                                                className={cn(
+                                                  "font-medium text-xs",
+                                                  history.new_status_color || "bg-gray-100",
+                                                )}
+                                              >
+                                                {history.new_status_name || history.new_status}
+                                              </Badge>
+                                              <span className="text-xs text-muted-foreground ml-2">
+                                                {history.changed_by}
+                                              </span>
+                                            </div>
+                                            <div className="text-xs text-muted-foreground mt-1 flex items-center">
+                                              <Clock className="h-3 w-3 mr-1" />
+                                              {formatDateTime(history.changed_at)}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </td>
                         </tr>
                       )}
-                    </>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -1,166 +1,142 @@
 "use client"
 
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { toast } from "@/hooks/use-toast"
-import { Loader2 } from "lucide-react"
-import { formatPhoneNumber } from "@/utils/format-phone"
+import { useEffect } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { CalendarDays, Mail, Phone, UserIcon, MapPin } from "lucide-react"
 
-// Схема валідації для форми профілю
-const profileFormSchema = z.object({
-  first_name: z.string().min(2, { message: "Ім'я повинно містити щонайменше 2 символи" }),
-  last_name: z.string().min(2, { message: "Прізвище повинно містити щонайменше 2 символи" }),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-})
-
-type ProfileFormValues = z.infer<typeof profileFormSchema>
-
-type UserProfileProps = {
+interface UserProfileProps {
   user: {
-    id: string
-    email: string
-    first_name: string | null
-    last_name: string | null
-    phone: string | null
-    address: string | null
-    created_at: string
+    id?: string
+    name?: string | null
+    first_name?: string | null
+    last_name?: string | null
+    email?: string | null
+    image?: string | null
+    avatar_url?: string | null
+    phone?: string | null
+    address?: string | null
+    role?: string
+    created_at?: string
   }
 }
 
 export function UserProfile({ user }: UserProfileProps) {
-  const [isLoading, setIsLoading] = useState(false)
+  // Debug log to see what user data we have
+  useEffect(() => {
+    console.log("User profile data in component:", user)
+  }, [user])
 
-  // Ініціалізуємо форму з даними користувача
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      first_name: user.first_name || "",
-      last_name: user.last_name || "",
-      phone: user.phone || "",
-      address: user.address || "",
-    },
-  })
-
-  // Функція для обробки відправки форми
-  async function onSubmit(data: ProfileFormValues) {
-    setIsLoading(true)
-
-    try {
-      const response = await fetch("/api/user/profile", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        toast({
-          title: "Профіль оновлено",
-          description: "Ваші дані успішно збережено",
-        })
-      } else {
-        throw new Error(result.message || "Помилка при оновленні профілю")
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error)
-      toast({
-        title: "Помилка",
-        description: error instanceof Error ? error.message : "Не вдалося оновити профіль",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
+  // Format date
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Не вказано"
+    return new Date(dateString).toLocaleDateString("uk-UA", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
   }
 
-  // Форматуємо дату реєстрації
-  const formattedDate = new Date(user.created_at).toLocaleDateString("uk-UA", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
+  // Get full name from first_name and last_name, fallback to name
+  const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || user?.name || "Не вказано"
+
+  // Get avatar URL from either avatar_url or image
+  const avatarUrl =
+    user?.avatar_url ||
+    user?.image ||
+    `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(fullName !== "Не вказано" ? fullName : "User")}`
+
+  // Get initials for avatar
+  const getInitials = () => {
+    if (user?.first_name && user?.last_name) {
+      return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase()
+    } else if (user?.name) {
+      return user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+    }
+    return "U"
+  }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      <Card>
-        <CardHeader className="px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-4">
-          <CardTitle className="text-xl">Інформація профілю</CardTitle>
-          <CardDescription>Оновіть свої персональні дані</CardDescription>
-        </CardHeader>
-        <CardContent className="px-4 py-2 sm:px-6 sm:py-4 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <Card className="w-full shadow-sm">
+      <CardHeader>
+        <div className="flex flex-col items-center space-y-3 sm:flex-row sm:space-y-0 sm:space-x-4">
+          <Avatar className="h-20 w-20">
+            <AvatarImage src={avatarUrl || "/placeholder.svg"} alt={fullName} />
+            <AvatarFallback>{getInitials()}</AvatarFallback>
+          </Avatar>
+          <div className="space-y-1 text-center sm:text-left">
+            <CardTitle className="text-2xl">{fullName}</CardTitle>
+            <CardDescription className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
+              <span className="flex items-center justify-center sm:justify-start">
+                <Mail className="mr-1 h-4 w-4" />
+                {user?.email || "Не вказано"}
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span className="flex items-center justify-center sm:justify-start">
+                <Phone className="mr-1 h-4 w-4" />
+                {user?.phone || "Не вказано"}
+              </span>
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="first_name">Ім'я</Label>
-              <Input
-                id="first_name"
-                placeholder="Введіть ваше ім'я"
-                {...form.register("first_name")}
-                className="w-full"
-              />
-              {form.formState.errors.first_name && (
-                <p className="text-sm text-red-500">{form.formState.errors.first_name.message}</p>
-              )}
+              <h3 className="text-sm font-medium text-muted-foreground">Ім'я</h3>
+              <div className="flex items-center space-x-2">
+                <UserIcon className="h-4 w-4 text-muted-foreground" />
+                <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{user?.first_name || "Не вказано"}</div>
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="last_name">Прізвище</Label>
-              <Input
-                id="last_name"
-                placeholder="Введіть ваше прізвище"
-                {...form.register("last_name")}
-                className="w-full"
-              />
-              {form.formState.errors.last_name && (
-                <p className="text-sm text-red-500">{form.formState.errors.last_name.message}</p>
-              )}
+              <h3 className="text-sm font-medium text-muted-foreground">Прізвище</h3>
+              <div className="flex items-center space-x-2">
+                <UserIcon className="h-4 w-4 text-muted-foreground" />
+                <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{user?.last_name || "Не вказано"}</div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{user?.email || "Не вказано"}</div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Телефон</h3>
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{user?.phone || "Не вказано"}</div>
+              </div>
+            </div>
+            {user?.address && (
+              <div className="space-y-2 sm:col-span-2">
+                <h3 className="text-sm font-medium text-muted-foreground">Адреса</h3>
+                <div className="flex items-center space-x-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{user?.address}</div>
+                </div>
+              </div>
+            )}
+            <div className="space-y-2 sm:col-span-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Дата реєстрації</h3>
+              <div className="flex items-center space-x-2">
+                <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                <div className="rounded-md border px-3 py-2 w-full bg-muted/30">{formatDate(user?.created_at)}</div>
+              </div>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" value={user.email} disabled className="w-full bg-muted" />
-            <p className="text-xs text-muted-foreground">Ваша електронна адреса не може бути змінена</p>
+          <div className="text-sm text-muted-foreground mt-4 text-center">
+            <p>Редагування профілю наразі недоступне. Зв'яжіться з адміністратором для внесення змін.</p>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone">Телефон</Label>
-            <Input
-              id="phone"
-              placeholder="Введіть ваш номер телефону"
-              {...form.register("phone")}
-              className="w-full"
-              onChange={(e) => {
-                const formatted = formatPhoneNumber(e.target.value)
-                form.setValue("phone", formatted)
-              }}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address">Адреса</Label>
-            <Input id="address" placeholder="Введіть вашу адресу" {...form.register("address")} className="w-full" />
-          </div>
-
-          <div className="text-sm text-muted-foreground">
-            Дата реєстрації: <span className="font-medium">{formattedDate}</span>
-          </div>
-        </CardContent>
-        <CardFooter className="px-4 py-3 sm:px-6 sm:py-4 flex justify-end">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Зберегти зміни
-          </Button>
-        </CardFooter>
-      </Card>
-    </form>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
