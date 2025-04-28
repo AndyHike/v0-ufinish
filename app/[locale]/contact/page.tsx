@@ -101,7 +101,7 @@ export default function ContactPage() {
                 <Mail className="mt-1 h-5 w-5 text-primary" />
                 <div>
                   <h3 className="font-semibold">{t("email")}</h3>
-                  <p className="text-sm text-muted-foreground">info@phonerepair.com</p>
+                  <p className="text-sm text-muted-foreground">info@devicehelp.cz</p>
                 </div>
               </div>
             </CardContent>
