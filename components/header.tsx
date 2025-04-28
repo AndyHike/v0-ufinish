@@ -49,7 +49,7 @@ export function Header({ user }) {
               <div className="flex h-full flex-col">
                 <div className="flex items-center gap-2 border-b py-4">
                   <Smartphone className="h-5 w-5" />
-                  <span className="font-semibold">{t("siteTitle")}</span>
+                  <span className="font-semibold">DeviceHelp</span>
                 </div>
                 <nav className="flex-1 overflow-auto py-4">
                   <ul className="grid gap-2">
