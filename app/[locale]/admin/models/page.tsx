@@ -75,6 +75,8 @@ export default function ModelsPage() {
   const [isReorderMode, setIsReorderMode] = useState(false)
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>("")
   const [selectedSeriesFilter, setSelectedSeriesFilter] = useState<string>("")
+  // Доданий стан для відстеження, чи відбувається зараз запит
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     Promise.all([fetchModels(), fetchBrands()])
@@ -91,12 +93,12 @@ export default function ModelsPage() {
     }
   }, [selectedBrandFilter])
 
-  // Додаємо ефект для завантаження серій при відкритті діалогу редагування
+  // Безпечне завантаження серій при відкритті діалогу редагування
   useEffect(() => {
-    if (editModel && isEditDialogOpen) {
+    if (editModel && editModel.brand_id) {
       fetchSeriesForEdit(editModel.brand_id)
     }
-  }, [editModel, isEditDialogOpen])
+  }, [editModel])
 
   async function fetchModels() {
     try {
@@ -166,16 +168,14 @@ export default function ModelsPage() {
       setSeries(data)
     } catch (error) {
       console.error("Error fetching series for edit:", error)
-      toast({
-        title: "Error",
-        description: "Failed to fetch series for edit",
-        variant: "destructive",
-      })
+      // Не показуємо toast при помилці, щоб уникнути блокування інтерфейсу
     }
   }
 
   async function handleEditModel() {
-    if (!editModel) return
+    if (!editModel || isSubmitting) return
+
+    setIsSubmitting(true)
 
     try {
       const response = await fetch(`/api/admin/models/${editModel.id}`, {
@@ -196,14 +196,21 @@ export default function ModelsPage() {
         throw new Error("Failed to update model")
       }
 
-      await fetchModels()
+      // Закриваємо діалог перед оновленням даних, щоб уникнути блокування
       setIsEditDialogOpen(false)
-      setEditModel(null) // Скидаємо стан після закриття
 
-      toast({
-        title: t("success"),
-        description: t("modelUpdatedSuccess"),
-      })
+      // Вводимо затримку перед оновленням списку, щоб уникнути конфліктів стану
+      setTimeout(async () => {
+        await fetchModels()
+        setEditModel(null)
+
+        toast({
+          title: t("success"),
+          description: t("modelUpdatedSuccess"),
+        })
+
+        setIsSubmitting(false)
+      }, 300)
     } catch (error) {
       console.error("Error updating model:", error)
       toast({
@@ -211,11 +218,14 @@ export default function ModelsPage() {
         description: t("modelUpdatedError"),
         variant: "destructive",
       })
+      setIsSubmitting(false)
     }
   }
 
   async function handleDeleteModel() {
-    if (!modelToDelete) return
+    if (!modelToDelete || isSubmitting) return
+
+    setIsSubmitting(true)
 
     try {
       const response = await fetch(`/api/admin/models/${modelToDelete.id}`, {
@@ -226,14 +236,21 @@ export default function ModelsPage() {
         throw new Error("Failed to delete model")
       }
 
-      await fetchModels()
+      // Закриваємо діалог перед оновленням даних
       setIsDeleteDialogOpen(false)
-      setModelToDelete(null)
 
-      toast({
-        title: t("success"),
-        description: t("modelDeletedSuccess"),
-      })
+      // Вводимо затримку перед оновленням списку
+      setTimeout(async () => {
+        await fetchModels()
+        setModelToDelete(null)
+
+        toast({
+          title: t("success"),
+          description: t("modelDeletedSuccess"),
+        })
+
+        setIsSubmitting(false)
+      }, 300)
     } catch (error) {
       console.error("Error deleting model:", error)
       toast({
@@ -241,11 +258,14 @@ export default function ModelsPage() {
         description: t("modelDeletedError"),
         variant: "destructive",
       })
+      setIsSubmitting(false)
     }
   }
 
   async function handleReorderModels(result: any) {
-    if (!result.destination) return
+    if (!result.destination || isSubmitting) return
+
+    setIsSubmitting(true)
 
     const items = Array.from(models)
     const [reorderedItem] = items.splice(result.source.index, 1)
@@ -281,6 +301,7 @@ export default function ModelsPage() {
         title: t("success"),
         description: t("modelReorderedSuccess"),
       })
+      setIsSubmitting(false)
     } catch (error) {
       console.error("Error reordering models:", error)
       toast({
@@ -290,7 +311,24 @@ export default function ModelsPage() {
       })
       // Revert to original order
       await fetchModels()
+      setIsSubmitting(false)
     }
+  }
+
+  const closeEditDialog = () => {
+    setIsEditDialogOpen(false)
+    // Очищаємо стан редагування через затримку, щоб анімація закриття відбулася коректно
+    setTimeout(() => {
+      setEditModel(null)
+    }, 300)
+  }
+
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false)
+    // Очищаємо стан видалення через затримку
+    setTimeout(() => {
+      setModelToDelete(null)
+    }, 300)
   }
 
   return (
@@ -441,8 +479,12 @@ export default function ModelsPage() {
                                       <DropdownMenuSeparator />
                                       <DropdownMenuItem
                                         onClick={() => {
+                                          // Спочатку встановлюємо модель для редагування, а потім відкриваємо діалог
                                           setEditModel(model)
-                                          setIsEditDialogOpen(true)
+                                          // Невелика затримка перед відкриттям діалогу
+                                          setTimeout(() => {
+                                            setIsEditDialogOpen(true)
+                                          }, 50)
                                         }}
                                       >
                                         <Pencil className="mr-2 h-4 w-4" />
@@ -459,7 +501,10 @@ export default function ModelsPage() {
                                         className="text-destructive"
                                         onClick={() => {
                                           setModelToDelete(model)
-                                          setIsDeleteDialogOpen(true)
+                                          // Невелика затримка перед відкриттям діалогу
+                                          setTimeout(() => {
+                                            setIsDeleteDialogOpen(true)
+                                          }, 50)
                                         }}
                                       >
                                         <Trash className="mr-2 h-4 w-4" />
@@ -484,19 +529,20 @@ export default function ModelsPage() {
       </Card>
 
       {/* Add Model Dialog */}
-      <AddModelDialog isOpen={isAddDialogOpen} onClose={() => setIsAddDialogOpen(false)} onModelAdded={fetchModels} />
+      <AddModelDialog
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onModelAdded={() => {
+          // Невелика затримка перед оновленням списку
+          setTimeout(fetchModels, 300)
+        }}
+      />
 
       {/* Edit Model Dialog */}
       <Dialog
         open={isEditDialogOpen}
         onOpenChange={(open) => {
-          if (!open) {
-            // Wait for animation to complete before resetting state
-            setTimeout(() => {
-              setEditModel(null)
-            }, 300)
-          }
-          setIsEditDialogOpen(open)
+          if (!open) closeEditDialog()
         }}
       >
         <DialogContent className="sm:max-w-[425px]">
@@ -573,10 +619,12 @@ export default function ModelsPage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button variant="outline" onClick={closeEditDialog} disabled={isSubmitting}>
               {t("cancel")}
             </Button>
-            <Button onClick={handleEditModel}>{t("save")}</Button>
+            <Button onClick={handleEditModel} disabled={isSubmitting}>
+              {isSubmitting ? t("processing") : t("save")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -585,13 +633,7 @@ export default function ModelsPage() {
       <Dialog
         open={isDeleteDialogOpen}
         onOpenChange={(open) => {
-          if (!open) {
-            // Wait for animation to complete before resetting state
-            setTimeout(() => {
-              setModelToDelete(null)
-            }, 300)
-          }
-          setIsDeleteDialogOpen(open)
+          if (!open) closeDeleteDialog()
         }}
       >
         <DialogContent>
@@ -603,11 +645,11 @@ export default function ModelsPage() {
             <p>{t("deleteModelConfirmation", { model: modelToDelete?.name })}</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button variant="outline" onClick={closeDeleteDialog} disabled={isSubmitting}>
               {t("cancel")}
             </Button>
-            <Button variant="destructive" onClick={handleDeleteModel}>
-              {t("confirmDelete")}
+            <Button variant="destructive" onClick={handleDeleteModel} disabled={isSubmitting}>
+              {isSubmitting ? t("processing") : t("confirmDelete")}
             </Button>
           </DialogFooter>
         </DialogContent>

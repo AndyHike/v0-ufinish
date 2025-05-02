@@ -41,6 +41,7 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
   const [brands, setBrands] = useState<Brand[]>([])
   const [series, setSeries] = useState<Series[]>([])
   const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [newModel, setNewModel] = useState({ name: "", brandId: "", seriesId: "", imageUrl: "" })
 
   // Завантажуємо бренди при відкритті діалогу
@@ -65,16 +66,15 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
 
   async function fetchBrands() {
     try {
+      setLoading(true)
       const response = await fetch("/api/admin/brands")
       const data = await response.json()
       setBrands(data)
+      setLoading(false)
     } catch (error) {
       console.error("Error fetching brands:", error)
-      toast({
-        title: t("error"),
-        description: t("errorFetchingBrands"),
-        variant: "destructive",
-      })
+      setLoading(false)
+      // Уникаємо показу toast при помилці, щоб не блокувати інтерфейс
     }
   }
 
@@ -85,11 +85,7 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
       setSeries(data)
     } catch (error) {
       console.error("Error fetching series:", error)
-      toast({
-        title: t("error"),
-        description: t("errorFetchingSeries") || "Failed to fetch series",
-        variant: "destructive",
-      })
+      // Уникаємо показу toast при помилці
     }
   }
 
@@ -103,7 +99,7 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
       return
     }
 
-    setLoading(true)
+    setSubmitting(true)
 
     try {
       // Підготуємо дані для відправки, видаляючи серію, якщо вона "_none"
@@ -125,14 +121,20 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
         throw new Error("Failed to add model")
       }
 
-      setNewModel({ name: "", brandId: "", seriesId: "", imageUrl: "" })
-      onModelAdded()
-      onClose()
+      // Спочатку закриваємо діалог, а потім оновлюємо дані
+      handleClose()
 
-      toast({
-        title: t("success"),
-        description: t("modelAddedSuccess"),
-      })
+      // Додаємо затримку перед оновленням даних
+      setTimeout(() => {
+        onModelAdded()
+
+        toast({
+          title: t("success"),
+          description: t("modelAddedSuccess"),
+        })
+
+        setSubmitting(false)
+      }, 300)
     } catch (error) {
       console.error("Error adding model:", error)
       toast({
@@ -140,9 +142,14 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
         description: t("modelAddedError"),
         variant: "destructive",
       })
-    } finally {
-      setLoading(false)
+      setSubmitting(false)
     }
+  }
+
+  // Функція безпечного закриття діалогу
+  const handleClose = () => {
+    setNewModel({ name: "", brandId: "", seriesId: "", imageUrl: "" })
+    onClose()
   }
 
   return (
@@ -150,12 +157,9 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
       open={isOpen}
       onOpenChange={(open) => {
         if (!open) {
-          // Reset form state after dialog closes
-          setTimeout(() => {
-            setNewModel({ name: "", brandId: "", seriesId: "", imageUrl: "" })
-          }, 300)
+          // Безпечне закриття діалогу
+          handleClose()
         }
-        onClose()
       }}
     >
       <DialogContent className="sm:max-w-[425px]">
@@ -228,11 +232,11 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={loading}>
+          <Button variant="outline" onClick={handleClose} disabled={submitting}>
             {t("cancel")}
           </Button>
-          <Button onClick={handleAddModel} disabled={loading}>
-            {loading ? t("processing") : t("add")}
+          <Button onClick={handleAddModel} disabled={submitting}>
+            {submitting ? t("processing") : t("add")}
           </Button>
         </DialogFooter>
       </DialogContent>
