@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { X } from "lucide-react"
 
 type Brand = {
   id: string
@@ -147,18 +146,22 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          // Reset form state after dialog closes
+          setTimeout(() => {
+            setNewModel({ name: "", brandId: "", seriesId: "", imageUrl: "" })
+          }, 300)
+        }
+        onClose()
+      }}
+    >
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{t("addNewModel")}</DialogTitle>
           <DialogDescription>{t("addNewModelDescription")}</DialogDescription>
-          <button
-            onClick={onClose}
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </button>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -207,7 +210,7 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="_no_series_available">
+                  <SelectItem value="_no_series_available" disabled>
                     {t("noSeriesAvailable") || "No series available for this brand"}
                   </SelectItem>
                 )}

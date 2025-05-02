@@ -490,13 +490,16 @@ export default function ModelsPage() {
       <Dialog
         open={isEditDialogOpen}
         onOpenChange={(open) => {
-          setIsEditDialogOpen(open)
           if (!open) {
-            setEditModel(null) // Скидаємо стан при закритті діалогу
+            // Wait for animation to complete before resetting state
+            setTimeout(() => {
+              setEditModel(null)
+            }, 300)
           }
+          setIsEditDialogOpen(open)
         }}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{t("editModel")}</DialogTitle>
             <DialogDescription>{t("editModelDescription")}</DialogDescription>
@@ -534,16 +537,16 @@ export default function ModelsPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-series">{t("series") || "Series"}</Label>
+                <Label htmlFor="edit-series">{t("series")}</Label>
                 <Select
                   value={editModel.series_id || "_none"}
                   onValueChange={(value) => setEditModel({ ...editModel, series_id: value === "_none" ? null : value })}
                 >
                   <SelectTrigger id="edit-series">
-                    <SelectValue placeholder={t("selectSeries") || "Select Series"} />
+                    <SelectValue placeholder={t("selectSeries")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_none">{t("noSeries") || "No Series"}</SelectItem>
+                    <SelectItem value="_none">{t("noSeries")}</SelectItem>
                     {series.length > 0 ? (
                       series.map((item) => (
                         <SelectItem key={item.id} value={item.id}>
@@ -551,15 +554,15 @@ export default function ModelsPage() {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="_no_series_available">
-                        {t("noSeriesAvailable") || "No series available for this brand"}
+                      <SelectItem value="_no_series_available" disabled>
+                        {t("noSeriesAvailable")}
                       </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-image">{t("imageUrl")}</Label>
+                <Label htmlFor="edit-image">{t("image")}</Label>
                 <Input
                   id="edit-image"
                   value={editModel.image_url || ""}
@@ -582,10 +585,13 @@ export default function ModelsPage() {
       <Dialog
         open={isDeleteDialogOpen}
         onOpenChange={(open) => {
-          setIsDeleteDialogOpen(open)
           if (!open) {
-            setModelToDelete(null) // Скидаємо стан при закритті діалогу
+            // Wait for animation to complete before resetting state
+            setTimeout(() => {
+              setModelToDelete(null)
+            }, 300)
           }
+          setIsDeleteDialogOpen(open)
         }}
       >
         <DialogContent>
