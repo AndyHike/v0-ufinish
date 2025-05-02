@@ -44,17 +44,23 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
   const [loading, setLoading] = useState(false)
   const [newModel, setNewModel] = useState({ name: "", brandId: "", seriesId: "", imageUrl: "" })
 
+  // Завантажуємо бренди при відкритті діалогу
   useEffect(() => {
     if (isOpen) {
       fetchBrands()
+      // Скидаємо стан форми при відкритті
+      setNewModel({ name: "", brandId: "", seriesId: "", imageUrl: "" })
     }
   }, [isOpen])
 
+  // Завантажуємо серії при зміні бренду
   useEffect(() => {
     if (newModel.brandId) {
       fetchSeries(newModel.brandId)
     } else {
       setSeries([])
+      // Скидаємо вибрану серію, якщо бренд не вибрано
+      setNewModel((prev) => ({ ...prev, seriesId: "" }))
     }
   }, [newModel.brandId])
 
@@ -187,18 +193,24 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
             <Select
               value={newModel.seriesId}
               onValueChange={(value) => setNewModel({ ...newModel, seriesId: value })}
-              disabled={!newModel.brandId || series.length === 0}
+              disabled={!newModel.brandId}
             >
               <SelectTrigger id="series">
                 <SelectValue placeholder={t("selectSeries") || "Select Series"} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_none">{t("noSeries") || "No Series"}</SelectItem>
-                {series.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.name}
+                {series.length > 0 ? (
+                  series.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="_no_series_available">
+                    {t("noSeriesAvailable") || "No series available for this brand"}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>

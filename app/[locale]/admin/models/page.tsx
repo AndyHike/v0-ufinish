@@ -91,6 +91,13 @@ export default function ModelsPage() {
     }
   }, [selectedBrandFilter])
 
+  // Додаємо ефект для завантаження серій при відкритті діалогу редагування
+  useEffect(() => {
+    if (editModel && isEditDialogOpen) {
+      fetchSeriesForEdit(editModel.brand_id)
+    }
+  }, [editModel, isEditDialogOpen])
+
   async function fetchModels() {
     try {
       let url = "/api/admin/models"
@@ -151,6 +158,22 @@ export default function ModelsPage() {
     }
   }
 
+  // Окрема функція для завантаження серій при редагуванні
+  async function fetchSeriesForEdit(brandId: string) {
+    try {
+      const response = await fetch(`/api/admin/series?brand_id=${brandId}`)
+      const data = await response.json()
+      setSeries(data)
+    } catch (error) {
+      console.error("Error fetching series for edit:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch series for edit",
+        variant: "destructive",
+      })
+    }
+  }
+
   async function handleEditModel() {
     if (!editModel) return
 
@@ -175,6 +198,7 @@ export default function ModelsPage() {
 
       await fetchModels()
       setIsEditDialogOpen(false)
+      setEditModel(null) // Скидаємо стан після закриття
 
       toast({
         title: t("success"),
@@ -321,12 +345,18 @@ export default function ModelsPage() {
                   <SelectValue placeholder={t("allSeries") || "All Series"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="_none">{t("allSeries") || "All Series"}</SelectItem>
-                  {series.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.name}
+                  <SelectItem value="_all">{t("allSeries") || "All Series"}</SelectItem>
+                  {series.length > 0 ? (
+                    series.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="_no_series_available">
+                      {t("noSeriesAvailable") || "No series available for this brand"}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -457,7 +487,15 @@ export default function ModelsPage() {
       <AddModelDialog isOpen={isAddDialogOpen} onClose={() => setIsAddDialogOpen(false)} onModelAdded={fetchModels} />
 
       {/* Edit Model Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open)
+          if (!open) {
+            setEditModel(null) // Скидаємо стан при закритті діалогу
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("editModel")}</DialogTitle>
@@ -480,7 +518,7 @@ export default function ModelsPage() {
                   value={editModel.brand_id}
                   onValueChange={(value) => {
                     setEditModel({ ...editModel, brand_id: value, series_id: null })
-                    fetchSeries(value)
+                    fetchSeriesForEdit(value)
                   }}
                 >
                   <SelectTrigger id="edit-brand">
@@ -506,11 +544,17 @@ export default function ModelsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="_none">{t("noSeries") || "No Series"}</SelectItem>
-                    {series.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name}
+                    {series.length > 0 ? (
+                      series.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="_no_series_available">
+                        {t("noSeriesAvailable") || "No series available for this brand"}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -535,7 +579,15 @@ export default function ModelsPage() {
       </Dialog>
 
       {/* Delete Model Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <Dialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setIsDeleteDialogOpen(open)
+          if (!open) {
+            setModelToDelete(null) // Скидаємо стан при закритті діалогу
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("deleteModel")}</DialogTitle>

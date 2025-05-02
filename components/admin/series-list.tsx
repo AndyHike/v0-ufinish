@@ -458,7 +458,16 @@ export function SeriesList({ brandId = "" }: { brandId?: string }) {
       </Dialog>
 
       {/* Edit Series Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open)
+          if (!open) {
+            // Скидаємо стан при закритті діалогу
+            setEditSeries(null)
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("editSeries")}</DialogTitle>
@@ -507,7 +516,15 @@ export function SeriesList({ brandId = "" }: { brandId?: string }) {
       </Dialog>
 
       {/* Delete Series Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <Dialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setIsDeleteDialogOpen(open)
+          if (!open) {
+            setSeriesToDelete(null)
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("deleteSeries")}</DialogTitle>
