@@ -4,50 +4,65 @@ import { useState, useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { SeriesList } from "@/components/admin/series-list"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ChevronLeft } from "lucide-react"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+
+type Brand = {
+  id: string
+  name: string
+}
 
 export default function BrandSeriesPage() {
   const t = useTranslations("Admin")
   const params = useParams()
   const brandId = params.id as string
-  const [brandName, setBrandName] = useState("")
+  const [brand, setBrand] = useState<Brand | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchBrandDetails() {
+    async function fetchBrand() {
       try {
         const response = await fetch(`/api/admin/brands/${brandId}`)
-        if (response.ok) {
-          const data = await response.json()
-          setBrandName(data.name)
+        if (!response.ok) {
+          throw new Error("Failed to fetch brand")
         }
+        const data = await response.json()
+        setBrand(data)
       } catch (error) {
-        console.error("Error fetching brand details:", error)
+        console.error("Error fetching brand:", error)
+      } finally {
+        setLoading(false)
       }
     }
 
-    if (brandId) {
-      fetchBrandDetails()
-    }
+    fetchBrand()
   }, [brandId])
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-64 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center">
-        <Button variant="ghost" size="sm" asChild className="mr-2">
-          <Link href="/admin/brands">
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            {t("backToBrands") || "Back to Brands"}
-          </Link>
-        </Button>
-      </div>
-
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {brandName ? `${brandName} - ${t("series") || "Series"}` : t("series") || "Series"}
-        </h1>
-        <p className="text-muted-foreground">{t("manageBrandSeries") || "Manage product series for this brand"}</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("seriesForBrand", { brand: brand?.name || "" })}</h1>
+        <p className="text-muted-foreground">{t("manageSeriesForBrand", { brand: brand?.name || "" })}</p>
       </div>
 
       <SeriesList brandId={brandId} />
