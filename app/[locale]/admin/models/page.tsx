@@ -163,7 +163,7 @@ export default function ModelsPage() {
         body: JSON.stringify({
           name: editModel.name,
           brandId: editModel.brand_id,
-          seriesId: editModel.series_id,
+          seriesId: editModel.series_id === "_none" ? null : editModel.series_id,
           imageUrl: editModel.image_url,
           userId: session?.user?.id,
         }),
@@ -300,7 +300,7 @@ export default function ModelsPage() {
                   <SelectValue placeholder={t("allBrands")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t("allBrands")}</SelectItem>
+                  <SelectItem value="_all">{t("allBrands")}</SelectItem>
                   {brands.map((brand) => (
                     <SelectItem key={brand.id} value={brand.id}>
                       {brand.name}
@@ -321,7 +321,7 @@ export default function ModelsPage() {
                   <SelectValue placeholder={t("allSeries") || "All Series"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{t("allSeries") || "All Series"}</SelectItem>
+                  <SelectItem value="_none">{t("allSeries") || "All Series"}</SelectItem>
                   {series.map((item) => (
                     <SelectItem key={item.id} value={item.id}>
                       {item.name}
@@ -498,14 +498,14 @@ export default function ModelsPage() {
               <div className="grid gap-2">
                 <Label htmlFor="edit-series">{t("series") || "Series"}</Label>
                 <Select
-                  value={editModel.series_id || ""}
-                  onValueChange={(value) => setEditModel({ ...editModel, series_id: value || null })}
+                  value={editModel.series_id || "_none"}
+                  onValueChange={(value) => setEditModel({ ...editModel, series_id: value === "_none" ? null : value })}
                 >
                   <SelectTrigger id="edit-series">
                     <SelectValue placeholder={t("selectSeries") || "Select Series"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">{t("noSeries") || "No Series"}</SelectItem>
+                    <SelectItem value="_none">{t("noSeries") || "No Series"}</SelectItem>
                     {series.map((item) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.name}
