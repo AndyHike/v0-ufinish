@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -9,15 +9,24 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
-interface Brand {
+// Оновимо тип Brand, щоб включити серії
+type Brand = {
   id: string
   name: string
   logo_url: string | null
-  position?: number | null
+  position: number | null
+  series:
+    | {
+        id: string
+        name: string
+        position: number
+      }[]
+    | null
 }
 
 export function BrandsSection() {
   const t = useTranslations("BrandsSection")
+  const locale = useLocale()
   const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -39,7 +48,7 @@ export function BrandsSection() {
         const sortedBrands = [...data].sort((a, b) => {
           // If both have position, sort by position
           if (a.position !== null && b.position !== null) {
-            return a.position - b.position
+            return (a.position || 0) - (b.position || 0)
           }
           // If only one has position, prioritize the one with position
           if (a.position !== null) return -1
@@ -96,36 +105,37 @@ export function BrandsSection() {
               <ChevronLeft className="h-5 w-5" />
             </button>
 
-            <div
-              id="brands-scroll"
-              className="flex overflow-x-auto gap-6 pb-4 snap-x scrollbar-hide"
-              style={{ scrollBehavior: "smooth" }}
-            >
-              {brands.map((brand) => (
-                <div key={brand.id} className="flex-none w-[200px] snap-start">
-                  <Link href={`/brands/${brand.id}`}>
-                    <Card className="border-none shadow-sm hover:shadow-md transition-shadow duration-300 h-32">
-                      <CardContent className="p-6 flex flex-col items-center justify-center h-full">
-                        {brand.logo_url ? (
-                          <div className="relative h-16 w-full">
-                            <Image
-                              src={brand.logo_url || "/placeholder.svg"}
-                              alt={brand.name}
-                              width={120}
-                              height={80}
-                              className="object-contain mx-auto"
-                              style={{ maxHeight: "100%", width: "auto" }}
-                            />
-                          </div>
-                        ) : (
-                          <div className="text-lg font-medium">{brand.name}</div>
-                        )}
-                        <span className="mt-2 text-sm text-center">{brand.name}</span>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </div>
-              ))}
+            <div id="brands-scroll" className="scrollbar-hide">
+              <div
+                className="flex overflow-x-auto gap-6 pb-4 snap-x scrollbar-hide"
+                style={{ scrollBehavior: "smooth" }}
+              >
+                {brands.map((brand) => (
+                  <div key={brand.id} className="flex-none w-[200px] snap-start">
+                    <Link href={`/brands/${brand.id}`}>
+                      <Card className="border-none shadow-sm hover:shadow-md transition-shadow duration-300 h-32">
+                        <CardContent className="p-6 flex flex-col items-center justify-center h-full">
+                          {brand.logo_url ? (
+                            <div className="relative h-16 w-full">
+                              <Image
+                                src={brand.logo_url || "/placeholder.svg"}
+                                alt={brand.name}
+                                width={120}
+                                height={80}
+                                className="object-contain mx-auto"
+                                style={{ maxHeight: "100%", width: "auto" }}
+                              />
+                            </div>
+                          ) : (
+                            <div className="text-lg font-medium">{brand.name}</div>
+                          )}
+                          <span className="mt-2 text-sm text-center">{brand.name}</span>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <button

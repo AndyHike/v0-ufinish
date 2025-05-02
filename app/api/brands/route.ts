@@ -9,7 +9,7 @@ export async function GET() {
     // Get brands ordered by position
     const { data, error } = await supabase
       .from("brands")
-      .select("*")
+      .select("*, series(id, name, position)")
       .order("position", { ascending: true, nullsLast: true })
       .order("name", { ascending: true })
 

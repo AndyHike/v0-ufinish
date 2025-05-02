@@ -37,16 +37,26 @@ type Brand = {
   name: string
 }
 
+type Series = {
+  id: string
+  name: string
+  brand_id: string
+}
+
 type Model = {
   id: string
   name: string
   brand_id: string
+  series_id: string | null
   image_url: string | null
   created_at: string
   position: number
   brands: {
     name: string
   }
+  series: {
+    name: string
+  } | null
 }
 
 export default function ModelsPage() {
@@ -55,6 +65,7 @@ export default function ModelsPage() {
   const { data: session } = useSession()
   const [models, setModels] = useState<Model[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
+  const [series, setSeries] = useState<Series[]>([])
   const [loading, setLoading] = useState(true)
   const [editModel, setEditModel] = useState<Model | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -63,16 +74,39 @@ export default function ModelsPage() {
   const [modelToDelete, setModelToDelete] = useState<Model | null>(null)
   const [isReorderMode, setIsReorderMode] = useState(false)
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>("")
+  const [selectedSeriesFilter, setSelectedSeriesFilter] = useState<string>("")
 
   useEffect(() => {
     Promise.all([fetchModels(), fetchBrands()])
       .then(() => setLoading(false))
       .catch(() => setLoading(false))
+  }, [selectedBrandFilter, selectedSeriesFilter])
+
+  useEffect(() => {
+    if (selectedBrandFilter) {
+      fetchSeries(selectedBrandFilter)
+    } else {
+      setSeries([])
+      setSelectedSeriesFilter("")
+    }
   }, [selectedBrandFilter])
 
   async function fetchModels() {
     try {
-      const url = selectedBrandFilter ? `/api/admin/models?brand_id=${selectedBrandFilter}` : "/api/admin/models"
+      let url = "/api/admin/models"
+      const params = new URLSearchParams()
+
+      if (selectedBrandFilter) {
+        params.append("brand_id", selectedBrandFilter)
+      }
+
+      if (selectedSeriesFilter) {
+        params.append("series_id", selectedSeriesFilter)
+      }
+
+      if (params.toString()) {
+        url += `?${params.toString()}`
+      }
 
       const response = await fetch(url)
       const data = await response.json()
@@ -102,6 +136,21 @@ export default function ModelsPage() {
     }
   }
 
+  async function fetchSeries(brandId: string) {
+    try {
+      const response = await fetch(`/api/admin/series?brand_id=${brandId}`)
+      const data = await response.json()
+      setSeries(data)
+    } catch (error) {
+      console.error("Error fetching series:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch series",
+        variant: "destructive",
+      })
+    }
+  }
+
   async function handleEditModel() {
     if (!editModel) return
 
@@ -114,6 +163,7 @@ export default function ModelsPage() {
         body: JSON.stringify({
           name: editModel.name,
           brandId: editModel.brand_id,
+          seriesId: editModel.series_id,
           imageUrl: editModel.image_url,
           userId: session?.user?.id,
         }),
@@ -242,21 +292,44 @@ export default function ModelsPage() {
         <CardHeader>
           <CardTitle>{t("models")}</CardTitle>
           <CardDescription>{t("modelsDescription")}</CardDescription>
-          <div className="mt-4">
-            <Label htmlFor="brand-filter">{t("filterByBrand")}</Label>
-            <Select value={selectedBrandFilter} onValueChange={setSelectedBrandFilter}>
-              <SelectTrigger id="brand-filter" className="mt-1">
-                <SelectValue placeholder={t("allBrands")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("allBrands")}</SelectItem>
-                {brands.map((brand) => (
-                  <SelectItem key={brand.id} value={brand.id}>
-                    {brand.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div>
+              <Label htmlFor="brand-filter">{t("filterByBrand")}</Label>
+              <Select value={selectedBrandFilter} onValueChange={setSelectedBrandFilter}>
+                <SelectTrigger id="brand-filter" className="mt-1">
+                  <SelectValue placeholder={t("allBrands")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t("allBrands")}</SelectItem>
+                  {brands.map((brand) => (
+                    <SelectItem key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="series-filter">{t("filterBySeries") || "Filter by Series"}</Label>
+              <Select
+                value={selectedSeriesFilter}
+                onValueChange={setSelectedSeriesFilter}
+                disabled={!selectedBrandFilter || series.length === 0}
+              >
+                <SelectTrigger id="series-filter" className="mt-1">
+                  <SelectValue placeholder={t("allSeries") || "All Series"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t("allSeries") || "All Series"}</SelectItem>
+                  {series.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -272,6 +345,7 @@ export default function ModelsPage() {
                     {isReorderMode && <TableHead className="w-[50px]"></TableHead>}
                     <TableHead>{t("name")}</TableHead>
                     <TableHead>{t("brand")}</TableHead>
+                    <TableHead>{t("series") || "Series"}</TableHead>
                     <TableHead>{t("image")}</TableHead>
                     <TableHead>{t("createdAt")}</TableHead>
                     <TableHead className="text-right">{t("actions")}</TableHead>
@@ -282,7 +356,7 @@ export default function ModelsPage() {
                     <TableBody {...provided.droppableProps} ref={provided.innerRef}>
                       {models.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={isReorderMode ? 6 : 5} className="text-center">
+                          <TableCell colSpan={isReorderMode ? 7 : 6} className="text-center">
                             {t("noModels")}
                           </TableCell>
                         </TableRow>
@@ -307,6 +381,7 @@ export default function ModelsPage() {
                                   </Link>
                                 </TableCell>
                                 <TableCell>{model.brands?.name}</TableCell>
+                                <TableCell>{model.series?.name || t("noSeries") || "No Series"}</TableCell>
                                 <TableCell>
                                   {model.image_url ? (
                                     <div className="h-10 w-10 overflow-hidden rounded-md">
@@ -403,7 +478,10 @@ export default function ModelsPage() {
                 <Label htmlFor="edit-brand">{t("brand")}</Label>
                 <Select
                   value={editModel.brand_id}
-                  onValueChange={(value) => setEditModel({ ...editModel, brand_id: value })}
+                  onValueChange={(value) => {
+                    setEditModel({ ...editModel, brand_id: value, series_id: null })
+                    fetchSeries(value)
+                  }}
                 >
                   <SelectTrigger id="edit-brand">
                     <SelectValue placeholder={t("selectBrand")} />
@@ -412,6 +490,25 @@ export default function ModelsPage() {
                     {brands.map((brand) => (
                       <SelectItem key={brand.id} value={brand.id}>
                         {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-series">{t("series") || "Series"}</Label>
+                <Select
+                  value={editModel.series_id || ""}
+                  onValueChange={(value) => setEditModel({ ...editModel, series_id: value || null })}
+                >
+                  <SelectTrigger id="edit-series">
+                    <SelectValue placeholder={t("selectSeries") || "Select Series"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t("noSeries") || "No Series"}</SelectItem>
+                    {series.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
