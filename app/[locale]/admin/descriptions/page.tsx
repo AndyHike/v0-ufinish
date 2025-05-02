@@ -1,23 +1,29 @@
-import { getTranslations } from "next-intl/server"
+"use client"
 
-export async function generateMetadata({
-  params: { locale },
-}: {
-  params: { locale: string }
-}) {
-  const t = await getTranslations({ locale, namespace: "Admin" })
-  return {
-    title: t("descriptions"),
-  }
-}
+import { useTranslations } from "next-intl"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function DescriptionsPage() {
+  const t = useTranslations("Admin")
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Descriptions</h2>
-        <p className="text-muted-foreground">This page is under development. Please check back later.</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("descriptions")}</h1>
+        <p className="text-muted-foreground">Керуйте описами послуг у вашій системі</p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("descriptions")}</CardTitle>
+          <CardDescription>Керуйте описами послуг для різних мов</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-40">
+            <p className="text-muted-foreground">{t("featureUnderDevelopment")}</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

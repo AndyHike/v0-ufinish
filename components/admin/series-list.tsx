@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { Plus, Pencil, Trash, MoveVertical, MoreHorizontal, ArrowUp, ArrowDown } from "lucide-react"
+import { Plus, Pencil, Trash, MoveVertical, MoreHorizontal } from "lucide-react"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 
 type Brand = {
@@ -45,27 +45,21 @@ type Series = {
   }
 }
 
-interface SeriesListProps {
-  brandId?: string
-}
-
-export function SeriesList({ brandId }: SeriesListProps) {
+export function SeriesList({ brandId = "" }: { brandId?: string }) {
   const t = useTranslations("Admin")
   const { toast } = useToast()
   const { data: session } = useSession()
   const [series, setSeries] = useState<Series[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
-  const [newSeries, setNewSeries] = useState({ name: "", brand_id: brandId || "" })
-  const [editSeries, setEditSeries] = useState<Series | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [newSeries, setNewSeries] = useState({ name: "", brandId: brandId || "" })
+  const [editSeries, setEditSeries] = useState<Series | null>(null)
   const [seriesToDelete, setSeriesToDelete] = useState<Series | null>(null)
   const [isReorderMode, setIsReorderMode] = useState(false)
-  const [reordering, setReordering] = useState(false)
-  const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>(brandId || "_empty")
-  const [error, setError] = useState<string | null>(null)
+  const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>(brandId || "")
 
   useEffect(() => {
     Promise.all([fetchSeries(), fetchBrands()])
@@ -75,42 +69,26 @@ export function SeriesList({ brandId }: SeriesListProps) {
 
   async function fetchSeries() {
     try {
-      setLoading(true)
-      setError(null)
+      let url = "/api/admin/series"
 
-      // Якщо вибрано "_empty", не додаємо параметр brand_id до URL
-      const url =
-        selectedBrandFilter && selectedBrandFilter !== "_empty"
-          ? `/api/admin/series?brand_id=${selectedBrandFilter}`
-          : "/api/admin/series"
+      // Додаємо параметр brand_id тільки якщо він не порожній
+      if (selectedBrandFilter) {
+        url += `?brand_id=${selectedBrandFilter}`
+      }
 
       const response = await fetch(url)
       if (!response.ok) {
         throw new Error(`Failed to fetch series: ${response.status}`)
       }
       const data = await response.json()
-
-      // Sort series by position
-      const sortedSeries = [...data].sort((a, b) => {
-        if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
-          return a.position - b.position
-        }
-        if (a.position !== null && a.position !== undefined) return -1
-        if (b.position !== null && b.position !== undefined) return 1
-        return a.name.localeCompare(b.name)
-      })
-
-      setSeries(sortedSeries)
+      setSeries(data)
     } catch (error) {
       console.error("Error fetching series:", error)
-      setError("Failed to load series. Please try again later.")
       toast({
         title: t("error"),
-        description: t("seriesFetchError") || "Failed to fetch series",
+        description: t("seriesFetchError"),
         variant: "destructive",
       })
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -123,17 +101,17 @@ export function SeriesList({ brandId }: SeriesListProps) {
       console.error("Error fetching brands:", error)
       toast({
         title: t("error"),
-        description: t("brandFetchError") || "Failed to fetch brands",
+        description: t("brandFetchError"),
         variant: "destructive",
       })
     }
   }
 
   async function handleAddSeries() {
-    if (!newSeries.name || !newSeries.brand_id) {
+    if (!newSeries.name || !newSeries.brandId) {
       toast({
         title: t("validationError"),
-        description: t("nameAndBrandRequired") || "Name and brand are required",
+        description: t("nameAndBrandRequired"),
         variant: "destructive",
       })
       return
@@ -147,7 +125,8 @@ export function SeriesList({ brandId }: SeriesListProps) {
         },
         body: JSON.stringify({
           name: newSeries.name,
-          brand_id: newSeries.brand_id,
+          brandId: newSeries.brandId,
+          userId: session?.user?.id,
         }),
       })
 
@@ -156,18 +135,18 @@ export function SeriesList({ brandId }: SeriesListProps) {
       }
 
       await fetchSeries()
-      setNewSeries({ name: "", brand_id: selectedBrandFilter || "" })
       setIsAddDialogOpen(false)
+      setNewSeries({ name: "", brandId: selectedBrandFilter || "" })
 
       toast({
         title: t("success"),
-        description: t("seriesAddedSuccess") || "Series added successfully",
+        description: t("seriesAddedSuccess"),
       })
     } catch (error) {
       console.error("Error adding series:", error)
       toast({
         title: t("error"),
-        description: t("seriesAddedError") || "Failed to add series",
+        description: t("seriesAddedError"),
         variant: "destructive",
       })
     }
@@ -177,7 +156,7 @@ export function SeriesList({ brandId }: SeriesListProps) {
     if (!editSeries || !editSeries.name || !editSeries.brand_id) {
       toast({
         title: t("validationError"),
-        description: t("nameAndBrandRequired") || "Name and brand are required",
+        description: t("nameAndBrandRequired"),
         variant: "destructive",
       })
       return
@@ -191,8 +170,7 @@ export function SeriesList({ brandId }: SeriesListProps) {
         },
         body: JSON.stringify({
           name: editSeries.name,
-          brand_id: editSeries.brand_id,
-          position: editSeries.position,
+          brandId: editSeries.brand_id,
           userId: session?.user?.id,
         }),
       })
@@ -206,13 +184,13 @@ export function SeriesList({ brandId }: SeriesListProps) {
 
       toast({
         title: t("success"),
-        description: t("seriesUpdatedSuccess") || "Series updated successfully",
+        description: t("seriesUpdatedSuccess"),
       })
     } catch (error) {
       console.error("Error updating series:", error)
       toast({
         title: t("error"),
-        description: t("seriesUpdatedError") || "Failed to update series",
+        description: t("seriesUpdatedError"),
         variant: "destructive",
       })
     }
@@ -236,13 +214,13 @@ export function SeriesList({ brandId }: SeriesListProps) {
 
       toast({
         title: t("success"),
-        description: t("seriesDeletedSuccess") || "Series deleted successfully",
+        description: t("seriesDeletedSuccess"),
       })
     } catch (error) {
       console.error("Error deleting series:", error)
       toast({
         title: t("error"),
-        description: t("seriesDeletedError") || "Failed to delete series",
+        description: t("seriesDeletedError"),
         variant: "destructive",
       })
     }
@@ -258,7 +236,7 @@ export function SeriesList({ brandId }: SeriesListProps) {
     // Update positions
     const updatedItems = items.map((item, index) => ({
       ...item,
-      position: index + 1,
+      position: index,
     }))
 
     setSeries(updatedItems)
@@ -283,13 +261,13 @@ export function SeriesList({ brandId }: SeriesListProps) {
 
       toast({
         title: t("success"),
-        description: t("seriesReorderedSuccess") || "Series reordered successfully",
+        description: t("seriesReorderedSuccess"),
       })
     } catch (error) {
       console.error("Error reordering series:", error)
       toast({
         title: t("error"),
-        description: t("seriesReorderedError") || "Failed to reorder series",
+        description: t("seriesReorderedError"),
         variant: "destructive",
       })
       // Revert to original order
@@ -297,164 +275,54 @@ export function SeriesList({ brandId }: SeriesListProps) {
     }
   }
 
-  async function moveSeriesUp(index: number) {
-    if (index <= 0 || reordering) return
-
-    setReordering(true)
-    try {
-      // Create a copy of the series array
-      const updatedSeries = [...series]
-
-      // Swap the positions
-      const temp = updatedSeries[index].position
-      updatedSeries[index].position = updatedSeries[index - 1].position
-      updatedSeries[index - 1].position = temp
-
-      // Swap the elements in the array
-      ;[updatedSeries[index], updatedSeries[index - 1]] = [updatedSeries[index - 1], updatedSeries[index]]
-
-      // Update the UI immediately
-      setSeries(updatedSeries)
-
-      // Update the positions in the database
-      await updateSeriesPositions(updatedSeries)
-
-      toast({
-        title: t("success"),
-        description: t("seriesReorderedSuccess") || "Series reordered successfully",
-      })
-    } catch (error) {
-      console.error("Error reordering series:", error)
-      toast({
-        title: t("error"),
-        description: t("seriesReorderedError") || "Failed to reorder series",
-        variant: "destructive",
-      })
-      // Revert to original order by refetching
-      await fetchSeries()
-    } finally {
-      setReordering(false)
-    }
-  }
-
-  async function moveSeriesDown(index: number) {
-    if (index >= series.length - 1 || reordering) return
-
-    setReordering(true)
-    try {
-      // Create a copy of the series array
-      const updatedSeries = [...series]
-
-      // Swap the positions
-      const temp = updatedSeries[index].position
-      updatedSeries[index].position = updatedSeries[index + 1].position
-      updatedSeries[index + 1].position = temp
-
-      // Swap the elements in the array
-      ;[updatedSeries[index], updatedSeries[index + 1]] = [updatedSeries[index + 1], updatedSeries[index]]
-
-      // Update the UI immediately
-      setSeries(updatedSeries)
-
-      // Update the positions in the database
-      await updateSeriesPositions(updatedSeries)
-
-      toast({
-        title: t("success"),
-        description: t("seriesReorderedSuccess") || "Series reordered successfully",
-      })
-    } catch (error) {
-      console.error("Error reordering series:", error)
-      toast({
-        title: t("error"),
-        description: t("seriesReorderedError") || "Failed to reorder series",
-        variant: "destructive",
-      })
-      // Revert to original order by refetching
-      await fetchSeries()
-    } finally {
-      setReordering(false)
-    }
-  }
-
-  async function updateSeriesPositions(updatedSeries: Series[]) {
-    try {
-      const response = await fetch("/api/admin/series/reorder", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          series: updatedSeries.map((series, index) => ({
-            id: series.id,
-            position: index + 1, // Ensure positions are sequential
-          })),
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to update series positions")
-      }
-    } catch (error) {
-      console.error("Error updating series positions:", error)
-      throw error
-    }
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">{t("series") || "Series"}</h2>
-          <p className="text-muted-foreground">{t("manageSeries") || "Manage product series"}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant={isReorderMode ? "default" : "outline"} onClick={() => setIsReorderMode(!isReorderMode)}>
-            <MoveVertical className="mr-2 h-4 w-4" />
-            {isReorderMode ? t("doneReordering") || "Done" : t("reorderSeries") || "Reorder"}
-          </Button>
-          <Button onClick={() => setIsAddDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t("addSeries") || "Add Series"}
-          </Button>
-        </div>
-      </div>
-
       {!brandId && (
-        <div className="mb-4">
-          <Label htmlFor="brand-filter">{t("filterByBrand") || "Filter by Brand"}</Label>
-          <Select
-            value={selectedBrandFilter}
-            onValueChange={(value) => setSelectedBrandFilter(value === "_empty" ? "" : value)}
-          >
-            <SelectTrigger id="brand-filter" className="mt-1">
-              <SelectValue placeholder={t("allBrands") || "All Brands"} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_empty">{t("allBrands") || "All Brands"}</SelectItem>
-              {brands.map((brand) => (
-                <SelectItem key={brand.id} value={brand.id}>
-                  {brand.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{t("seriesTitle")}</h1>
+            <p className="text-muted-foreground">{t("seriesDescription")}</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant={isReorderMode ? "default" : "outline"} onClick={() => setIsReorderMode(!isReorderMode)}>
+              <MoveVertical className="mr-2 h-4 w-4" />
+              {isReorderMode ? t("doneReordering") : t("reorderSeries")}
+            </Button>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t("addSeries")}
+            </Button>
+          </div>
         </div>
       )}
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("seriesTitle") || "Product Series"}</CardTitle>
-          <CardDescription>{t("seriesDescription") || "Manage product series for each brand"}</CardDescription>
+          <CardTitle>{t("series")}</CardTitle>
+          <CardDescription>{t("seriesDescription")}</CardDescription>
+          {!brandId && (
+            <div className="mt-4">
+              <Label htmlFor="brand-filter">{t("filterByBrand")}</Label>
+              <Select value={selectedBrandFilter} onValueChange={setSelectedBrandFilter}>
+                <SelectTrigger id="brand-filter" className="mt-1">
+                  <SelectValue placeholder={t("allBrands")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("allBrands")}</SelectItem>
+                  {brands.map((brand) => (
+                    <SelectItem key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center h-40">
-              <p>{t("loading") || "Loading..."}</p>
-            </div>
-          ) : error ? (
-            <div className="flex items-center justify-center h-40 text-destructive">
-              <p>{error}</p>
+              <p>{t("loading")}</p>
             </div>
           ) : (
             <DragDropContext onDragEnd={handleReorderSeries}>
@@ -462,10 +330,10 @@ export function SeriesList({ brandId }: SeriesListProps) {
                 <TableHeader>
                   <TableRow>
                     {isReorderMode && <TableHead className="w-[50px]"></TableHead>}
-                    <TableHead>{t("name") || "Name"}</TableHead>
-                    {!brandId && <TableHead>{t("brand") || "Brand"}</TableHead>}
-                    <TableHead>{t("createdAt") || "Created At"}</TableHead>
-                    <TableHead className="text-right">{t("actions") || "Actions"}</TableHead>
+                    <TableHead>{t("name")}</TableHead>
+                    {!brandId && <TableHead>{t("brand")}</TableHead>}
+                    <TableHead>{t("createdAt")}</TableHead>
+                    <TableHead className="text-right">{t("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <Droppable droppableId="series" isDropDisabled={!isReorderMode}>
@@ -477,7 +345,7 @@ export function SeriesList({ brandId }: SeriesListProps) {
                             colSpan={isReorderMode ? (brandId ? 4 : 5) : brandId ? 3 : 4}
                             className="text-center"
                           >
-                            {t("noSeries") || "No series found"}
+                            {t("noSeries")}
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -494,59 +362,38 @@ export function SeriesList({ brandId }: SeriesListProps) {
                                 {!brandId && <TableCell>{item.brands?.name}</TableCell>}
                                 <TableCell>{new Date(item.created_at).toLocaleDateString()}</TableCell>
                                 <TableCell className="text-right">
-                                  {!isReorderMode ? (
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon">
-                                          <MoreHorizontal className="h-4 w-4" />
-                                          <span className="sr-only">{t("openMenu") || "Open Menu"}</span>
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>{t("actions") || "Actions"}</DropdownMenuLabel>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                          onClick={() => {
-                                            setEditSeries(item)
-                                            setIsEditDialogOpen(true)
-                                          }}
-                                        >
-                                          <Pencil className="mr-2 h-4 w-4" />
-                                          {t("edit") || "Edit"}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                          className="text-destructive"
-                                          onClick={() => {
-                                            setSeriesToDelete(item)
-                                            setIsDeleteDialogOpen(true)
-                                          }}
-                                        >
-                                          <Trash className="mr-2 h-4 w-4" />
-                                          {t("delete") || "Delete"}
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  ) : (
-                                    <div className="flex justify-end space-x-1">
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => moveSeriesUp(index)}
-                                        disabled={index === 0 || reordering}
-                                      >
-                                        <ArrowUp className="h-4 w-4" />
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                        <span className="sr-only">{t("openMenu")}</span>
                                       </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => moveSeriesDown(index)}
-                                        disabled={index === series.length - 1 || reordering}
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setEditSeries(item)
+                                          setIsEditDialogOpen(true)
+                                        }}
                                       >
-                                        <ArrowDown className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  )}
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        {t("edit")}
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        className="text-destructive"
+                                        onClick={() => {
+                                          setSeriesToDelete(item)
+                                          setIsDeleteDialogOpen(true)
+                                        }}
+                                      >
+                                        <Trash className="mr-2 h-4 w-4" />
+                                        {t("delete")}
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 </TableCell>
                               </TableRow>
                             )}
@@ -567,77 +414,28 @@ export function SeriesList({ brandId }: SeriesListProps) {
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("addNewSeries") || "Add New Series"}</DialogTitle>
-            <DialogDescription>
-              {t("addNewSeriesDescription") || "Add a new product series to a brand"}
-            </DialogDescription>
+            <DialogTitle>{t("addNewSeries")}</DialogTitle>
+            <DialogDescription>{t("addNewSeriesDescription")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="series-name">{t("seriesName") || "Series Name"}</Label>
+              <Label htmlFor="name">{t("seriesName")}</Label>
               <Input
-                id="series-name"
+                id="name"
                 value={newSeries.name}
                 onChange={(e) => setNewSeries({ ...newSeries, name: e.target.value })}
-                placeholder={t("seriesNamePlaceholder") || "Enter series name"}
+                placeholder={t("seriesNamePlaceholder")}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="brand">{t("brand") || "Brand"}</Label>
-              <Select
-                value={newSeries.brand_id}
-                onValueChange={(value) => setNewSeries({ ...newSeries, brand_id: value })}
-                disabled={!!brandId}
-              >
-                <SelectTrigger id="brand">
-                  <SelectValue placeholder={t("selectBrand") || "Select Brand"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {brands.map((brand) => (
-                    <SelectItem key={brand.id} value={brand.id}>
-                      {brand.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              {t("cancel") || "Cancel"}
-            </Button>
-            <Button onClick={handleAddSeries}>{t("add") || "Add"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Series Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("editSeries") || "Edit Series"}</DialogTitle>
-            <DialogDescription>{t("editSeriesDescription") || "Edit product series details"}</DialogDescription>
-          </DialogHeader>
-          {editSeries && (
-            <div className="grid gap-4 py-4">
+            {!brandId && (
               <div className="grid gap-2">
-                <Label htmlFor="edit-name">{t("seriesName") || "Series Name"}</Label>
-                <Input
-                  id="edit-name"
-                  value={editSeries.name}
-                  onChange={(e) => setEditSeries({ ...editSeries, name: e.target.value })}
-                  placeholder={t("seriesNamePlaceholder") || "Enter series name"}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-brand">{t("brand") || "Brand"}</Label>
+                <Label htmlFor="brand">{t("brand")}</Label>
                 <Select
-                  value={editSeries.brand_id}
-                  onValueChange={(value) => setEditSeries({ ...editSeries, brand_id: value })}
-                  disabled={!!brandId}
+                  value={newSeries.brandId}
+                  onValueChange={(value) => setNewSeries({ ...newSeries, brandId: value })}
                 >
-                  <SelectTrigger id="edit-brand">
-                    <SelectValue placeholder={t("selectBrand") || "Select Brand"} />
+                  <SelectTrigger id="brand">
+                    <SelectValue placeholder={t("selectBrand")} />
                   </SelectTrigger>
                   <SelectContent>
                     {brands.map((brand) => (
@@ -648,13 +446,62 @@ export function SeriesList({ brandId }: SeriesListProps) {
                   </SelectContent>
                 </Select>
               </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button onClick={handleAddSeries}>{t("add")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Series Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("editSeries")}</DialogTitle>
+            <DialogDescription>{t("editSeriesDescription")}</DialogDescription>
+          </DialogHeader>
+          {editSeries && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-name">{t("seriesName")}</Label>
+                <Input
+                  id="edit-name"
+                  value={editSeries.name}
+                  onChange={(e) => setEditSeries({ ...editSeries, name: e.target.value })}
+                  placeholder={t("seriesNamePlaceholder")}
+                />
+              </div>
+              {!brandId && (
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-brand">{t("brand")}</Label>
+                  <Select
+                    value={editSeries.brand_id}
+                    onValueChange={(value) => setEditSeries({ ...editSeries, brand_id: value })}
+                  >
+                    <SelectTrigger id="edit-brand">
+                      <SelectValue placeholder={t("selectBrand")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {brands.map((brand) => (
+                        <SelectItem key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              {t("cancel") || "Cancel"}
+              {t("cancel")}
             </Button>
-            <Button onClick={handleEditSeries}>{t("save") || "Save"}</Button>
+            <Button onClick={handleEditSeries}>{t("save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -663,23 +510,18 @@ export function SeriesList({ brandId }: SeriesListProps) {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("deleteSeries") || "Delete Series"}</DialogTitle>
-            <DialogDescription>
-              {t("deleteSeriesDescription") || "Are you sure you want to delete this series?"}
-            </DialogDescription>
+            <DialogTitle>{t("deleteSeries")}</DialogTitle>
+            <DialogDescription>{t("deleteSeriesDescription")}</DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <p>
-              {t("deleteSeriesConfirmation", { series: seriesToDelete?.name }) ||
-                `Are you sure you want to delete "${seriesToDelete?.name}"? This action cannot be undone.`}
-            </p>
+            <p>{t("deleteSeriesConfirmation", { series: seriesToDelete?.name })}</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              {t("cancel") || "Cancel"}
+              {t("cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDeleteSeries}>
-              {t("confirmDelete") || "Delete"}
+              {t("confirmDelete")}
             </Button>
           </DialogFooter>
         </DialogContent>

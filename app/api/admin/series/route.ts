@@ -1,17 +1,16 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
-import { getSession } from "@/lib/auth/session"
 import { logActivity } from "@/lib/admin/activity-logger"
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const url = new URL(request.url)
-    const brandId = url.searchParams.get("brand_id")
+    const searchParams = request.nextUrl.searchParams
+    const brandId = searchParams.get("brand_id")
 
     const supabase = createClient()
     let query = supabase.from("series").select("*, brands(name)")
 
-    // Перевіряємо, чи brandId не є "_empty" і не є null/undefined
+    // Перевіряємо, чи brandId не дорівнює "_empty" перед додаванням фільтра
     if (brandId && brandId !== "_empty") {
       query = query.eq("brand_id", brandId)
     }
@@ -32,49 +31,36 @@ export async function POST(request: Request) {
     const body = await request.json()
     const supabase = createClient()
 
-    // Get the current user for activity logging
-    const session = await getSession()
-    const userId = session?.user?.id
-
     // Get the highest position value
-    const { data: existingSeries, error: fetchError } = await supabase
+    const { data: positionData } = await supabase
       .from("series")
       .select("position")
-      .eq("brand_id", body.brand_id)
       .order("position", { ascending: false })
       .limit(1)
 
-    if (fetchError) throw fetchError
-
     const nextPosition =
-      existingSeries && existingSeries.length > 0 && existingSeries[0].position !== null
-        ? (existingSeries[0].position || 0) + 1
-        : 1
+      positionData && positionData.length > 0 && positionData[0].position !== null ? positionData[0].position + 1 : 0
 
     const { data, error } = await supabase
       .from("series")
-      .insert([
-        {
-          name: body.name,
-          brand_id: body.brand_id,
-          position: body.position || nextPosition,
-        },
-      ])
+      .insert({
+        name: body.name,
+        brand_id: body.brandId,
+        position: nextPosition,
+      })
       .select()
       .single()
 
     if (error) throw error
 
-    // Log activity if user is logged in
-    if (userId) {
-      await logActivity({
-        entityId: data.id,
-        entityType: "series",
-        actionType: "create",
-        userId: userId,
-        details: { name: data.name, brand_id: data.brand_id },
-      })
-    }
+    // Log activity
+    await logActivity({
+      entityId: data.id,
+      entityType: "series",
+      actionType: "create",
+      userId: body.userId || null,
+      details: { name: data.name },
+    })
 
     return NextResponse.json(data)
   } catch (error) {
