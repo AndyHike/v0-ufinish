@@ -64,7 +64,7 @@ export function SeriesList({ brandId }: SeriesListProps) {
   const [seriesToDelete, setSeriesToDelete] = useState<Series | null>(null)
   const [isReorderMode, setIsReorderMode] = useState(false)
   const [reordering, setReordering] = useState(false)
-  const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>(brandId || "")
+  const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>(brandId || "_empty")
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -418,12 +418,15 @@ export function SeriesList({ brandId }: SeriesListProps) {
       {!brandId && (
         <div className="mb-4">
           <Label htmlFor="brand-filter">{t("filterByBrand") || "Filter by Brand"}</Label>
-          <Select value={selectedBrandFilter} onValueChange={setSelectedBrandFilter}>
+          <Select
+            value={selectedBrandFilter}
+            onValueChange={(value) => setSelectedBrandFilter(value === "_empty" ? "" : value)}
+          >
             <SelectTrigger id="brand-filter" className="mt-1">
               <SelectValue placeholder={t("allBrands") || "All Brands"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t("allBrands") || "All Brands"}</SelectItem>
+              <SelectItem value="_empty">{t("allBrands") || "All Brands"}</SelectItem>
               {brands.map((brand) => (
                 <SelectItem key={brand.id} value={brand.id}>
                   {brand.name}
@@ -586,7 +589,7 @@ export function SeriesList({ brandId }: SeriesListProps) {
                 </SelectTrigger>
                 <SelectContent>
                   {brands.map((brand) => (
-                    <SelectItem key={brand.id} value={brand.id || "default"}>
+                    <SelectItem key={brand.id} value={brand.id}>
                       {brand.name}
                     </SelectItem>
                   ))}

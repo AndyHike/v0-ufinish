@@ -102,10 +102,8 @@ export function AdminSidebar() {
           key={item.href}
           href={item.href}
           className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
-            item.active
-              ? "bg-accent text-accent-foreground"
-              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+            "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-accent hover:text-accent-foreground",
+            item.active ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground",
           )}
         >
           <item.icon className="h-4 w-4" />

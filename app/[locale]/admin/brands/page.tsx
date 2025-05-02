@@ -708,15 +708,15 @@ export default function BrandsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openEditDialog(brand)}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              {t("edit")}
-                            </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                               <Link href={`/admin/brands/${brand.id}/series`}>
                                 <Layers className="mr-2 h-4 w-4" />
-                                {t("manageSeries") || "Manage Series"}
+                                {t("series") || "Series"}
                               </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openEditDialog(brand)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              {t("edit")}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => openDeleteDialog(brand)}>
                               <Trash className="mr-2 h-4 w-4" />
