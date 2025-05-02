@@ -95,6 +95,7 @@
     "availableModels": "Доступні моделі",
     "noModelsAvailable": "Поки що немає доступних моделей для {brand}.",
     "backToAllBrands": "Назад до всіх брендів",
+    "backToBrand": "Назад до {brand}",
     "startingFrom": "Від {price}",
     "repairServices": "Послуги з ремонту",
     "brandNotFound": "Бренд не знайдено",
@@ -109,6 +110,8 @@
     "seriesNotFound": "Лінійку не знайдено",
     "seriesNotFoundDesc": "Запитувана лінійка не знайдена.",
     "seriesPageDescription": "Перегляньте всі доступні моделі {series} від {brand}, які ми ремонтуємо.",
+    "checkBackLater": "Будь ласка, перевірте пізніше, коли з'являться нові моделі.",
+    "searchBrands": "Пошук брендів...",
     "checkBackLater": "Будь ласка, перевірте пізніше, коли з'являться нові моделі."
   },
   "Models": {

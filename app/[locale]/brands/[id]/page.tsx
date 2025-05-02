@@ -145,7 +145,11 @@ export default function BrandModelsPage() {
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
       <div className="mx-auto max-w-5xl">
-        <Link href="/brands" className="mb-8 flex items-center text-muted-foreground hover:text-foreground">
+        <Link
+          href="/brands"
+          className="mb-8 flex items-center text-muted-foreground hover:text-foreground"
+          aria-label={t("backToAllBrands")}
+        >
           <ChevronLeft className="mr-1 h-4 w-4" />
           {t("backToAllBrands")}
         </Link>

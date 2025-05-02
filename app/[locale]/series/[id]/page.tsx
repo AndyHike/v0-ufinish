@@ -118,6 +118,7 @@ export default function SeriesModelsPage() {
         <Link
           href={`/brands/${series.brand_id}`}
           className="mb-8 flex items-center text-muted-foreground hover:text-foreground"
+          aria-label={t("backToBrand", { brand: series.brands?.name })}
         >
           <ChevronLeft className="mr-1 h-4 w-4" />
           {t("backToBrand", { brand: series.brands?.name })}

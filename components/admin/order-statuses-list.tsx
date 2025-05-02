@@ -376,7 +376,7 @@ export function OrderStatusesList({ forceAuth = false }: OrderStatusesListProps)
           if (!open) resetForm()
         }}
       >
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px]" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>{t("addNewStatus")}</DialogTitle>
             <DialogDescription>{t("addNewStatusDescription")}</DialogDescription>
@@ -490,7 +490,7 @@ export function OrderStatusesList({ forceAuth = false }: OrderStatusesListProps)
           if (!open) resetForm()
         }}
       >
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px]" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>{t("editStatus")}</DialogTitle>
             <DialogDescription>{t("editStatusDescription")}</DialogDescription>
@@ -594,7 +594,7 @@ export function OrderStatusesList({ forceAuth = false }: OrderStatusesListProps)
 
       {/* Delete Status Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>{t("deleteStatus")}</DialogTitle>
             <DialogDescription>
