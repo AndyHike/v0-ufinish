@@ -101,15 +101,19 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
     setLoading(true)
 
     try {
+      // Підготуємо дані для відправки, видаляючи серію, якщо вона "_none"
+      const modelData = {
+        ...newModel,
+        seriesId: newModel.seriesId === "_none" ? "" : newModel.seriesId,
+        userId: session?.user?.id,
+      }
+
       const response = await fetch("/api/admin/models", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...newModel,
-          userId: session?.user?.id,
-        }),
+        body: JSON.stringify(modelData),
       })
 
       if (!response.ok) {
@@ -189,7 +193,7 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
                 <SelectValue placeholder={t("selectSeries") || "Select Series"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">{t("noSeries") || "No Series"}</SelectItem>
+                <SelectItem value="_none">{t("noSeries") || "No Series"}</SelectItem>
                 {series.map((item) => (
                   <SelectItem key={item.id} value={item.id}>
                     {item.name}

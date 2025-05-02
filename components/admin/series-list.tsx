@@ -71,8 +71,8 @@ export function SeriesList({ brandId = "" }: { brandId?: string }) {
     try {
       let url = "/api/admin/series"
 
-      // Додаємо параметр brand_id тільки якщо він не порожній
-      if (selectedBrandFilter) {
+      // Додаємо параметр brand_id тільки якщо він не "_all"
+      if (selectedBrandFilter && selectedBrandFilter !== "_all") {
         url += `?brand_id=${selectedBrandFilter}`
       }
 
@@ -308,7 +308,7 @@ export function SeriesList({ brandId = "" }: { brandId?: string }) {
                   <SelectValue placeholder={t("allBrands")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t("allBrands")}</SelectItem>
+                  <SelectItem value="_all">{t("allBrands")}</SelectItem>
                   {brands.map((brand) => (
                     <SelectItem key={brand.id} value={brand.id}>
                       {brand.name}
