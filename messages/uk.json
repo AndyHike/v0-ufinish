@@ -105,7 +105,11 @@
     "pageDescription": "Виберіть бренд вашого телефону, щоб побачити доступні моделі та ціни на ремонт",
     "series": "Лінійки",
     "viewAllModels": "Переглянути всі моделі",
-    "modelsWithoutSeries": "Моделі без лінійки"
+    "modelsWithoutSeries": "Моделі без лінійки",
+    "seriesNotFound": "Лінійку не знайдено",
+    "seriesNotFoundDesc": "Запитувана лінійка не знайдена.",
+    "seriesPageDescription": "Перегляньте всі доступні моделі {series} від {brand}, які ми ремонтуємо.",
+    "checkBackLater": "Будь ласка, перевірте пізніше, коли з'являться нові моделі."
   },
   "Models": {
     "repairServices": "Послуги з ремонту",
