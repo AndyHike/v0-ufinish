@@ -7,14 +7,6 @@ import { useSession } from "next-auth/react"
 import { useTranslations } from "next-intl"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
@@ -22,6 +14,8 @@ import { toast } from "@/components/ui/use-toast"
 import { Loader2, Plus, Pencil, Trash, AlertCircle } from "lucide-react"
 import type { OrderStatus } from "@/lib/order-status-utils"
 import { clearStatusCache } from "@/lib/order-status-utils"
+import { Modal, ModalHeader, ModalTitle, ModalDescription, ModalFooter } from "@/components/ui/modal"
+import { useModal } from "@/hooks/use-modal"
 
 // Color options for status badges
 const colorOptions = [
@@ -53,10 +47,11 @@ export function OrderStatusesList({ forceAuth = false }: OrderStatusesListProps)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Dialog states
-  const [addDialogOpen, setAddDialogOpen] = useState(false)
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  // Modal states using our custom hook
+  const addModal = useModal()
+  const editModal = useModal()
+  const deleteModal = useModal()
+
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | null>(null)
 
   // Form state
@@ -115,7 +110,7 @@ export function OrderStatusesList({ forceAuth = false }: OrderStatusesListProps)
     setFormState((prev) => ({ ...prev, [name]: value }))
   }
 
-  // Open edit dialog and populate form with status data
+  // Open edit modal and populate form with status data
   function handleEditClick(status: OrderStatus) {
     setSelectedStatus(status)
     setFormState({
@@ -125,13 +120,13 @@ export function OrderStatusesList({ forceAuth = false }: OrderStatusesListProps)
       name_cs: status.name_cs,
       color: status.color,
     })
-    setEditDialogOpen(true)
+    editModal.open()
   }
 
-  // Open delete dialog
+  // Open delete modal
   function handleDeleteClick(status: OrderStatus) {
     setSelectedStatus(status)
-    setDeleteDialogOpen(true)
+    deleteModal.open()
   }
 
   // Add new status
@@ -168,7 +163,7 @@ export function OrderStatusesList({ forceAuth = false }: OrderStatusesListProps)
       })
 
       resetForm()
-      setAddDialogOpen(false)
+      addModal.close()
       fetchStatuses()
     } catch (err) {
       console.error("Error adding status:", err)
@@ -225,7 +220,7 @@ export function OrderStatusesList({ forceAuth = false }: OrderStatusesListProps)
       })
 
       resetForm()
-      setEditDialogOpen(false)
+      editModal.close()
       fetchStatuses()
     } catch (err) {
       console.error("Error updating status:", err)
@@ -275,7 +270,7 @@ export function OrderStatusesList({ forceAuth = false }: OrderStatusesListProps)
         description: t("statusDeletedDescription"),
       })
 
-      setDeleteDialogOpen(false)
+      deleteModal.close()
       fetchStatuses()
     } catch (err) {
       console.error("Error deleting status:", err)
@@ -315,7 +310,7 @@ export function OrderStatusesList({ forceAuth = false }: OrderStatusesListProps)
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold tracking-tight">{t("orderStatuses")}</h2>
-        <Button onClick={() => setAddDialogOpen(true)}>
+        <Button onClick={addModal.open}>
           <Plus className="mr-2 h-4 w-4" />
           {t("addStatus")}
         </Button>
@@ -368,257 +363,253 @@ export function OrderStatusesList({ forceAuth = false }: OrderStatusesListProps)
         </Table>
       </div>
 
-      {/* Add Status Dialog */}
-      <Dialog
-        open={addDialogOpen}
-        onOpenChange={(open) => {
-          setAddDialogOpen(open)
-          if (!open) resetForm()
+      {/* Add Status Modal */}
+      <Modal
+        isOpen={addModal.isOpen}
+        onClose={() => {
+          addModal.close()
+          resetForm()
         }}
+        className="sm:max-w-[500px]"
       >
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{t("addNewStatus")}</DialogTitle>
-            <DialogDescription>{t("addNewStatusDescription")}</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleAddStatus}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="remonline_status_id" className="text-right">
-                  {t("remonlineCode")}
-                </Label>
-                <Input
-                  id="remonline_status_id"
-                  name="remonline_status_id"
-                  value={formState.remonline_status_id}
+        <ModalHeader>
+          <ModalTitle>{t("addNewStatus")}</ModalTitle>
+          <ModalDescription>{t("addNewStatusDescription")}</ModalDescription>
+        </ModalHeader>
+        <form onSubmit={handleAddStatus}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="remonline_status_id" className="text-right">
+                {t("remonlineCode")}
+              </Label>
+              <Input
+                id="remonline_status_id"
+                name="remonline_status_id"
+                value={formState.remonline_status_id}
+                onChange={handleInputChange}
+                className="col-span-3"
+                placeholder="3153189"
+                type="number"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name_uk" className="text-right">
+                {t("nameUk")}
+              </Label>
+              <Input
+                id="name_uk"
+                name="name_uk"
+                value={formState.name_uk}
+                onChange={handleInputChange}
+                className="col-span-3"
+                placeholder={t("newStatusPlaceholderUk")}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name_en" className="text-right">
+                {t("nameEn")}
+              </Label>
+              <Input
+                id="name_en"
+                name="name_en"
+                value={formState.name_en}
+                onChange={handleInputChange}
+                className="col-span-3"
+                placeholder={t("newStatusPlaceholderEn")}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name_cs" className="text-right">
+                {t("nameCs")}
+              </Label>
+              <Input
+                id="name_cs"
+                name="name_cs"
+                value={formState.name_cs}
+                onChange={handleInputChange}
+                className="col-span-3"
+                placeholder={t("newStatusPlaceholderCs")}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="color" className="text-right">
+                {t("color")}
+              </Label>
+              <div className="col-span-3 flex gap-2">
+                <select
+                  id="color"
+                  name="color"
+                  value={formState.color}
                   onChange={handleInputChange}
-                  className="col-span-3"
-                  placeholder="3153189"
-                  type="number"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name_uk" className="text-right">
-                  {t("nameUk")}
-                </Label>
-                <Input
-                  id="name_uk"
-                  name="name_uk"
-                  value={formState.name_uk}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  placeholder={t("newStatusPlaceholderUk")}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name_en" className="text-right">
-                  {t("nameEn")}
-                </Label>
-                <Input
-                  id="name_en"
-                  name="name_en"
-                  value={formState.name_en}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  placeholder={t("newStatusPlaceholderEn")}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name_cs" className="text-right">
-                  {t("nameCs")}
-                </Label>
-                <Input
-                  id="name_cs"
-                  name="name_cs"
-                  value={formState.name_cs}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  placeholder={t("newStatusPlaceholderCs")}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="color" className="text-right">
-                  {t("color")}
-                </Label>
-                <div className="col-span-3 flex gap-2">
-                  <select
-                    id="color"
-                    name="color"
-                    value={formState.color}
-                    onChange={handleInputChange}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    required
-                  >
-                    {colorOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {t(`colors.${option.label}`)}
-                      </option>
-                    ))}
-                  </select>
-                  <Badge className={formState.color}>{t("example")}</Badge>
-                </div>
+                >
+                  {colorOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {t(`colors.${option.label}`)}
+                    </option>
+                  ))}
+                </select>
+                <Badge className={formState.color}>{t("example")}</Badge>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
-                {t("cancel")}
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("adding")}
-                  </>
-                ) : (
-                  t("add")
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Status Dialog */}
-      <Dialog
-        open={editDialogOpen}
-        onOpenChange={(open) => {
-          setEditDialogOpen(open)
-          if (!open) resetForm()
-        }}
-      >
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{t("editStatus")}</DialogTitle>
-            <DialogDescription>{t("editStatusDescription")}</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleUpdateStatus}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit_remonline_status_id" className="text-right">
-                  {t("remonlineCode")}
-                </Label>
-                <Input
-                  id="edit_remonline_status_id"
-                  name="remonline_status_id"
-                  value={formState.remonline_status_id}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  type="number"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit_name_uk" className="text-right">
-                  {t("nameUk")}
-                </Label>
-                <Input
-                  id="edit_name_uk"
-                  name="name_uk"
-                  value={formState.name_uk}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit_name_en" className="text-right">
-                  {t("nameEn")}
-                </Label>
-                <Input
-                  id="edit_name_en"
-                  name="name_en"
-                  value={formState.name_en}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit_name_cs" className="text-right">
-                  {t("nameCs")}
-                </Label>
-                <Input
-                  id="edit_name_cs"
-                  name="name_cs"
-                  value={formState.name_cs}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit_color" className="text-right">
-                  {t("color")}
-                </Label>
-                <div className="col-span-3 flex gap-2">
-                  <select
-                    id="edit_color"
-                    name="color"
-                    value={formState.color}
-                    onChange={handleInputChange}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    required
-                  >
-                    {colorOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {t(`colors.${option.label}`)}
-                      </option>
-                    ))}
-                  </select>
-                  <Badge className={formState.color}>{t("example")}</Badge>
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
-                {t("cancel")}
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("saving")}
-                  </>
-                ) : (
-                  t("save")
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Status Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{t("deleteStatus")}</DialogTitle>
-            <DialogDescription>
-              {t("deleteStatusConfirmation", { status: selectedStatus?.name_uk || selectedStatus?.name_en || "" })}
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+          </div>
+          <ModalFooter>
+            <Button variant="outline" type="button" onClick={addModal.close}>
               {t("cancel")}
             </Button>
-            <Button variant="destructive" onClick={handleDeleteStatus} disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t("deleting")}
+                  {t("adding")}
                 </>
               ) : (
-                t("delete")
+                t("add")
               )}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ModalFooter>
+        </form>
+      </Modal>
+
+      {/* Edit Status Modal */}
+      <Modal
+        isOpen={editModal.isOpen}
+        onClose={() => {
+          editModal.close()
+          resetForm()
+        }}
+        className="sm:max-w-[500px]"
+      >
+        <ModalHeader>
+          <ModalTitle>{t("editStatus")}</ModalTitle>
+          <ModalDescription>{t("editStatusDescription")}</ModalDescription>
+        </ModalHeader>
+        <form onSubmit={handleUpdateStatus}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit_remonline_status_id" className="text-right">
+                {t("remonlineCode")}
+              </Label>
+              <Input
+                id="edit_remonline_status_id"
+                name="remonline_status_id"
+                value={formState.remonline_status_id}
+                onChange={handleInputChange}
+                className="col-span-3"
+                type="number"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit_name_uk" className="text-right">
+                {t("nameUk")}
+              </Label>
+              <Input
+                id="edit_name_uk"
+                name="name_uk"
+                value={formState.name_uk}
+                onChange={handleInputChange}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit_name_en" className="text-right">
+                {t("nameEn")}
+              </Label>
+              <Input
+                id="edit_name_en"
+                name="name_en"
+                value={formState.name_en}
+                onChange={handleInputChange}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit_name_cs" className="text-right">
+                {t("nameCs")}
+              </Label>
+              <Input
+                id="edit_name_cs"
+                name="name_cs"
+                value={formState.name_cs}
+                onChange={handleInputChange}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit_color" className="text-right">
+                {t("color")}
+              </Label>
+              <div className="col-span-3 flex gap-2">
+                <select
+                  id="edit_color"
+                  name="color"
+                  value={formState.color}
+                  onChange={handleInputChange}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  required
+                >
+                  {colorOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {t(`colors.${option.label}`)}
+                    </option>
+                  ))}
+                </select>
+                <Badge className={formState.color}>{t("example")}</Badge>
+              </div>
+            </div>
+          </div>
+          <ModalFooter>
+            <Button type="button" variant="outline" onClick={editModal.close}>
+              {t("cancel")}
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t("saving")}
+                </>
+              ) : (
+                t("save")
+              )}
+            </Button>
+          </ModalFooter>
+        </form>
+      </Modal>
+
+      {/* Delete Status Modal */}
+      <Modal isOpen={deleteModal.isOpen} onClose={deleteModal.close} className="sm:max-w-[425px]">
+        <ModalHeader>
+          <ModalTitle>{t("deleteStatus")}</ModalTitle>
+          <ModalDescription>
+            {t("deleteStatusConfirmation", { status: selectedStatus?.name_uk || selectedStatus?.name_en || "" })}
+          </ModalDescription>
+        </ModalHeader>
+
+        <ModalFooter>
+          <Button variant="outline" onClick={deleteModal.close}>
+            {t("cancel")}
+          </Button>
+          <Button variant="destructive" onClick={handleDeleteStatus} disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t("deleting")}
+              </>
+            ) : (
+              t("delete")
+            )}
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   )
 }

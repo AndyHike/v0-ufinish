@@ -1,37 +1,20 @@
-"use client"
-
-import { OrderStatusesList } from "@/components/admin/order-statuses-list"
+import { OrderStatusesList } from "@/components/admin/order-statuses-list-fixed"
 import { PageHeader } from "@/components/page-header"
-import { useTranslations } from "next-intl"
-import { useState, useEffect } from "react"
+import { getTranslations } from "next-intl/server"
 
-export default function OrderStatusesPage() {
-  const t = useTranslations("Admin")
-  const [isClient, setIsClient] = useState(false)
-
-  // Використовуємо useEffect для перевірки, що ми на клієнті
-  useEffect(() => {
-    setIsClient(true)
-    // Встановлюємо дані автентифікації в localStorage для компонента OrderStatusesList
-    localStorage.setItem("userId", "admin-user")
-    localStorage.setItem("userRole", "admin")
-  }, [])
-
-  if (!isClient) {
-    return (
-      <div className="space-y-6">
-        <PageHeader heading={t("orderStatuses")} text={t("orderStatusesDescription")} />
-        <div className="flex justify-center p-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    )
+export async function generateMetadata({ params: { locale } }: { params: { locale: string } }) {
+  const t = await getTranslations({ locale, namespace: "Admin" })
+  return {
+    title: t("orderStatusesPageTitle"),
+    description: t("orderStatusesPageDescription"),
   }
+}
 
+export default async function OrderStatusesPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader heading={t("orderStatuses")} text={t("orderStatusesDescription")} />
-      <OrderStatusesList forceAuth={true} />
+    <div className="container py-6 space-y-6">
+      <PageHeader heading="Статуси замовлень" text="Керуйте статусами замовлень для синхронізації з Remonline" />
+      <OrderStatusesList />
     </div>
   )
 }
