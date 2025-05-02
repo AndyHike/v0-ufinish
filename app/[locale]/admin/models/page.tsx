@@ -5,17 +5,7 @@ import { useTranslations } from "next-intl"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +21,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { AddModelDialog } from "@/components/admin/add-model-dialog"
+import { Label } from "@/components/ui/label"
 
 type Brand = {
   id: string
@@ -67,23 +58,25 @@ export default function ModelsPage() {
   const [brands, setBrands] = useState<Brand[]>([])
   const [series, setSeries] = useState<Series[]>([])
   const [loading, setLoading] = useState(true)
-  const [editModel, setEditModel] = useState<Model | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [modelToDelete, setModelToDelete] = useState<Model | null>(null)
   const [isReorderMode, setIsReorderMode] = useState(false)
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>("")
   const [selectedSeriesFilter, setSelectedSeriesFilter] = useState<string>("")
-  // Доданий стан для відстеження, чи відбувається зараз запит
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Спрощуємо ефекти, щоб уникнути зайвих рендерів
   useEffect(() => {
-    Promise.all([fetchModels(), fetchBrands()])
-      .then(() => setLoading(false))
-      .catch(() => setLoading(false))
+    fetchModels()
+    fetchBrands()
+  }, []) // Завантажуємо дані лише при монтуванні компонента
+
+  // Окремий ефект для фільтрації
+  useEffect(() => {
+    if (selectedBrandFilter || selectedSeriesFilter) {
+      fetchModels()
+    }
   }, [selectedBrandFilter, selectedSeriesFilter])
 
+  // Завантажуємо серії при зміні бренду
   useEffect(() => {
     if (selectedBrandFilter) {
       fetchSeries(selectedBrandFilter)
@@ -93,23 +86,16 @@ export default function ModelsPage() {
     }
   }, [selectedBrandFilter])
 
-  // Безпечне завантаження серій при відкритті діалогу редагування
-  useEffect(() => {
-    if (editModel && editModel.brand_id) {
-      fetchSeriesForEdit(editModel.brand_id)
-    }
-  }, [editModel])
-
   async function fetchModels() {
     try {
       let url = "/api/admin/models"
       const params = new URLSearchParams()
 
-      if (selectedBrandFilter) {
+      if (selectedBrandFilter && selectedBrandFilter !== "_all") {
         params.append("brand_id", selectedBrandFilter)
       }
 
-      if (selectedSeriesFilter) {
+      if (selectedSeriesFilter && selectedSeriesFilter !== "_all") {
         params.append("series_id", selectedSeriesFilter)
       }
 
@@ -120,13 +106,10 @@ export default function ModelsPage() {
       const response = await fetch(url)
       const data = await response.json()
       setModels(data)
+      setLoading(false)
     } catch (error) {
       console.error("Error fetching models:", error)
-      toast({
-        title: "Error",
-        description: "Failed to fetch models",
-        variant: "destructive",
-      })
+      setLoading(false)
     }
   }
 
@@ -137,11 +120,6 @@ export default function ModelsPage() {
       setBrands(data)
     } catch (error) {
       console.error("Error fetching brands:", error)
-      toast({
-        title: "Error",
-        description: "Failed to fetch brands",
-        variant: "destructive",
-      })
     }
   }
 
@@ -152,120 +130,11 @@ export default function ModelsPage() {
       setSeries(data)
     } catch (error) {
       console.error("Error fetching series:", error)
-      toast({
-        title: "Error",
-        description: "Failed to fetch series",
-        variant: "destructive",
-      })
-    }
-  }
-
-  // Окрема функція для завантаження серій при редагуванні
-  async function fetchSeriesForEdit(brandId: string) {
-    try {
-      const response = await fetch(`/api/admin/series?brand_id=${brandId}`)
-      const data = await response.json()
-      setSeries(data)
-    } catch (error) {
-      console.error("Error fetching series for edit:", error)
-      // Не показуємо toast при помилці, щоб уникнути блокування інтерфейсу
-    }
-  }
-
-  async function handleEditModel() {
-    if (!editModel || isSubmitting) return
-
-    setIsSubmitting(true)
-
-    try {
-      const response = await fetch(`/api/admin/models/${editModel.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: editModel.name,
-          brandId: editModel.brand_id,
-          seriesId: editModel.series_id === "_none" ? null : editModel.series_id,
-          imageUrl: editModel.image_url,
-          userId: session?.user?.id,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to update model")
-      }
-
-      // Закриваємо діалог перед оновленням даних, щоб уникнути блокування
-      setIsEditDialogOpen(false)
-
-      // Вводимо затримку перед оновленням списку, щоб уникнути конфліктів стану
-      setTimeout(async () => {
-        await fetchModels()
-        setEditModel(null)
-
-        toast({
-          title: t("success"),
-          description: t("modelUpdatedSuccess"),
-        })
-
-        setIsSubmitting(false)
-      }, 300)
-    } catch (error) {
-      console.error("Error updating model:", error)
-      toast({
-        title: t("error"),
-        description: t("modelUpdatedError"),
-        variant: "destructive",
-      })
-      setIsSubmitting(false)
-    }
-  }
-
-  async function handleDeleteModel() {
-    if (!modelToDelete || isSubmitting) return
-
-    setIsSubmitting(true)
-
-    try {
-      const response = await fetch(`/api/admin/models/${modelToDelete.id}`, {
-        method: "DELETE",
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to delete model")
-      }
-
-      // Закриваємо діалог перед оновленням даних
-      setIsDeleteDialogOpen(false)
-
-      // Вводимо затримку перед оновленням списку
-      setTimeout(async () => {
-        await fetchModels()
-        setModelToDelete(null)
-
-        toast({
-          title: t("success"),
-          description: t("modelDeletedSuccess"),
-        })
-
-        setIsSubmitting(false)
-      }, 300)
-    } catch (error) {
-      console.error("Error deleting model:", error)
-      toast({
-        title: t("error"),
-        description: t("modelDeletedError"),
-        variant: "destructive",
-      })
-      setIsSubmitting(false)
     }
   }
 
   async function handleReorderModels(result: any) {
-    if (!result.destination || isSubmitting) return
-
-    setIsSubmitting(true)
+    if (!result.destination) return
 
     const items = Array.from(models)
     const [reorderedItem] = items.splice(result.source.index, 1)
@@ -301,7 +170,6 @@ export default function ModelsPage() {
         title: t("success"),
         description: t("modelReorderedSuccess"),
       })
-      setIsSubmitting(false)
     } catch (error) {
       console.error("Error reordering models:", error)
       toast({
@@ -310,25 +178,36 @@ export default function ModelsPage() {
         variant: "destructive",
       })
       // Revert to original order
-      await fetchModels()
-      setIsSubmitting(false)
+      fetchModels()
     }
   }
 
-  const closeEditDialog = () => {
-    setIsEditDialogOpen(false)
-    // Очищаємо стан редагування через затримку, щоб анімація закриття відбулася коректно
-    setTimeout(() => {
-      setEditModel(null)
-    }, 300)
-  }
+  // Функція для видалення моделі
+  async function handleDeleteModel(modelId: string) {
+    try {
+      const response = await fetch(`/api/admin/models/${modelId}`, {
+        method: "DELETE",
+      })
 
-  const closeDeleteDialog = () => {
-    setIsDeleteDialogOpen(false)
-    // Очищаємо стан видалення через затримку
-    setTimeout(() => {
-      setModelToDelete(null)
-    }, 300)
+      if (!response.ok) {
+        throw new Error("Failed to delete model")
+      }
+
+      // Оновлюємо список моделей
+      fetchModels()
+
+      toast({
+        title: t("success"),
+        description: t("modelDeletedSuccess"),
+      })
+    } catch (error) {
+      console.error("Error deleting model:", error)
+      toast({
+        title: t("error"),
+        description: t("modelDeletedError"),
+        variant: "destructive",
+      })
+    }
   }
 
   return (
@@ -477,18 +356,11 @@ export default function ModelsPage() {
                                     <DropdownMenuContent align="end">
                                       <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                                       <DropdownMenuSeparator />
-                                      <DropdownMenuItem
-                                        onClick={() => {
-                                          // Спочатку встановлюємо модель для редагування, а потім відкриваємо діалог
-                                          setEditModel(model)
-                                          // Невелика затримка перед відкриттям діалогу
-                                          setTimeout(() => {
-                                            setIsEditDialogOpen(true)
-                                          }, 50)
-                                        }}
-                                      >
-                                        <Pencil className="mr-2 h-4 w-4" />
-                                        {t("edit")}
+                                      <DropdownMenuItem asChild>
+                                        <Link href={`/admin/models/${model.id}/edit`}>
+                                          <Pencil className="mr-2 h-4 w-4" />
+                                          {t("edit")}
+                                        </Link>
                                       </DropdownMenuItem>
                                       <DropdownMenuItem asChild>
                                         <Link href={`/admin/models/${model.id}/services`}>
@@ -500,11 +372,9 @@ export default function ModelsPage() {
                                       <DropdownMenuItem
                                         className="text-destructive"
                                         onClick={() => {
-                                          setModelToDelete(model)
-                                          // Невелика затримка перед відкриттям діалогу
-                                          setTimeout(() => {
-                                            setIsDeleteDialogOpen(true)
-                                          }, 50)
+                                          if (window.confirm(t("deleteModelConfirmation", { model: model.name }))) {
+                                            handleDeleteModel(model.id)
+                                          }
                                         }}
                                       >
                                         <Trash className="mr-2 h-4 w-4" />
@@ -529,131 +399,7 @@ export default function ModelsPage() {
       </Card>
 
       {/* Add Model Dialog */}
-      <AddModelDialog
-        isOpen={isAddDialogOpen}
-        onClose={() => setIsAddDialogOpen(false)}
-        onModelAdded={() => {
-          // Невелика затримка перед оновленням списку
-          setTimeout(fetchModels, 300)
-        }}
-      />
-
-      {/* Edit Model Dialog */}
-      <Dialog
-        open={isEditDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) closeEditDialog()
-        }}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{t("editModel")}</DialogTitle>
-            <DialogDescription>{t("editModelDescription")}</DialogDescription>
-          </DialogHeader>
-          {editModel && (
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-name">{t("modelName")}</Label>
-                <Input
-                  id="edit-name"
-                  value={editModel.name}
-                  onChange={(e) => setEditModel({ ...editModel, name: e.target.value })}
-                  placeholder={t("modelNamePlaceholder")}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-brand">{t("brand")}</Label>
-                <Select
-                  value={editModel.brand_id}
-                  onValueChange={(value) => {
-                    setEditModel({ ...editModel, brand_id: value, series_id: null })
-                    fetchSeriesForEdit(value)
-                  }}
-                >
-                  <SelectTrigger id="edit-brand">
-                    <SelectValue placeholder={t("selectBrand")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {brands.map((brand) => (
-                      <SelectItem key={brand.id} value={brand.id}>
-                        {brand.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-series">{t("series")}</Label>
-                <Select
-                  value={editModel.series_id || "_none"}
-                  onValueChange={(value) => setEditModel({ ...editModel, series_id: value === "_none" ? null : value })}
-                >
-                  <SelectTrigger id="edit-series">
-                    <SelectValue placeholder={t("selectSeries")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_none">{t("noSeries")}</SelectItem>
-                    {series.length > 0 ? (
-                      series.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="_no_series_available" disabled>
-                        {t("noSeriesAvailable")}
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-image">{t("image")}</Label>
-                <Input
-                  id="edit-image"
-                  value={editModel.image_url || ""}
-                  onChange={(e) => setEditModel({ ...editModel, image_url: e.target.value })}
-                  placeholder={t("imageUrlPlaceholder")}
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={closeEditDialog} disabled={isSubmitting}>
-              {t("cancel")}
-            </Button>
-            <Button onClick={handleEditModel} disabled={isSubmitting}>
-              {isSubmitting ? t("processing") : t("save")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Model Dialog */}
-      <Dialog
-        open={isDeleteDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) closeDeleteDialog()
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("deleteModel")}</DialogTitle>
-            <DialogDescription>{t("deleteModelDescription")}</DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p>{t("deleteModelConfirmation", { model: modelToDelete?.name })}</p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={closeDeleteDialog} disabled={isSubmitting}>
-              {t("cancel")}
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteModel} disabled={isSubmitting}>
-              {isSubmitting ? t("processing") : t("confirmDelete")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddModelDialog isOpen={isAddDialogOpen} onClose={() => setIsAddDialogOpen(false)} onModelAdded={fetchModels} />
     </div>
   )
 }

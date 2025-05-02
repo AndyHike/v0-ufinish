@@ -42,27 +42,36 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
   const [series, setSeries] = useState<Series[]>([])
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [newModel, setNewModel] = useState({ name: "", brandId: "", seriesId: "", imageUrl: "" })
+  const [name, setName] = useState("")
+  const [brandId, setBrandId] = useState("")
+  const [seriesId, setSeriesId] = useState("")
+  const [imageUrl, setImageUrl] = useState("")
 
   // Завантажуємо бренди при відкритті діалогу
   useEffect(() => {
     if (isOpen) {
       fetchBrands()
       // Скидаємо стан форми при відкритті
-      setNewModel({ name: "", brandId: "", seriesId: "", imageUrl: "" })
+      resetForm()
     }
   }, [isOpen])
 
   // Завантажуємо серії при зміні бренду
   useEffect(() => {
-    if (newModel.brandId) {
-      fetchSeries(newModel.brandId)
+    if (brandId) {
+      fetchSeries(brandId)
     } else {
       setSeries([])
-      // Скидаємо вибрану серію, якщо бренд не вибрано
-      setNewModel((prev) => ({ ...prev, seriesId: "" }))
+      setSeriesId("")
     }
-  }, [newModel.brandId])
+  }, [brandId])
+
+  function resetForm() {
+    setName("")
+    setBrandId("")
+    setSeriesId("")
+    setImageUrl("")
+  }
 
   async function fetchBrands() {
     try {
@@ -74,7 +83,6 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
     } catch (error) {
       console.error("Error fetching brands:", error)
       setLoading(false)
-      // Уникаємо показу toast при помилці, щоб не блокувати інтерфейс
     }
   }
 
@@ -85,12 +93,11 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
       setSeries(data)
     } catch (error) {
       console.error("Error fetching series:", error)
-      // Уникаємо показу toast при помилці
     }
   }
 
   async function handleAddModel() {
-    if (!newModel.name || !newModel.brandId) {
+    if (!name || !brandId) {
       toast({
         title: t("validationError"),
         description: t("nameAndBrandRequired"),
@@ -102,10 +109,12 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
     setSubmitting(true)
 
     try {
-      // Підготуємо дані для відправки, видаляючи серію, якщо вона "_none"
+      // Підготуємо дані для відправки
       const modelData = {
-        ...newModel,
-        seriesId: newModel.seriesId === "_none" ? "" : newModel.seriesId,
+        name,
+        brandId,
+        seriesId: seriesId === "_none" ? "" : seriesId,
+        imageUrl,
         userId: session?.user?.id,
       }
 
@@ -121,20 +130,16 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
         throw new Error("Failed to add model")
       }
 
-      // Спочатку закриваємо діалог, а потім оновлюємо дані
-      handleClose()
+      // Закриваємо діалог
+      onClose()
 
-      // Додаємо затримку перед оновленням даних
-      setTimeout(() => {
-        onModelAdded()
+      // Оновлюємо список моделей
+      onModelAdded()
 
-        toast({
-          title: t("success"),
-          description: t("modelAddedSuccess"),
-        })
-
-        setSubmitting(false)
-      }, 300)
+      toast({
+        title: t("success"),
+        description: t("modelAddedSuccess"),
+      })
     } catch (error) {
       console.error("Error adding model:", error)
       toast({
@@ -142,26 +147,13 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
         description: t("modelAddedError"),
         variant: "destructive",
       })
+    } finally {
       setSubmitting(false)
     }
   }
 
-  // Функція безпечного закриття діалогу
-  const handleClose = () => {
-    setNewModel({ name: "", brandId: "", seriesId: "", imageUrl: "" })
-    onClose()
-  }
-
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) {
-          // Безпечне закриття діалогу
-          handleClose()
-        }
-      }}
-    >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{t("addNewModel")}</DialogTitle>
@@ -172,17 +164,14 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
             <Label htmlFor="model-name">{t("modelName")}</Label>
             <Input
               id="model-name"
-              value={newModel.name}
-              onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               placeholder={t("modelNamePlaceholder")}
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="brand">{t("brand")}</Label>
-            <Select
-              value={newModel.brandId}
-              onValueChange={(value) => setNewModel({ ...newModel, brandId: value, seriesId: "" })}
-            >
+            <Select value={brandId} onValueChange={setBrandId}>
               <SelectTrigger id="brand">
                 <SelectValue placeholder={t("selectBrand")} />
               </SelectTrigger>
@@ -197,11 +186,7 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
           </div>
           <div className="grid gap-2">
             <Label htmlFor="series">{t("series") || "Series"}</Label>
-            <Select
-              value={newModel.seriesId}
-              onValueChange={(value) => setNewModel({ ...newModel, seriesId: value })}
-              disabled={!newModel.brandId}
-            >
+            <Select value={seriesId} onValueChange={setSeriesId} disabled={!brandId}>
               <SelectTrigger id="series">
                 <SelectValue placeholder={t("selectSeries") || "Select Series"} />
               </SelectTrigger>
@@ -225,14 +210,14 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
             <Label htmlFor="image-url">{t("imageUrl")}</Label>
             <Input
               id="image-url"
-              value={newModel.imageUrl}
-              onChange={(e) => setNewModel({ ...newModel, imageUrl: e.target.value })}
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
               placeholder={t("imageUrlPlaceholder")}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={submitting}>
+          <Button variant="outline" onClick={onClose} disabled={submitting}>
             {t("cancel")}
           </Button>
           <Button onClick={handleAddModel} disabled={submitting}>

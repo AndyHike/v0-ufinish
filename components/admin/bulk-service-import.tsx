@@ -2,375 +2,198 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState } from "react"
 import { useTranslations } from "next-intl"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Progress } from "@/components/ui/progress"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { Upload, AlertCircle, CheckCircle, FileSpreadsheet, Download, X } from "lucide-react"
-import Papa from "papaparse"
+import { Download, Upload } from "lucide-react"
+import Link from "next/link"
 
-type ServiceImportRow = {
-  brand: string
-  model: string
-  service_uk: string
-  service_en?: string
-  service_cs?: string
-  description_uk?: string
-  description_en?: string
-  description_cs?: string
-  price: string | number
-}
-
-type ImportResult = {
-  total: number
-  success: number
-  failed: number
-  errors: string[]
-}
-
-interface BulkServiceImportProps {
-  onSuccess?: () => void
-}
-
-export function BulkServiceImport({ onSuccess }: BulkServiceImportProps) {
+export function BulkServiceImport() {
   const t = useTranslations("Admin")
   const { toast } = useToast()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
+  const { data: session } = useSession()
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [result, setResult] = useState<ImportResult | null>(null)
-  const [parsedData, setParsedData] = useState<ServiceImportRow[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [results, setResults] = useState<any>(null)
+  const [locale, setLocale] = useState("uk") // Додаємо стан для локалі
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selectedFile = e.target.files?.[0]
-    if (!selectedFile) return
-
-    // Check file type
-    if (!selectedFile.name.endsWith(".csv")) {
-      setError(t("onlyCSVAllowed") || "Only CSV files are allowed")
-      return
+    if (selectedFile) {
+      setFile(selectedFile)
     }
-
-    setFile(selectedFile)
-    setError(null)
-
-    // Parse the CSV file
-    Papa.parse(selectedFile, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        if (results.errors.length > 0) {
-          setError(t("csvParseError") || "Error parsing CSV file")
-          console.error("CSV parse errors:", results.errors)
-          return
-        }
-
-        // Validate the data structure
-        const data = results.data as ServiceImportRow[]
-        const requiredColumns = ["brand", "model", "service_uk", "price"]
-        const hasRequiredColumns = requiredColumns.every((col) =>
-          Object.keys(data[0] || {})
-            .map((k) => k.toLowerCase())
-            .includes(col.toLowerCase()),
-        )
-
-        if (!hasRequiredColumns) {
-          setError(t("csvMissingColumns") || "CSV file is missing required columns")
-          return
-        }
-
-        setParsedData(data)
-      },
-      error: (error) => {
-        setError(t("csvParseError") || "Error parsing CSV file")
-        console.error("CSV parse error:", error)
-      },
-    })
   }
 
   async function handleUpload() {
-    if (!file || parsedData.length === 0) return
-
-    setIsProcessing(true)
-    setProgress(0)
-    setResult(null)
-
-    const result: ImportResult = {
-      total: parsedData.length,
-      success: 0,
-      failed: 0,
-      errors: [],
-    }
-
-    try {
-      // Process in batches to avoid overwhelming the server
-      const batchSize = 10
-      const batches = Math.ceil(parsedData.length / batchSize)
-
-      for (let i = 0; i < batches; i++) {
-        const start = i * batchSize
-        const end = Math.min(start + batchSize, parsedData.length)
-        const batch = parsedData.slice(start, end)
-
-        const response = await fetch("/api/admin/bulk-import/services", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: batch }),
-        })
-
-        const batchResult = await response.json()
-
-        if (!response.ok) {
-          throw new Error(batchResult.error || "Failed to process batch")
-        }
-
-        // Update results
-        result.success += batchResult.success
-        result.failed += batchResult.failed
-        result.errors = [...result.errors, ...batchResult.errors]
-
-        // Update progress
-        setProgress(Math.round((end / parsedData.length) * 100))
-      }
-
-      setResult(result)
-
-      if (result.failed === 0) {
-        toast({
-          title: t("success"),
-          description: t("importSuccess") || "Import completed successfully",
-        })
-
-        if (onSuccess) onSuccess()
-      } else {
-        toast({
-          title: t("importPartialSuccess"),
-          description:
-            t("importPartialSuccessDescription", {
-              success: result.success,
-              failed: result.failed,
-              total: result.total,
-            }) || `Imported ${result.success} of ${result.total} items with ${result.failed} failures`,
-          variant: "warning",
-        })
-      }
-    } catch (err) {
-      console.error("Error uploading data:", err)
-      setError(err instanceof Error ? err.message : "Failed to upload data")
+    if (!file) {
       toast({
         title: t("error"),
-        description: t("importError") || "Failed to import data",
+        description: t("noFileSelected"),
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUploading(true)
+    setResults(null)
+
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("userId", session?.user?.id || "")
+      formData.append("locale", locale) // Додаємо локаль до запиту
+
+      const response = await fetch("/api/admin/bulk-import/services", {
+        method: "POST",
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to upload file")
+      }
+
+      setResults(data)
+
+      toast({
+        title: t("success"),
+        description: t("fileUploadedSuccess"),
+      })
+    } catch (error) {
+      console.error("Error uploading file:", error)
+      toast({
+        title: t("error"),
+        description: t("fileUploadedError"),
         variant: "destructive",
       })
     } finally {
-      setIsProcessing(false)
       setIsUploading(false)
     }
   }
 
-  function downloadTemplate() {
-    const template = [
-      {
-        brand: "Apple",
-        model: "iPhone 13",
-        service_uk: "Заміна екрану",
-        description_uk: "Професійна заміна розбитого або пошкодженого екрану",
-        service_en: "Screen Replacement",
-        description_en: "Professional replacement of broken or damaged screens",
-        service_cs: "Výměna displeje",
-        description_cs: "Profesionální výměna rozbitého nebo poškozeného displeje",
-        price: 2500,
-      },
-      {
-        brand: "Samsung",
-        model: "Galaxy S21",
-        service_uk: "Заміна батареї",
-        description_uk: "Відновлення тривалості роботи вашого телефону з новою батареєю",
-        service_en: "Battery Replacement",
-        description_en: "Restore your phone's battery life with a new battery",
-        service_cs: "Výměna baterie",
-        description_cs: "Obnovení výdrže vašeho telefonu s novou baterií",
-        price: 1200,
-      },
-    ]
+  async function handleExport() {
+    try {
+      const response = await fetch("/api/admin/export/services")
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "services-export.csv"
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
 
-    const csv = Papa.unparse(template)
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.setAttribute("download", "service_import_template.csv")
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+      toast({
+        title: t("success"),
+        description: t("exportSuccess"),
+      })
+    } catch (error) {
+      console.error("Error exporting services:", error)
+      toast({
+        title: t("error"),
+        description: t("exportError"),
+        variant: "destructive",
+      })
+    }
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">{t("importServicePrices")}</h3>
-        <Button variant="outline" onClick={downloadTemplate}>
-          <FileSpreadsheet className="mr-2 h-4 w-4" />
-          <Download className="mr-2 h-4 w-4" />
-          {t("downloadTemplate")}
-        </Button>
-      </div>
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>{t("error")}</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {result && (
-        <Alert variant={result.failed === 0 ? "default" : "warning"}>
-          <CheckCircle className="h-4 w-4" />
-          <AlertTitle>{result.failed === 0 ? t("importSuccess") : t("importPartialSuccess")}</AlertTitle>
-          <AlertDescription>
-            {t("importResultSummary", {
-              success: result.success,
-              failed: result.failed,
-              total: result.total,
-            })}
-
-            {result.errors.length > 0 && (
-              <div className="mt-2">
-                <details>
-                  <summary className="cursor-pointer font-medium">{t("showErrors")}</summary>
-                  <ul className="mt-2 list-disc pl-5 text-sm">
-                    {result.errors.slice(0, 10).map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                    {result.errors.length > 10 && (
-                      <li>...{t("andMoreErrors", { count: result.errors.length - 10 })}</li>
-                    )}
-                  </ul>
-                </details>
-              </div>
-            )}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg">
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".csv" className="hidden" />
-
-            {!file ? (
-              <div className="text-center">
-                <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-2 text-lg font-semibold">{t("dropCSVFile")}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{t("orClickToUpload")}</p>
-                <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="mt-4">
-                  {t("selectFile")}
-                </Button>
-              </div>
-            ) : (
-              <div className="w-full space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileSpreadsheet className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{file.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {parsedData.length} {t("rowsDetected")}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setFile(null)
-                      setParsedData([])
-                      setResult(null)
-                      if (fileInputRef.current) fileInputRef.current.value = ""
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {isProcessing && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs">
-                      <span>{t("processing")}</span>
-                      <span>{progress}%</span>
-                    </div>
-                    <Progress value={progress} />
-                  </div>
-                )}
-
-                <Button onClick={handleUpload} disabled={isProcessing || parsedData.length === 0} className="w-full">
-                  <Upload className="mr-2 h-4 w-4" />
-                  {isProcessing ? t("processing") : t("uploadAndProcess")}
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {parsedData.length > 0 && (
-        <div className="mt-4">
-          <h3 className="text-lg font-medium mb-2">{t("previewData")}</h3>
-          <div className="border rounded-lg overflow-auto max-h-64">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("brand")}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("model")}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("serviceUk")}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("serviceEn")}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("serviceCs")}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("price")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {parsedData.slice(0, 5).map((row, index) => (
-                  <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.brand}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.model}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.service_uk}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.service_en || "-"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.service_cs || "-"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.price}</td>
-                  </tr>
-                ))}
-                {parsedData.length > 5 && (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-4 text-sm text-center text-gray-500">
-                      {t("andMoreRows", { count: parsedData.length - 5 })}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("bulkServiceImport")}</CardTitle>
+        <CardDescription>{t("bulkServiceImportDescription")}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-2">
+          <Label htmlFor="locale">{t("selectLanguage") || "Select Language"}</Label>
+          <Select value={locale} onValueChange={setLocale}>
+            <SelectTrigger id="locale">
+              <SelectValue placeholder={t("selectLanguage") || "Select Language"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="uk">Українська</SelectItem>
+              <SelectItem value="en">English</SelectItem>
+              <SelectItem value="cs">Čeština</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t("languageImportDescription") || "Select the language for imported service names and descriptions"}
+          </p>
         </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="file">{t("selectFile")}</Label>
+          <Input id="file" type="file" accept=".csv" onChange={handleFileChange} />
+          <p className="text-sm text-muted-foreground mt-1">{t("csvFileDescription")}</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button onClick={handleUpload} disabled={!file || isUploading}>
+            <Upload className="mr-2 h-4 w-4" />
+            {isUploading ? t("uploading") : t("uploadFile")}
+          </Button>
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="mr-2 h-4 w-4" />
+            {t("exportServices")}
+          </Button>
+        </div>
+
+        <div className="mt-4">
+          <p className="text-sm text-muted-foreground">
+            {t("bulkImportGuide")}{" "}
+            <Link href="/docs/bulk-management-guide.md" className="text-primary hover:underline" target="_blank">
+              {t("viewGuide")}
+            </Link>
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            {t("multilingualImportGuide")}{" "}
+            <Link href="/docs/multilingual-import-guide.md" className="text-primary hover:underline" target="_blank">
+              {t("viewGuide")}
+            </Link>
+          </p>
+        </div>
+      </CardContent>
+      {results && (
+        <CardFooter className="flex flex-col items-start">
+          <h3 className="text-lg font-semibold mb-2">{t("importResults")}</h3>
+          <div className="grid grid-cols-3 gap-4 w-full">
+            <div className="bg-green-50 p-3 rounded-md">
+              <p className="text-green-600 font-medium">{t("successfulImports")}</p>
+              <p className="text-2xl font-bold">{results.success}</p>
+            </div>
+            <div className="bg-red-50 p-3 rounded-md">
+              <p className="text-red-600 font-medium">{t("failedImports")}</p>
+              <p className="text-2xl font-bold">{results.failed}</p>
+            </div>
+            <div className="bg-yellow-50 p-3 rounded-md">
+              <p className="text-yellow-600 font-medium">{t("skippedImports")}</p>
+              <p className="text-2xl font-bold">{results.skipped}</p>
+            </div>
+          </div>
+          {results.errors && results.errors.length > 0 && (
+            <div className="mt-4 w-full">
+              <h4 className="text-md font-semibold mb-2">{t("errors")}</h4>
+              <div className="bg-red-50 p-3 rounded-md max-h-40 overflow-y-auto">
+                <ul className="list-disc pl-5">
+                  {results.errors.map((error: string, index: number) => (
+                    <li key={index} className="text-red-600 text-sm">
+                      {error}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </CardFooter>
       )}
-    </div>
+    </Card>
   )
 }
