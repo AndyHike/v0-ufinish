@@ -11,7 +11,8 @@ export async function GET(request: Request) {
     const supabase = createClient()
     let query = supabase.from("series").select("*, brands(name)")
 
-    if (brandId) {
+    // Перевіряємо, чи brandId не є "_empty" і не є null/undefined
+    if (brandId && brandId !== "_empty") {
       query = query.eq("brand_id", brandId)
     }
 

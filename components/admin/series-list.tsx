@@ -77,7 +77,12 @@ export function SeriesList({ brandId }: SeriesListProps) {
     try {
       setLoading(true)
       setError(null)
-      const url = selectedBrandFilter ? `/api/admin/series?brand_id=${selectedBrandFilter}` : "/api/admin/series"
+
+      // Якщо вибрано "_empty", не додаємо параметр brand_id до URL
+      const url =
+        selectedBrandFilter && selectedBrandFilter !== "_empty"
+          ? `/api/admin/series?brand_id=${selectedBrandFilter}`
+          : "/api/admin/series"
 
       const response = await fetch(url)
       if (!response.ok) {

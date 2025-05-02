@@ -491,6 +491,7 @@
     "passwordResetError": "Помилка скидання пароля",
     "missingTokenDescription": "Відсутній токен підтвердження. Спробуйте ще раз.",
     "passwordResetErrorDescription": "Не вдалося скинути пароль. Посилання на скидання пароля могло закінчитися або є недійсним.",
+    "sync": "Синхронізація",
     "syncWithRemonline": "Синхронізація з RemOnline",
     "syncWithRemonlineDescription": "Синхронізуйте користувачів між вашою базою даних та RemOnline",
     "manualSync": "Ручна синхронізація",
