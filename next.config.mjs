@@ -28,6 +28,15 @@ const nextConfig = {
   },
   // Disable source maps in production to reduce build size
   productionBrowserSourceMaps: false,
+  // Оптимізація для швидшого переходу між сторінками
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  experimental: {
+    optimizeCss: true,
+    scrollRestoration: true,
+  },
 };
 
 export default withNextIntl(nextConfig);
