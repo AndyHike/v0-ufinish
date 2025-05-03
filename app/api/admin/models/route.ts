@@ -6,17 +6,12 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const brandId = searchParams.get("brand_id")
-    const seriesId = searchParams.get("series_id")
 
     const supabase = createClient()
-    let query = supabase.from("models").select("*, brands(name), series(name)")
+    let query = supabase.from("models").select("*, brands(name)")
 
     if (brandId) {
       query = query.eq("brand_id", brandId)
-    }
-
-    if (seriesId) {
-      query = query.eq("series_id", seriesId)
     }
 
     const { data, error } = await query.order("position", { ascending: true, nullsLast: true })
@@ -50,7 +45,6 @@ export async function POST(request: Request) {
       .insert({
         name: body.name,
         brand_id: body.brandId,
-        series_id: body.seriesId || null,
         image_url: body.imageUrl || null,
         position: nextPosition,
       })
