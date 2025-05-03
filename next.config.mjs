@@ -1,7 +1,12 @@
 import createNextIntlPlugin from 'next-intl/plugin';
-import { withBundleAnalyzer } from '@next/bundle-analyzer';
+// Виправляємо імпорт bundle-analyzer
+import bundleAnalyzer from '@next/bundle-analyzer';
 
 const withNextIntl = createNextIntlPlugin();
+// Правильно отримуємо функцію withBundleAnalyzer
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -55,9 +60,5 @@ const nextConfig = {
   },
 };
 
-// Додаємо аналізатор бандлів, якщо встановлена змінна середовища ANALYZE
-const config = process.env.ANALYZE === 'true'
-  ? withBundleAnalyzer(nextConfig)
-  : nextConfig;
-
-export default withNextIntl(config);
+// Застосовуємо обидва плагіни
+export default withBundleAnalyzer(withNextIntl(nextConfig));

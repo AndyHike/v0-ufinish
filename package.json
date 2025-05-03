@@ -73,11 +73,11 @@
     "react-phone-number-input": "latest",
     "@hello-pangea/dnd": "latest",
     "wicg-inert": "latest",
-    "@next/bundle-analyzer": "latest",
     "fs": "latest",
     "path": "latest",
     "sharp": "latest",
-    "glob": "latest"
+    "glob": "latest",
+    "@next/bundle-analyzer": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
