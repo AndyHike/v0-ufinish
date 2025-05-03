@@ -68,7 +68,6 @@
     "@formatjs/intl-localematcher": "latest",
     "negotiator": "latest",
     "papaparse": "latest",
-    "react-csv": "latest",
     "uuid": "latest",
     "libphonenumber-js": "latest",
     "react-phone-number-input": "latest",

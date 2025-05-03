@@ -16,12 +16,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { Plus, Pencil, Trash, MoveVertical, MoreHorizontal, DollarSign } from "lucide-react"
+import { Plus, Pencil, Trash, MoveVertical, MoreHorizontal, DollarSign, FileUp } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { AddModelDialog } from "@/components/admin/add-model-dialog"
 import { Label } from "@/components/ui/label"
+import { BulkModelImport } from "@/components/admin/bulk-model-import"
 
 type Brand = {
   id: string
@@ -62,12 +63,13 @@ export default function ModelsPage() {
   const [isReorderMode, setIsReorderMode] = useState(false)
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>("")
   const [selectedSeriesFilter, setSelectedSeriesFilter] = useState<string>("")
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false)
 
-  // Спрощуємо ефекти, щоб уникнути зайвих рендерів
+  // Завантажуємо дані при монтуванні компонента
   useEffect(() => {
     fetchModels()
     fetchBrands()
-  }, []) // Завантажуємо дані лише при монтуванні компонента
+  }, [])
 
   // Окремий ефект для фільтрації
   useEffect(() => {
@@ -218,6 +220,10 @@ export default function ModelsPage() {
           <p className="text-muted-foreground">{t("manageModels")}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsBulkImportOpen(!isBulkImportOpen)}>
+            <FileUp className="mr-2 h-4 w-4" />
+            {t("bulkImport") || "Bulk Import"}
+          </Button>
           <Button variant={isReorderMode ? "default" : "outline"} onClick={() => setIsReorderMode(!isReorderMode)}>
             <MoveVertical className="mr-2 h-4 w-4" />
             {isReorderMode ? t("doneReordering") : t("reorderModels")}
@@ -228,6 +234,21 @@ export default function ModelsPage() {
           </Button>
         </div>
       </div>
+
+      {isBulkImportOpen && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>{t("bulkImportModels") || "Bulk Import Models"}</CardTitle>
+            <CardDescription>
+              {t("bulkImportModelsDescription") ||
+                "Upload a CSV file to import multiple models at once. The file should contain columns for brand, model, and optionally image URL."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BulkModelImport onSuccess={fetchModels} />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
