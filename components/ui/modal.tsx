@@ -5,6 +5,7 @@ import type React from "react"
 import { useEffect, useRef } from "react"
 import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useFocusTrap } from "@/lib/focus-trap"
 
 interface ModalProps {
   isOpen: boolean
@@ -24,6 +25,9 @@ export function Modal({
   preventOutsideClick = false,
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
+
+  // Використовуємо пастку фокусу
+  useFocusTrap(modalRef, isOpen)
 
   // Закриття при натисканні Escape
   useEffect(() => {
@@ -59,6 +63,7 @@ export function Modal({
   const handleOutsideClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (preventOutsideClick) return
     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      e.preventDefault()
       onClose()
     }
   }
