@@ -583,7 +583,9 @@
     "editStatusDescription": "Редагуйте існуючий статус замовлення",
     "deleteStatusConfirmation": "Ви впевнені, що хочете видалити статус \"{status}\"? Ця дія не може бути скасована.",
     "noSeriesAvailable": "Немає доступних лінійок для цього бренду",
-    "image": "Зображення"
+    "image": "Зображення",
+    "seriesForBrand": "Лінійки для бренду {brand}",
+    "manageSeriesForBrand": "Керування лінійками для бренду {brand}"
   },
   "About": {
     "about": "Про нас",
