@@ -34,7 +34,7 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true,  // Comment out or remove this line
     scrollRestoration: true,
   },
 };
