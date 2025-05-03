@@ -40,7 +40,11 @@ export default async function BrandPage({ params }: Props) {
   const supabase = createServerClient()
 
   // Fetch the brand
-  const { data: brand, error: brandError } = await supabase.from("brands").select("*").eq("id", id).single()
+  const { data: brand, error: brandError } = await supabase
+    .from("brands")
+    .select("*, series(id, name, position)")
+    .eq("id", id)
+    .single()
 
   if (brandError || !brand) {
     notFound()
@@ -51,6 +55,14 @@ export default async function BrandPage({ params }: Props) {
     .from("models")
     .select("*")
     .eq("brand_id", id)
+    .order("position", { ascending: true })
+
+  // Оновимо запит до бази даних, щоб отримати моделі без серії
+  const { data: modelsWithoutSeries, error: modelsError } = await supabase
+    .from("models")
+    .select("id, name, image_url")
+    .eq("brand_id", id)
+    .is("series_id", null)
     .order("position", { ascending: true })
 
   return (
@@ -74,11 +86,33 @@ export default async function BrandPage({ params }: Props) {
           </div>
         </div>
 
-        <h2 className="mb-6 text-2xl font-bold">{t("availableModels")}</h2>
+        {brand.series && brand.series.length > 0 && (
+          <>
+            <h2 className="mb-6 text-2xl font-bold">{t("series") || "Series"}</h2>
+            <div className="mb-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {brand.series.map((series) => (
+                <Link
+                  key={series.id}
+                  href={`/${locale}/series/${series.id}`}
+                  className="group rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                >
+                  <h3 className="text-lg font-medium group-hover:underline">{series.name}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{t("viewAllModels") || "View all models"}</p>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
 
-        {models && models.length > 0 ? (
+        <h2 className="mb-6 text-2xl font-bold">
+          {brand.series && brand.series.length > 0
+            ? t("modelsWithoutSeries") || "Models without series"
+            : t("availableModels") || "Available Models"}
+        </h2>
+
+        {modelsWithoutSeries && modelsWithoutSeries.length > 0 ? (
           <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
-            {models.map((model) => (
+            {modelsWithoutSeries.map((model) => (
               <Link
                 href={`/${locale}/models/${model.id}`}
                 key={model.id}

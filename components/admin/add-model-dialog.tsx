@@ -23,6 +23,12 @@ type Brand = {
   name: string
 }
 
+type Series = {
+  id: string
+  name: string
+  brand_id: string
+}
+
 interface AddModelDialogProps {
   isOpen: boolean
   onClose: () => void
@@ -34,14 +40,23 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
   const { toast } = useToast()
   const { data: session } = useSession()
   const [brands, setBrands] = useState<Brand[]>([])
+  const [series, setSeries] = useState<Series[]>([])
   const [loading, setLoading] = useState(false)
-  const [newModel, setNewModel] = useState({ name: "", brandId: "", imageUrl: "" })
+  const [newModel, setNewModel] = useState({ name: "", brandId: "", seriesId: "", imageUrl: "" })
 
   useEffect(() => {
     if (isOpen) {
       fetchBrands()
     }
   }, [isOpen])
+
+  useEffect(() => {
+    if (newModel.brandId) {
+      fetchSeries(newModel.brandId)
+    } else {
+      setSeries([])
+    }
+  }, [newModel.brandId])
 
   async function fetchBrands() {
     try {
@@ -53,6 +68,21 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
       toast({
         title: t("error"),
         description: t("errorFetchingBrands"),
+        variant: "destructive",
+      })
+    }
+  }
+
+  async function fetchSeries(brandId: string) {
+    try {
+      const response = await fetch(`/api/admin/series?brand_id=${brandId}`)
+      const data = await response.json()
+      setSeries(data)
+    } catch (error) {
+      console.error("Error fetching series:", error)
+      toast({
+        title: t("error"),
+        description: t("errorFetchingSeries") || "Failed to fetch series",
         variant: "destructive",
       })
     }
@@ -86,7 +116,7 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
         throw new Error("Failed to add model")
       }
 
-      setNewModel({ name: "", brandId: "", imageUrl: "" })
+      setNewModel({ name: "", brandId: "", seriesId: "", imageUrl: "" })
       onModelAdded()
       onClose()
 
@@ -132,7 +162,10 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
           </div>
           <div className="grid gap-2">
             <Label htmlFor="brand">{t("brand")}</Label>
-            <Select value={newModel.brandId} onValueChange={(value) => setNewModel({ ...newModel, brandId: value })}>
+            <Select
+              value={newModel.brandId}
+              onValueChange={(value) => setNewModel({ ...newModel, brandId: value, seriesId: "" })}
+            >
               <SelectTrigger id="brand">
                 <SelectValue placeholder={t("selectBrand")} />
               </SelectTrigger>
@@ -140,6 +173,26 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
                 {brands.map((brand) => (
                   <SelectItem key={brand.id} value={brand.id}>
                     {brand.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="series">{t("series") || "Series"}</Label>
+            <Select
+              value={newModel.seriesId}
+              onValueChange={(value) => setNewModel({ ...newModel, seriesId: value })}
+              disabled={!newModel.brandId || series.length === 0}
+            >
+              <SelectTrigger id="series">
+                <SelectValue placeholder={t("selectSeries") || "Select Series"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{t("noSeries") || "No Series"}</SelectItem>
+                {series.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.name}
                   </SelectItem>
                 ))}
               </SelectContent>

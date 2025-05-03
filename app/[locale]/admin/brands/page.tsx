@@ -27,10 +27,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Plus, Pencil, Trash, Upload, X, ArrowUp, ArrowDown } from "lucide-react"
+// Додамо імпорт для Layers іконки
+import { Plus, Pencil, Trash, Upload, X, ArrowUp, ArrowDown, Layers } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { MoreHorizontal } from "lucide-react"
+import Link from "next/link"
 
 type Brand = {
   id: string
@@ -696,12 +700,30 @@ export default function BrandsPage() {
                       </TableCell>
                       <TableCell>{new Date(brand.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(brand)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(brand)}>
-                          <Trash className="h-4 w-4" />
-                        </Button>
+                        {/* Додамо кнопку для управління серіями в DropdownMenu для кожного бренду */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => openEditDialog(brand)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              {t("edit")}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/brands/${brand.id}/series`}>
+                                <Layers className="mr-2 h-4 w-4" />
+                                {t("manageSeries") || "Manage Series"}
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openDeleteDialog(brand)}>
+                              <Trash className="mr-2 h-4 w-4" />
+                              {t("delete")}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))

@@ -1,157 +1,117 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 import {
-  LayoutDashboard,
-  Tag,
+  BarChart3,
+  Box,
+  CircleDollarSign,
   Smartphone,
-  Percent,
+  Tag,
   Users,
-  LogOut,
-  Menu,
-  FileText,
-  Database,
-  RefreshCw,
+  Settings,
+  Layers,
+  Repeat,
+  FileSpreadsheet,
+  Wrench,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { useState } from "react"
 
 export function AdminSidebar() {
   const t = useTranslations("Admin")
   const pathname = usePathname()
-  const [open, setOpen] = useState(false)
 
-  // Extract locale from pathname
-  const locale = pathname.split("/")[1]
+  const isActive = (path: string) => {
+    return pathname?.startsWith(path)
+  }
 
-  const routes = [
+  const navItems = [
     {
-      label: t("dashboard"),
-      icon: LayoutDashboard,
-      href: `/${locale}/admin`,
-      active: pathname.endsWith("/admin"),
+      title: t("dashboard"),
+      href: "/admin",
+      icon: BarChart3,
+      active: pathname === "/admin",
     },
     {
-      label: t("users"),
-      icon: Users,
-      href: `/${locale}/admin/users`,
-      active: pathname.includes("/admin/users"),
-    },
-    {
-      label: t("brands"),
+      title: t("brands"),
+      href: "/admin/brands",
       icon: Tag,
-      href: `/${locale}/admin/brands`,
-      active: pathname.includes("/admin/brands"),
+      active: isActive("/admin/brands"),
     },
     {
-      label: t("models"),
+      title: t("series") || "Series",
+      href: "/admin/series",
+      icon: Layers,
+      active: isActive("/admin/series"),
+    },
+    {
+      title: t("models"),
+      href: "/admin/models",
       icon: Smartphone,
-      href: `/${locale}/admin/models`,
-      active: pathname.includes("/admin/models") && !pathname.includes("/services"),
+      active: isActive("/admin/models"),
     },
     {
-      label: t("bulkServices"),
-      icon: Database,
-      href: `/${locale}/admin/bulk-services`,
-      active: pathname.includes("/admin/bulk-services"),
+      title: t("descriptions"),
+      href: "/admin/descriptions",
+      icon: Box,
+      active: isActive("/admin/descriptions"),
     },
     {
-      label: t("descriptions"),
-      icon: FileText,
-      href: `/${locale}/admin/descriptions`,
-      active: pathname.includes("/admin/descriptions"),
+      title: t("discounts"),
+      href: "/admin/discounts",
+      icon: CircleDollarSign,
+      active: isActive("/admin/discounts"),
     },
     {
-      label: t("discounts"),
-      icon: Percent,
-      href: `/${locale}/admin/discounts`,
-      active: pathname.includes("/admin/discounts"),
+      title: t("orderStatuses") || "Order Statuses",
+      href: "/admin/order-statuses",
+      icon: Wrench,
+      active: isActive("/admin/order-statuses"),
     },
     {
-      label: "Статуси замовлень",
-      icon: Tag,
-      href: `/${locale}/admin/order-statuses`,
-      active: pathname.includes("/admin/order-statuses"),
+      title: t("users"),
+      href: "/admin/users",
+      icon: Users,
+      active: isActive("/admin/users"),
     },
     {
-      label: t("syncWithRemonline"),
-      icon: RefreshCw,
-      href: `/${locale}/admin/sync`,
-      active: pathname.includes("/admin/sync"),
+      title: t("bulkServices") || "Bulk Services",
+      href: "/admin/bulk-services",
+      icon: FileSpreadsheet,
+      active: isActive("/admin/bulk-services"),
+    },
+    {
+      title: t("sync") || "Sync",
+      href: "/admin/sync",
+      icon: Repeat,
+      active: isActive("/admin/sync"),
+    },
+    {
+      title: t("settings"),
+      href: "/admin/settings",
+      icon: Settings,
+      active: isActive("/admin/settings"),
     },
   ]
 
-  const SidebarContent = () => (
-    <div className="space-y-4 py-4 flex flex-col h-full bg-slate-900 text-white">
-      <div className="px-3 py-2 flex-1">
-        <Link href={`/${locale}/admin`} className="flex items-center pl-3 mb-14">
-          <h1 className="text-xl font-bold">{t("adminPanel")}</h1>
-        </Link>
-        <div className="space-y-1">
-          {routes.map((route) => (
-            <Link
-              key={route.href}
-              href={route.href}
-              className={cn(
-                "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
-                route.active ? "text-white bg-white/10" : "text-zinc-400",
-              )}
-              onClick={() => setOpen(false)}
-            >
-              <div className="flex items-center flex-1">
-                <route.icon className={cn("h-5 w-5 mr-3")} />
-                {route.label}
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-      <div className="px-3 py-2">
-        <Link
-          href={`/${locale}/api/auth/signout`}
-          className="text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition text-zinc-400"
-          onClick={() => setOpen(false)}
-        >
-          <div className="flex items-center flex-1">
-            <LogOut className="h-5 w-5 mr-3" />
-            {t("logout")}
-          </div>
-        </Link>
-      </div>
-    </div>
-  )
-
   return (
-    <>
-      {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:w-64 md:flex-col">
-        <SidebarContent />
-      </div>
-
-      {/* Mobile Sidebar */}
-      <div className="md:hidden fixed top-0 left-0 z-50 w-full bg-slate-900 border-b border-slate-800 p-4">
-        <div className="flex justify-between items-center">
-          <h1 className="font-bold text-xl text-white">{t("adminPanel")}</h1>
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-slate-800">
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-64 border-r-0 bg-slate-900">
-              <SidebarContent />
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-
-      {/* Mobile padding to prevent content from being hidden under the header */}
-      <div className="md:hidden h-16"></div>
-    </>
+    <nav className="grid items-start px-2 py-4 lg:px-4">
+      {navItems.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={cn(
+            "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
+            item.active
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          )}
+        >
+          <item.icon className="h-4 w-4" />
+          <span>{item.title}</span>
+        </Link>
+      ))}
+    </nav>
   )
 }
