@@ -100,7 +100,7 @@ export default function ModelsPage() {
         params.append("brand_id", selectedBrandFilter)
       }
 
-      if (selectedSeriesFilter) {
+      if (selectedSeriesFilter && selectedSeriesFilter !== "_none") {
         params.append("series_id", selectedSeriesFilter)
       }
 
@@ -321,7 +321,7 @@ export default function ModelsPage() {
                   <SelectValue placeholder={t("allSeries") || "All Series"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{t("allSeries") || "All Series"}</SelectItem>
+                  <SelectItem value="all">{t("allSeries") || "All Series"}</SelectItem>
                   {series.map((item) => (
                     <SelectItem key={item.id} value={item.id}>
                       {item.name}
@@ -505,7 +505,7 @@ export default function ModelsPage() {
                     <SelectValue placeholder={t("selectSeries") || "Select Series"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">{t("noSeries") || "No Series"}</SelectItem>
+                    <SelectItem value="no_series">{t("noSeries") || "No Series"}</SelectItem>
                     {series.map((item) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.name}
