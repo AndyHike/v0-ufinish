@@ -76,6 +76,7 @@ export default function ModelsPage() {
   const [isReorderMode, setIsReorderMode] = useState(false)
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>("")
   const [selectedSeriesFilter, setSelectedSeriesFilter] = useState<string>("")
+  const [editModelSeries, setEditModelSeries] = useState<Series[]>([])
 
   const { execute: executeEditModel, isLoading: isEditLoading } = useAsyncAction({
     successMessage: t("modelUpdatedSuccess"),
@@ -114,6 +115,13 @@ export default function ModelsPage() {
       setSelectedSeriesFilter("")
     }
   }, [selectedBrandFilter])
+
+  // When edit model is set, fetch its series
+  useEffect(() => {
+    if (editModel && editModel.brand_id) {
+      fetchSeriesForEdit(editModel.brand_id)
+    }
+  }, [editModel])
 
   async function fetchModels() {
     try {
@@ -167,6 +175,22 @@ export default function ModelsPage() {
       setSeries(data)
     } catch (error) {
       console.error("Error fetching series:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch series",
+        variant: "destructive",
+      })
+    }
+  }
+
+  async function fetchSeriesForEdit(brandId: string) {
+    try {
+      const response = await fetch(`/api/admin/series?brand_id=${brandId}`)
+      const data = await response.json()
+      setEditModelSeries(data)
+      console.log("Fetched series for edit:", data)
+    } catch (error) {
+      console.error("Error fetching series for edit:", error)
       toast({
         title: "Error",
         description: "Failed to fetch series",
@@ -337,7 +361,7 @@ export default function ModelsPage() {
                     <TableHead>{t("name")}</TableHead>
                     <TableHead>{t("brand")}</TableHead>
                     <TableHead>{t("series")}</TableHead>
-                    <TableHead>{t("image")}</TableHead>
+                    <TableHead>{t("image") || "Image"}</TableHead>
                     <TableHead>{t("createdAt")}</TableHead>
                     <TableHead className="text-right">{t("actions")}</TableHead>
                   </TableRow>
@@ -385,7 +409,7 @@ export default function ModelsPage() {
                                       />
                                     </div>
                                   ) : (
-                                    <span className="text-muted-foreground">{t("noImage")}</span>
+                                    <span className="text-muted-foreground">{t("noImage") || "No image"}</span>
                                   )}
                                 </TableCell>
                                 <TableCell>{new Date(model.created_at).toLocaleDateString()}</TableCell>
@@ -479,7 +503,7 @@ export default function ModelsPage() {
                   value={editModel.brand_id}
                   onValueChange={(value) => {
                     setEditModel({ ...editModel, brand_id: value, series_id: null })
-                    fetchSeries(value)
+                    fetchSeriesForEdit(value)
                   }}
                   disabled={isEditLoading}
                 >
@@ -507,11 +531,17 @@ export default function ModelsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="_none">{t("noSeries")}</SelectItem>
-                    {series.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name}
+                    {editModelSeries.length > 0 ? (
+                      editModelSeries.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="" disabled>
+                        {t("noSeriesForBrand") || "No series found for this brand"}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>

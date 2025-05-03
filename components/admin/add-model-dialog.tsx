@@ -89,6 +89,7 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
       const response = await fetch(`/api/admin/series?brand_id=${brandId}`)
       const data = await response.json()
       setSeries(data)
+      console.log("Fetched series for brand", brandId, ":", data)
     } catch (error) {
       console.error("Error fetching series:", error)
       toast({
@@ -131,7 +132,12 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !isLoading && onClose()}>
-      <DialogContent className="sm:max-w-[425px]" ref={dialogRef}>
+      <DialogContent
+        className="sm:max-w-[425px]"
+        ref={dialogRef}
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{t("addNewModel")}</DialogTitle>
           <DialogDescription>{t("addNewModelDescription")}</DialogDescription>
@@ -179,18 +185,26 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
             <Select
               value={newModel.seriesId}
               onValueChange={(value) => setNewModel({ ...newModel, seriesId: value })}
-              disabled={isLoading || !newModel.brandId || series.length === 0}
+              disabled={isLoading || !newModel.brandId}
             >
               <SelectTrigger id="series">
                 <SelectValue placeholder={t("selectSeries") || "Select Series"} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_none">{t("noSeries") || "No Series"}</SelectItem>
-                {series.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.name}
+                {series.length > 0 ? (
+                  series.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="" disabled>
+                    {newModel.brandId
+                      ? t("noSeriesForBrand") || "No series found for this brand"
+                      : t("selectBrandFirst") || "Select a brand first"}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
