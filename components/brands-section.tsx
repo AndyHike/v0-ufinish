@@ -1,32 +1,23 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useTranslations, useLocale } from "next-intl"
+import { useTranslations } from "next-intl"
+import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import Image from "next/image"
 
-// Update Brand type to include series
-type Brand = {
+interface Brand {
   id: string
   name: string
   logo_url: string | null
-  position: number | null
-  series:
-    | {
-        id: string
-        name: string
-        position: number
-      }[]
-    | null
+  position?: number | null
 }
 
 export function BrandsSection() {
   const t = useTranslations("BrandsSection")
-  const locale = useLocale()
   const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -48,7 +39,7 @@ export function BrandsSection() {
         const sortedBrands = [...data].sort((a, b) => {
           // If both have position, sort by position
           if (a.position !== null && b.position !== null) {
-            return (a.position || 0) - (b.position || 0)
+            return a.position - b.position
           }
           // If only one has position, prioritize the one with position
           if (a.position !== null) return -1
@@ -105,37 +96,36 @@ export function BrandsSection() {
               <ChevronLeft className="h-5 w-5" />
             </button>
 
-            <div id="brands-scroll" className="overflow-x-auto pb-6">
-              <div className="flex gap-6 min-w-max px-4" style={{ scrollBehavior: "smooth" }}>
-                {brands.map((brand) => (
-                  <div key={brand.id} className="flex-none w-[180px]">
-                    <Link href={`/brands/${brand.id}`}>
-                      <Card className="border-none shadow-sm hover:shadow-md transition-shadow duration-300 h-32">
-                        <CardContent className="p-4 flex flex-col items-center justify-center h-full">
-                          {brand.logo_url ? (
-                            <div className="relative h-16 w-full mb-2">
-                              <Image
-                                src={brand.logo_url || "/placeholder.svg"}
-                                alt={brand.name}
-                                width={160}
-                                height={80}
-                                className="object-contain"
-                                onError={(e) => {
-                                  // Replace broken image with placeholder
-                                  ;(e.target as HTMLImageElement).src = "/placeholder.svg"
-                                }}
-                              />
-                            </div>
-                          ) : (
-                            <div className="text-lg font-medium mb-2">{brand.name}</div>
-                          )}
-                          <span className="text-sm text-center line-clamp-1">{brand.name}</span>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  </div>
-                ))}
-              </div>
+            <div
+              id="brands-scroll"
+              className="flex overflow-x-auto gap-6 pb-4 snap-x scrollbar-hide"
+              style={{ scrollBehavior: "smooth" }}
+            >
+              {brands.map((brand) => (
+                <div key={brand.id} className="flex-none w-[200px] snap-start">
+                  <Link href={`/brands/${brand.id}`}>
+                    <Card className="border-none shadow-sm hover:shadow-md transition-shadow duration-300 h-32">
+                      <CardContent className="p-6 flex flex-col items-center justify-center h-full">
+                        {brand.logo_url ? (
+                          <div className="relative h-16 w-full">
+                            <Image
+                              src={brand.logo_url || "/placeholder.svg"}
+                              alt={brand.name}
+                              width={120}
+                              height={80}
+                              className="object-contain mx-auto"
+                              style={{ maxHeight: "100%", width: "auto" }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="text-lg font-medium">{brand.name}</div>
+                        )}
+                        <span className="mt-2 text-sm text-center">{brand.name}</span>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </div>
+              ))}
             </div>
 
             <button

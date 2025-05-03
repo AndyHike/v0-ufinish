@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase"
 
 type ServiceImportRow = {
   brand: string
@@ -15,7 +15,7 @@ type ServiceImportRow = {
 
 export async function POST(request: Request) {
   try {
-    const { data, userId, locale = "uk" } = await request.json()
+    const { data } = await request.json()
 
     if (!Array.isArray(data) || data.length === 0) {
       return NextResponse.json({ error: "Invalid data format" }, { status: 400 })
@@ -49,10 +49,7 @@ export async function POST(request: Request) {
           // Create new brand
           const { data: newBrand, error: brandError } = await supabase
             .from("brands")
-            .insert({
-              name: row.brand,
-              created_by: userId || null,
-            })
+            .insert({ name: row.brand })
             .select("id")
             .single()
 
@@ -80,11 +77,7 @@ export async function POST(request: Request) {
           // Create new model
           const { data: newModel, error: modelError } = await supabase
             .from("models")
-            .insert({
-              name: row.model,
-              brand_id: brandId,
-              created_by: userId || null,
-            })
+            .insert({ name: row.model, brand_id: brandId })
             .select("id")
             .single()
 
@@ -196,9 +189,7 @@ export async function POST(request: Request) {
           // Create new service
           const { data: newService, error: serviceError } = await supabase
             .from("services")
-            .insert({
-              created_by: userId || null,
-            })
+            .insert({})
             .select("id")
             .single()
 
@@ -241,74 +232,70 @@ export async function POST(request: Request) {
             })
           }
 
-          // Insert all translations
-          const { error: insertError } = await supabase.from("services_translations").insert(translationInserts)
+          const { error: translationError } = await supabase.from("services_translations").insert(translationInserts)
 
-          if (insertError) {
+          if (translationError) {
             result.failed++
-            result.errors.push(`Failed to create translations for service "${row.service_uk}": ${insertError.message}`)
+            result.errors.push(
+              `Failed to create service translations for "${row.service_uk}": ${translationError.message}`,
+            )
             continue
           }
         }
 
-        // 4. Create model_service relation
-        const price = typeof row.price === "string" ? Number.parseFloat(row.price) : row.price
+        // 4. Create or update model service
+        const price = row.price === "" ? null : typeof row.price === "string" ? Number.parseFloat(row.price) : row.price
 
-        if (isNaN(price)) {
-          result.failed++
-          result.errors.push(`Invalid price value for service "${row.service_uk}"`)
-          continue
-        }
-
-        const { data: existingRelation } = await supabase
+        // Check if model service already exists
+        const { data: existingModelService } = await supabase
           .from("model_services")
           .select("id")
           .eq("model_id", modelId)
           .eq("service_id", serviceId)
           .maybeSingle()
 
-        if (!existingRelation) {
-          const { error: relationError } = await supabase.from("model_services").insert({
-            model_id: modelId,
-            service_id: serviceId,
-            price: price,
-            created_by: userId || null,
-          })
-
-          if (relationError) {
-            result.failed++
-            result.errors.push(
-              `Failed to create relation between model and service "${row.service_uk}": ${relationError.message}`,
-            )
-            continue
-          }
-        } else {
-          // Update existing relation (e.g., price)
+        if (existingModelService) {
+          // Update existing model service
           const { error: updateError } = await supabase
             .from("model_services")
-            .update({
-              price: price,
-            })
-            .eq("id", existingRelation.id)
+            .update({ price })
+            .eq("id", existingModelService.id)
 
           if (updateError) {
             result.failed++
-            result.errors.push(
-              `Failed to update relation between model and service "${row.service_uk}": ${updateError.message}`,
-            )
+            result.errors.push(`Failed to update price for ${row.model} - ${row.service_uk}: ${updateError.message}`)
+            continue
+          }
+        } else {
+          // Create new model service
+          const { error: createError } = await supabase.from("model_services").insert({
+            model_id: modelId,
+            service_id: serviceId,
+            price,
+          })
+
+          if (createError) {
+            result.failed++
+            result.errors.push(`Failed to create price for ${row.model} - ${row.service_uk}: ${createError.message}`)
             continue
           }
         }
 
         result.success++
-      } catch (error: any) {
+      } catch (err) {
         result.failed++
-        result.errors.push(`Error processing row: ${error.message || error}`)
+        result.errors.push(
+          `Error processing row: ${JSON.stringify(row)} - ${err instanceof Error ? err.message : String(err)}`,
+        )
       }
     }
 
     return NextResponse.json(result)
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || error }, { status: 500 })
+  } catch (error) {
+    console.error("Error processing bulk import:", error)
+    return NextResponse.json(
+      { error: "Failed to process import", details: error instanceof Error ? error.message : String(error) },
+      { status: 500 },
+    )
   }
 }

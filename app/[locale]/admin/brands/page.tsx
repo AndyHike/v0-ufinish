@@ -27,13 +27,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Plus, Pencil, Trash, Upload, X, ArrowUp, ArrowDown, Layers } from "lucide-react"
+import { Plus, Pencil, Trash, Upload, X, ArrowUp, ArrowDown } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal } from "lucide-react"
-import Link from "next/link"
 
 type Brand = {
   id: string
@@ -315,16 +312,10 @@ export default function BrandsPage() {
         throw new Error("Failed to update brand")
       }
 
-      // Update the local state first to prevent UI blocking
-      const updatedBrands = brands.map((brand) => (brand.id === editBrand.id ? { ...brand, logo_url: null } : brand))
-      setBrands(updatedBrands)
-
-      // Close the dialog before fetching to prevent UI blocking
+      await fetchBrands() // Refresh the brands list
+      setEditBrand({ ...editBrand, logo_url: null })
       setIsDeleteImageDialogOpen(false)
       setImagePreview(null)
-
-      // Then fetch the updated data
-      await fetchBrands()
 
       toast({
         title: t("success"),
@@ -697,10 +688,6 @@ export default function BrandsPage() {
                               width={40}
                               height={40}
                               className="h-full w-full object-contain"
-                              onError={(e) => {
-                                // Replace broken image with placeholder
-                                ;(e.target as HTMLImageElement).src = "/placeholder.svg"
-                              }}
                             />
                           </div>
                         ) : (
@@ -709,29 +696,12 @@ export default function BrandsPage() {
                       </TableCell>
                       <TableCell>{new Date(brand.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/admin/brands/${brand.id}/series`}>
-                                <Layers className="mr-2 h-4 w-4" />
-                                {t("series") || "Series"}
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openEditDialog(brand)}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              {t("edit")}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openDeleteDialog(brand)}>
-                              <Trash className="mr-2 h-4 w-4" />
-                              {t("delete")}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(brand)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(brand)}>
+                          <Trash className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -824,16 +794,7 @@ export default function BrandsPage() {
                 </div>
                 {imagePreview && (
                   <div className="mt-2 relative w-20 h-20 border rounded overflow-hidden">
-                    <Image
-                      src={imagePreview || "/placeholder.svg"}
-                      alt="Preview"
-                      fill
-                      className="object-contain"
-                      onError={(e) => {
-                        // Replace broken image with placeholder
-                        ;(e.target as HTMLImageElement).src = "/placeholder.svg"
-                      }}
-                    />
+                    <Image src={imagePreview || "/placeholder.svg"} alt="Preview" fill className="object-contain" />
                   </div>
                 )}
               </div>

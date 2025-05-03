@@ -16,16 +16,11 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
+import { X } from "lucide-react"
 
 type Brand = {
   id: string
   name: string
-}
-
-type Series = {
-  id: string
-  name: string
-  brand_id: string
 }
 
 interface AddModelDialogProps {
@@ -39,65 +34,32 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
   const { toast } = useToast()
   const { data: session } = useSession()
   const [brands, setBrands] = useState<Brand[]>([])
-  const [series, setSeries] = useState<Series[]>([])
   const [loading, setLoading] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [name, setName] = useState("")
-  const [brandId, setBrandId] = useState("")
-  const [seriesId, setSeriesId] = useState("")
-  const [imageUrl, setImageUrl] = useState("")
+  const [newModel, setNewModel] = useState({ name: "", brandId: "", imageUrl: "" })
 
-  // Завантажуємо бренди при відкритті діалогу
   useEffect(() => {
     if (isOpen) {
       fetchBrands()
-      // Скидаємо стан форми при відкритті
-      resetForm()
     }
   }, [isOpen])
 
-  // Завантажуємо серії при зміні бренду
-  useEffect(() => {
-    if (brandId) {
-      fetchSeries(brandId)
-    } else {
-      setSeries([])
-      setSeriesId("")
-    }
-  }, [brandId])
-
-  function resetForm() {
-    setName("")
-    setBrandId("")
-    setSeriesId("")
-    setImageUrl("")
-  }
-
   async function fetchBrands() {
     try {
-      setLoading(true)
       const response = await fetch("/api/admin/brands")
       const data = await response.json()
       setBrands(data)
-      setLoading(false)
     } catch (error) {
       console.error("Error fetching brands:", error)
-      setLoading(false)
-    }
-  }
-
-  async function fetchSeries(brandId: string) {
-    try {
-      const response = await fetch(`/api/admin/series?brand_id=${brandId}`)
-      const data = await response.json()
-      setSeries(data)
-    } catch (error) {
-      console.error("Error fetching series:", error)
+      toast({
+        title: t("error"),
+        description: t("errorFetchingBrands"),
+        variant: "destructive",
+      })
     }
   }
 
   async function handleAddModel() {
-    if (!name || !brandId) {
+    if (!newModel.name || !newModel.brandId) {
       toast({
         title: t("validationError"),
         description: t("nameAndBrandRequired"),
@@ -106,35 +68,27 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
       return
     }
 
-    setSubmitting(true)
+    setLoading(true)
 
     try {
-      // Підготуємо дані для відправки
-      const modelData = {
-        name,
-        brandId,
-        seriesId: seriesId === "_none" ? "" : seriesId,
-        imageUrl,
-        userId: session?.user?.id,
-      }
-
       const response = await fetch("/api/admin/models", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(modelData),
+        body: JSON.stringify({
+          ...newModel,
+          userId: session?.user?.id,
+        }),
       })
 
       if (!response.ok) {
         throw new Error("Failed to add model")
       }
 
-      // Закриваємо діалог
-      onClose()
-
-      // Оновлюємо список моделей
+      setNewModel({ name: "", brandId: "", imageUrl: "" })
       onModelAdded()
+      onClose()
 
       toast({
         title: t("success"),
@@ -148,30 +102,37 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
         variant: "destructive",
       })
     } finally {
-      setSubmitting(false)
+      setLoading(false)
     }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{t("addNewModel")}</DialogTitle>
           <DialogDescription>{t("addNewModelDescription")}</DialogDescription>
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </button>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="model-name">{t("modelName")}</Label>
             <Input
               id="model-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={newModel.name}
+              onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
               placeholder={t("modelNamePlaceholder")}
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="brand">{t("brand")}</Label>
-            <Select value={brandId} onValueChange={setBrandId}>
+            <Select value={newModel.brandId} onValueChange={(value) => setNewModel({ ...newModel, brandId: value })}>
               <SelectTrigger id="brand">
                 <SelectValue placeholder={t("selectBrand")} />
               </SelectTrigger>
@@ -185,43 +146,21 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="series">{t("series") || "Series"}</Label>
-            <Select value={seriesId} onValueChange={setSeriesId} disabled={!brandId}>
-              <SelectTrigger id="series">
-                <SelectValue placeholder={t("selectSeries") || "Select Series"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none">{t("noSeries") || "No Series"}</SelectItem>
-                {series.length > 0 ? (
-                  series.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.name}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="_no_series_available" disabled>
-                    {t("noSeriesAvailable") || "No series available for this brand"}
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-2">
             <Label htmlFor="image-url">{t("imageUrl")}</Label>
             <Input
               id="image-url"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
+              value={newModel.imageUrl}
+              onChange={(e) => setNewModel({ ...newModel, imageUrl: e.target.value })}
               placeholder={t("imageUrlPlaceholder")}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={submitting}>
+          <Button variant="outline" onClick={onClose} disabled={loading}>
             {t("cancel")}
           </Button>
-          <Button onClick={handleAddModel} disabled={submitting}>
-            {submitting ? t("processing") : t("add")}
+          <Button onClick={handleAddModel} disabled={loading}>
+            {loading ? t("processing") : t("add")}
           </Button>
         </DialogFooter>
       </DialogContent>

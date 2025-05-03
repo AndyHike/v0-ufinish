@@ -4,8 +4,8 @@ import type React from "react"
 
 import { useState, useRef } from "react"
 import { useTranslations } from "next-intl"
-import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/components/ui/use-toast"
@@ -15,7 +15,6 @@ import Papa from "papaparse"
 type ModelImportRow = {
   brand: string
   model: string
-  series?: string
   image_url?: string
 }
 
@@ -33,10 +32,10 @@ interface BulkModelImportProps {
 export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
   const t = useTranslations("Admin")
   const { toast } = useToast()
-  const { data: session } = useSession()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [file, setFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [progress, setProgress] = useState(0)
   const [result, setResult] = useState<ImportResult | null>(null)
@@ -117,10 +116,7 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
         const response = await fetch("/api/admin/bulk-import/models", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            data: batch,
-            userId: session?.user?.id,
-          }),
+          body: JSON.stringify({ data: batch }),
         })
 
         const batchResult = await response.json()
@@ -169,6 +165,7 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
       })
     } finally {
       setIsProcessing(false)
+      setIsUploading(false)
     }
   }
 
@@ -177,13 +174,11 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
       {
         brand: "Apple",
         model: "iPhone 13",
-        series: "iPhone",
         image_url: "https://example.com/iphone13.jpg",
       },
       {
         brand: "Samsung",
         model: "Galaxy S21",
-        series: "Galaxy S",
         image_url: "",
       },
     ]
@@ -202,11 +197,11 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">{t("importModels") || "Import Models"}</h3>
+        <h3 className="text-lg font-medium">{t("importModels")}</h3>
         <Button variant="outline" onClick={downloadTemplate}>
           <FileSpreadsheet className="mr-2 h-4 w-4" />
           <Download className="mr-2 h-4 w-4" />
-          {t("downloadTemplate") || "Download Template"}
+          {t("downloadTemplate")}
         </Button>
       </div>
 
@@ -227,22 +222,18 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
               success: result.success,
               failed: result.failed,
               total: result.total,
-            }) || `Imported ${result.success} of ${result.total} items with ${result.failed} failures`}
+            })}
 
             {result.errors.length > 0 && (
               <div className="mt-2">
                 <details>
-                  <summary className="cursor-pointer font-medium">{t("showErrors") || "Show Errors"}</summary>
+                  <summary className="cursor-pointer font-medium">{t("showErrors")}</summary>
                   <ul className="mt-2 list-disc pl-5 text-sm">
                     {result.errors.slice(0, 10).map((error, index) => (
                       <li key={index}>{error}</li>
                     ))}
                     {result.errors.length > 10 && (
-                      <li>
-                        ...
-                        {t("andMoreErrors", { count: result.errors.length - 10 }) ||
-                          `and ${result.errors.length - 10} more errors`}
-                      </li>
+                      <li>...{t("andMoreErrors", { count: result.errors.length - 10 })}</li>
                     )}
                   </ul>
                 </details>
@@ -252,80 +243,81 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
         </Alert>
       )}
 
-      <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg">
-        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".csv" className="hidden" />
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg">
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".csv" className="hidden" />
 
-        {!file ? (
-          <div className="text-center">
-            <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-lg font-semibold">{t("dropCSVFile") || "Drop CSV File"}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{t("orClickToUpload") || "or click to upload"}</p>
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="mt-4">
-              {t("selectFile") || "Select File"}
-            </Button>
-          </div>
-        ) : (
-          <div className="w-full space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileSpreadsheet className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium">{file.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {parsedData.length} {t("rowsDetected") || "rows detected"}
-                  </p>
-                </div>
+            {!file ? (
+              <div className="text-center">
+                <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-2 text-lg font-semibold">{t("dropCSVFile")}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{t("orClickToUpload")}</p>
+                <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="mt-4">
+                  {t("selectFile")}
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setFile(null)
-                  setParsedData([])
-                  setResult(null)
-                  if (fileInputRef.current) fileInputRef.current.value = ""
-                }}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {isProcessing && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span>{t("processing") || "Processing"}</span>
-                  <span>{progress}%</span>
+            ) : (
+              <div className="w-full space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileSpreadsheet className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">{file.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {parsedData.length} {t("rowsDetected")}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setFile(null)
+                      setParsedData([])
+                      setResult(null)
+                      if (fileInputRef.current) fileInputRef.current.value = ""
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Progress value={progress} />
+
+                {isProcessing && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span>{t("processing")}</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <Progress value={progress} />
+                  </div>
+                )}
+
+                <Button onClick={handleUpload} disabled={isProcessing || parsedData.length === 0} className="w-full">
+                  <Upload className="mr-2 h-4 w-4" />
+                  {isProcessing ? t("processing") : t("uploadAndProcess")}
+                </Button>
               </div>
             )}
-
-            <Button onClick={handleUpload} disabled={isProcessing || parsedData.length === 0} className="w-full">
-              <Upload className="mr-2 h-4 w-4" />
-              {isProcessing ? t("processing") || "Processing" : t("uploadAndProcess") || "Upload and Process"}
-            </Button>
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
 
       {parsedData.length > 0 && (
         <div className="mt-4">
-          <h3 className="text-lg font-medium mb-2">{t("previewData") || "Preview Data"}</h3>
+          <h3 className="text-lg font-medium mb-2">{t("previewData")}</h3>
           <div className="border rounded-lg overflow-auto max-h-64">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("brand") || "Brand"}
+                    {t("brand")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("model") || "Model"}
+                    {t("model")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("series") || "Series"}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("imageUrl") || "Image URL"}
+                    {t("imageUrl")}
                   </th>
                 </tr>
               </thead>
@@ -334,14 +326,13 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
                   <tr key={index}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{row.brand}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{row.model}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.series || "-"}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm truncate max-w-xs">{row.image_url || "-"}</td>
                   </tr>
                 ))}
                 {parsedData.length > 5 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-4 text-sm text-center text-gray-500">
-                      {t("andMoreRows", { count: parsedData.length - 5 }) || `and ${parsedData.length - 5} more rows`}
+                    <td colSpan={3} className="px-6 py-4 text-sm text-center text-gray-500">
+                      {t("andMoreRows", { count: parsedData.length - 5 })}
                     </td>
                   </tr>
                 )}

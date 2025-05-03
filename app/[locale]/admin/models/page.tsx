@@ -5,7 +5,17 @@ import { useTranslations } from "next-intl"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,39 +26,27 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { Plus, Pencil, Trash, MoveVertical, MoreHorizontal, DollarSign, FileUp } from "lucide-react"
+import { Plus, Pencil, Trash, MoveVertical, MoreHorizontal, DollarSign } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { AddModelDialog } from "@/components/admin/add-model-dialog"
-import { Label } from "@/components/ui/label"
-import { BulkModelImport } from "@/components/admin/bulk-model-import"
 
 type Brand = {
   id: string
   name: string
 }
 
-type Series = {
-  id: string
-  name: string
-  brand_id: string
-}
-
 type Model = {
   id: string
   name: string
   brand_id: string
-  series_id: string | null
   image_url: string | null
   created_at: string
   position: number
   brands: {
     name: string
   }
-  series: {
-    name: string
-  } | null
 }
 
 export default function ModelsPage() {
@@ -57,61 +55,35 @@ export default function ModelsPage() {
   const { data: session } = useSession()
   const [models, setModels] = useState<Model[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
-  const [series, setSeries] = useState<Series[]>([])
   const [loading, setLoading] = useState(true)
+  const [editModel, setEditModel] = useState<Model | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [modelToDelete, setModelToDelete] = useState<Model | null>(null)
   const [isReorderMode, setIsReorderMode] = useState(false)
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>("")
-  const [selectedSeriesFilter, setSelectedSeriesFilter] = useState<string>("")
-  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false)
 
-  // Завантажуємо дані при монтуванні компонента
   useEffect(() => {
-    fetchModels()
-    fetchBrands()
-  }, [])
-
-  // Окремий ефект для фільтрації
-  useEffect(() => {
-    if (selectedBrandFilter || selectedSeriesFilter) {
-      fetchModels()
-    }
-  }, [selectedBrandFilter, selectedSeriesFilter])
-
-  // Завантажуємо серії при зміні бренду
-  useEffect(() => {
-    if (selectedBrandFilter) {
-      fetchSeries(selectedBrandFilter)
-    } else {
-      setSeries([])
-      setSelectedSeriesFilter("")
-    }
+    Promise.all([fetchModels(), fetchBrands()])
+      .then(() => setLoading(false))
+      .catch(() => setLoading(false))
   }, [selectedBrandFilter])
 
   async function fetchModels() {
     try {
-      let url = "/api/admin/models"
-      const params = new URLSearchParams()
-
-      if (selectedBrandFilter && selectedBrandFilter !== "_all") {
-        params.append("brand_id", selectedBrandFilter)
-      }
-
-      if (selectedSeriesFilter && selectedSeriesFilter !== "_all") {
-        params.append("series_id", selectedSeriesFilter)
-      }
-
-      if (params.toString()) {
-        url += `?${params.toString()}`
-      }
+      const url = selectedBrandFilter ? `/api/admin/models?brand_id=${selectedBrandFilter}` : "/api/admin/models"
 
       const response = await fetch(url)
       const data = await response.json()
       setModels(data)
-      setLoading(false)
     } catch (error) {
       console.error("Error fetching models:", error)
-      setLoading(false)
+      toast({
+        title: "Error",
+        description: "Failed to fetch models",
+        variant: "destructive",
+      })
     }
   }
 
@@ -122,16 +94,79 @@ export default function ModelsPage() {
       setBrands(data)
     } catch (error) {
       console.error("Error fetching brands:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch brands",
+        variant: "destructive",
+      })
     }
   }
 
-  async function fetchSeries(brandId: string) {
+  async function handleEditModel() {
+    if (!editModel) return
+
     try {
-      const response = await fetch(`/api/admin/series?brand_id=${brandId}`)
-      const data = await response.json()
-      setSeries(data)
+      const response = await fetch(`/api/admin/models/${editModel.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: editModel.name,
+          brandId: editModel.brand_id,
+          imageUrl: editModel.image_url,
+          userId: session?.user?.id,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update model")
+      }
+
+      await fetchModels()
+      setIsEditDialogOpen(false)
+
+      toast({
+        title: t("success"),
+        description: t("modelUpdatedSuccess"),
+      })
     } catch (error) {
-      console.error("Error fetching series:", error)
+      console.error("Error updating model:", error)
+      toast({
+        title: t("error"),
+        description: t("modelUpdatedError"),
+        variant: "destructive",
+      })
+    }
+  }
+
+  async function handleDeleteModel() {
+    if (!modelToDelete) return
+
+    try {
+      const response = await fetch(`/api/admin/models/${modelToDelete.id}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete model")
+      }
+
+      await fetchModels()
+      setIsDeleteDialogOpen(false)
+      setModelToDelete(null)
+
+      toast({
+        title: t("success"),
+        description: t("modelDeletedSuccess"),
+      })
+    } catch (error) {
+      console.error("Error deleting model:", error)
+      toast({
+        title: t("error"),
+        description: t("modelDeletedError"),
+        variant: "destructive",
+      })
     }
   }
 
@@ -180,35 +215,7 @@ export default function ModelsPage() {
         variant: "destructive",
       })
       // Revert to original order
-      fetchModels()
-    }
-  }
-
-  // Функція для видалення моделі
-  async function handleDeleteModel(modelId: string) {
-    try {
-      const response = await fetch(`/api/admin/models/${modelId}`, {
-        method: "DELETE",
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to delete model")
-      }
-
-      // Оновлюємо список моделей
-      fetchModels()
-
-      toast({
-        title: t("success"),
-        description: t("modelDeletedSuccess"),
-      })
-    } catch (error) {
-      console.error("Error deleting model:", error)
-      toast({
-        title: t("error"),
-        description: t("modelDeletedError"),
-        variant: "destructive",
-      })
+      await fetchModels()
     }
   }
 
@@ -220,10 +227,6 @@ export default function ModelsPage() {
           <p className="text-muted-foreground">{t("manageModels")}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsBulkImportOpen(!isBulkImportOpen)}>
-            <FileUp className="mr-2 h-4 w-4" />
-            {t("bulkImport") || "Bulk Import"}
-          </Button>
           <Button variant={isReorderMode ? "default" : "outline"} onClick={() => setIsReorderMode(!isReorderMode)}>
             <MoveVertical className="mr-2 h-4 w-4" />
             {isReorderMode ? t("doneReordering") : t("reorderModels")}
@@ -235,69 +238,25 @@ export default function ModelsPage() {
         </div>
       </div>
 
-      {isBulkImportOpen && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>{t("bulkImportModels") || "Bulk Import Models"}</CardTitle>
-            <CardDescription>
-              {t("bulkImportModelsDescription") ||
-                "Upload a CSV file to import multiple models at once. The file should contain columns for brand, model, and optionally image URL."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <BulkModelImport onSuccess={fetchModels} />
-          </CardContent>
-        </Card>
-      )}
-
       <Card>
         <CardHeader>
           <CardTitle>{t("models")}</CardTitle>
           <CardDescription>{t("modelsDescription")}</CardDescription>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <div>
-              <Label htmlFor="brand-filter">{t("filterByBrand")}</Label>
-              <Select value={selectedBrandFilter} onValueChange={setSelectedBrandFilter}>
-                <SelectTrigger id="brand-filter" className="mt-1">
-                  <SelectValue placeholder={t("allBrands")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_all">{t("allBrands")}</SelectItem>
-                  {brands.map((brand) => (
-                    <SelectItem key={brand.id} value={brand.id}>
-                      {brand.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="series-filter">{t("filterBySeries") || "Filter by Series"}</Label>
-              <Select
-                value={selectedSeriesFilter}
-                onValueChange={setSelectedSeriesFilter}
-                disabled={!selectedBrandFilter || series.length === 0}
-              >
-                <SelectTrigger id="series-filter" className="mt-1">
-                  <SelectValue placeholder={t("allSeries") || "All Series"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_all">{t("allSeries") || "All Series"}</SelectItem>
-                  {series.length > 0 ? (
-                    series.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="_no_series_available">
-                      {t("noSeriesAvailable") || "No series available for this brand"}
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="mt-4">
+            <Label htmlFor="brand-filter">{t("filterByBrand")}</Label>
+            <Select value={selectedBrandFilter} onValueChange={setSelectedBrandFilter}>
+              <SelectTrigger id="brand-filter" className="mt-1">
+                <SelectValue placeholder={t("allBrands")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allBrands")}</SelectItem>
+                {brands.map((brand) => (
+                  <SelectItem key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>
@@ -313,7 +272,6 @@ export default function ModelsPage() {
                     {isReorderMode && <TableHead className="w-[50px]"></TableHead>}
                     <TableHead>{t("name")}</TableHead>
                     <TableHead>{t("brand")}</TableHead>
-                    <TableHead>{t("series") || "Series"}</TableHead>
                     <TableHead>{t("image")}</TableHead>
                     <TableHead>{t("createdAt")}</TableHead>
                     <TableHead className="text-right">{t("actions")}</TableHead>
@@ -324,7 +282,7 @@ export default function ModelsPage() {
                     <TableBody {...provided.droppableProps} ref={provided.innerRef}>
                       {models.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={isReorderMode ? 7 : 6} className="text-center">
+                          <TableCell colSpan={isReorderMode ? 6 : 5} className="text-center">
                             {t("noModels")}
                           </TableCell>
                         </TableRow>
@@ -349,7 +307,6 @@ export default function ModelsPage() {
                                   </Link>
                                 </TableCell>
                                 <TableCell>{model.brands?.name}</TableCell>
-                                <TableCell>{model.series?.name || t("noSeries") || "No Series"}</TableCell>
                                 <TableCell>
                                   {model.image_url ? (
                                     <div className="h-10 w-10 overflow-hidden rounded-md">
@@ -377,11 +334,14 @@ export default function ModelsPage() {
                                     <DropdownMenuContent align="end">
                                       <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                                       <DropdownMenuSeparator />
-                                      <DropdownMenuItem asChild>
-                                        <Link href={`/admin/models/${model.id}/edit`}>
-                                          <Pencil className="mr-2 h-4 w-4" />
-                                          {t("edit")}
-                                        </Link>
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setEditModel(model)
+                                          setIsEditDialogOpen(true)
+                                        }}
+                                      >
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        {t("edit")}
                                       </DropdownMenuItem>
                                       <DropdownMenuItem asChild>
                                         <Link href={`/admin/models/${model.id}/services`}>
@@ -393,9 +353,8 @@ export default function ModelsPage() {
                                       <DropdownMenuItem
                                         className="text-destructive"
                                         onClick={() => {
-                                          if (window.confirm(t("deleteModelConfirmation", { model: model.name }))) {
-                                            handleDeleteModel(model.id)
-                                          }
+                                          setModelToDelete(model)
+                                          setIsDeleteDialogOpen(true)
                                         }}
                                       >
                                         <Trash className="mr-2 h-4 w-4" />
@@ -421,6 +380,83 @@ export default function ModelsPage() {
 
       {/* Add Model Dialog */}
       <AddModelDialog isOpen={isAddDialogOpen} onClose={() => setIsAddDialogOpen(false)} onModelAdded={fetchModels} />
+
+      {/* Edit Model Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("editModel")}</DialogTitle>
+            <DialogDescription>{t("editModelDescription")}</DialogDescription>
+          </DialogHeader>
+          {editModel && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-name">{t("modelName")}</Label>
+                <Input
+                  id="edit-name"
+                  value={editModel.name}
+                  onChange={(e) => setEditModel({ ...editModel, name: e.target.value })}
+                  placeholder={t("modelNamePlaceholder")}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-brand">{t("brand")}</Label>
+                <Select
+                  value={editModel.brand_id}
+                  onValueChange={(value) => setEditModel({ ...editModel, brand_id: value })}
+                >
+                  <SelectTrigger id="edit-brand">
+                    <SelectValue placeholder={t("selectBrand")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-image">{t("imageUrl")}</Label>
+                <Input
+                  id="edit-image"
+                  value={editModel.image_url || ""}
+                  onChange={(e) => setEditModel({ ...editModel, image_url: e.target.value })}
+                  placeholder={t("imageUrlPlaceholder")}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button onClick={handleEditModel}>{t("save")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Model Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("deleteModel")}</DialogTitle>
+            <DialogDescription>{t("deleteModelDescription")}</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p>{t("deleteModelConfirmation", { model: modelToDelete?.name })}</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteModel}>
+              {t("confirmDelete")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
