@@ -157,12 +157,17 @@ export function SeriesList({ brandId }: SeriesListProps) {
 
       await fetchSeries()
       setNewSeries({ name: "", brand_id: selectedBrandFilter || "" })
+
+      // Close the dialog first, then show toast
       setIsAddDialogOpen(false)
 
-      toast({
-        title: t("success"),
-        description: t("seriesAddedSuccess") || "Series added successfully",
-      })
+      // Small delay to ensure dialog is closed before showing toast
+      setTimeout(() => {
+        toast({
+          title: t("success"),
+          description: t("seriesAddedSuccess") || "Series added successfully",
+        })
+      }, 100)
     } catch (error) {
       console.error("Error adding series:", error)
       toast({
@@ -206,13 +211,18 @@ export function SeriesList({ brandId }: SeriesListProps) {
       }
 
       await fetchSeries()
+
+      // Close the dialog first, then show toast
       setIsEditDialogOpen(false)
       setEditSeries(null)
 
-      toast({
-        title: t("success"),
-        description: t("seriesUpdatedSuccess") || "Series updated successfully",
-      })
+      // Small delay to ensure dialog is closed before showing toast
+      setTimeout(() => {
+        toast({
+          title: t("success"),
+          description: t("seriesUpdatedSuccess") || "Series updated successfully",
+        })
+      }, 100)
     } catch (error) {
       console.error("Error updating series:", error)
       toast({
@@ -240,13 +250,18 @@ export function SeriesList({ brandId }: SeriesListProps) {
       }
 
       await fetchSeries()
+
+      // Close the dialog first, then show toast
       setIsDeleteDialogOpen(false)
       setSeriesToDelete(null)
 
-      toast({
-        title: t("success"),
-        description: t("seriesDeletedSuccess") || "Series deleted successfully",
-      })
+      // Small delay to ensure dialog is closed before showing toast
+      setTimeout(() => {
+        toast({
+          title: t("success"),
+          description: t("seriesDeletedSuccess") || "Series deleted successfully",
+        })
+      }, 100)
     } catch (error) {
       console.error("Error deleting series:", error)
       toast({

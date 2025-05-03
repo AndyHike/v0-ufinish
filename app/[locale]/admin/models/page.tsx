@@ -448,8 +448,15 @@ export default function ModelsPage() {
       <AddModelDialog isOpen={isAddDialogOpen} onClose={() => setIsAddDialogOpen(false)} onModelAdded={fetchModels} />
 
       {/* Edit Model Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={(open) => !isEditLoading && setIsEditDialogOpen(open)}>
-        <DialogContent>
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          if (!isEditLoading) {
+            setIsEditDialogOpen(open)
+          }
+        }}
+      >
+        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} onCloseAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>{t("editModel")}</DialogTitle>
             <DialogDescription>{t("editModelDescription")}</DialogDescription>
@@ -532,8 +539,15 @@ export default function ModelsPage() {
       </Dialog>
 
       {/* Delete Model Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => !isDeleteLoading && setIsDeleteDialogOpen(open)}>
-        <DialogContent>
+      <Dialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!isDeleteLoading) {
+            setIsDeleteDialogOpen(open)
+          }
+        }}
+      >
+        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} onCloseAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>{t("deleteModel")}</DialogTitle>
             <DialogDescription>{t("deleteModelDescription")}</DialogDescription>
