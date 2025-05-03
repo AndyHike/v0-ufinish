@@ -41,29 +41,25 @@ const DialogContent = React.forwardRef<
         "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
         className,
       )}
-      onOpenAutoFocus={(e) => {
-        // Дозволяємо автофокус при відкритті
-        if (props.onOpenAutoFocus) {
-          props.onOpenAutoFocus(e)
-        }
-      }}
+      // Ключове виправлення: завжди запобігаємо автофокусу при закритті
       onCloseAutoFocus={(e) => {
-        // Запобігаємо автофокусу при закритті
         e.preventDefault()
         if (props.onCloseAutoFocus) {
           props.onCloseAutoFocus(e)
         }
       }}
-      onEscapeKeyDown={(e) => {
-        // Обробка клавіші Escape
-        if (props.onEscapeKeyDown) {
-          props.onEscapeKeyDown(e)
+      // Додаємо обробник для стану діалогу
+      onInteractOutside={(e) => {
+        // Запобігаємо взаємодії з елементами поза діалогом, коли діалог відкритий
+        if (props.onInteractOutside) {
+          props.onInteractOutside(e)
         }
       }}
-      onPointerDownOutside={(e) => {
-        // Обробка кліку поза діалогом
-        if (props.onPointerDownOutside) {
-          props.onPointerDownOutside(e)
+      // Додаємо обробник для клавіші Escape
+      onEscapeKeyDown={(e) => {
+        // Переконуємося, що фокус правильно переміщується при закритті діалогу клавішею Escape
+        if (props.onEscapeKeyDown) {
+          props.onEscapeKeyDown(e)
         }
       }}
       {...props}
