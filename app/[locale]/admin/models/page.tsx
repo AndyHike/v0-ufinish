@@ -100,7 +100,7 @@ export default function ModelsPage() {
         params.append("brand_id", selectedBrandFilter)
       }
 
-      if (selectedSeriesFilter && selectedSeriesFilter !== "_none") {
+      if (selectedSeriesFilter && selectedSeriesFilter !== "all") {
         params.append("series_id", selectedSeriesFilter)
       }
 
@@ -300,7 +300,7 @@ export default function ModelsPage() {
                   <SelectValue placeholder={t("allBrands")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t("allBrands")}</SelectItem>
+                  <SelectItem value="all">{t("allBrands")}</SelectItem>
                   {brands.map((brand) => (
                     <SelectItem key={brand.id} value={brand.id}>
                       {brand.name}
@@ -311,17 +311,17 @@ export default function ModelsPage() {
             </div>
 
             <div>
-              <Label htmlFor="series-filter">{t("filterBySeries") || "Filter by Series"}</Label>
+              <Label htmlFor="series-filter">{t("filterBySeries")}</Label>
               <Select
                 value={selectedSeriesFilter}
                 onValueChange={setSelectedSeriesFilter}
                 disabled={!selectedBrandFilter || series.length === 0}
               >
                 <SelectTrigger id="series-filter" className="mt-1">
-                  <SelectValue placeholder={t("allSeries") || "All Series"} />
+                  <SelectValue placeholder={t("allSeries")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t("allSeries") || "All Series"}</SelectItem>
+                  <SelectItem value="all">{t("allSeries")}</SelectItem>
                   {series.map((item) => (
                     <SelectItem key={item.id} value={item.id}>
                       {item.name}
@@ -345,7 +345,7 @@ export default function ModelsPage() {
                     {isReorderMode && <TableHead className="w-[50px]"></TableHead>}
                     <TableHead>{t("name")}</TableHead>
                     <TableHead>{t("brand")}</TableHead>
-                    <TableHead>{t("series") || "Series"}</TableHead>
+                    <TableHead>{t("series")}</TableHead>
                     <TableHead>{t("image")}</TableHead>
                     <TableHead>{t("createdAt")}</TableHead>
                     <TableHead className="text-right">{t("actions")}</TableHead>
@@ -381,7 +381,7 @@ export default function ModelsPage() {
                                   </Link>
                                 </TableCell>
                                 <TableCell>{model.brands?.name}</TableCell>
-                                <TableCell>{model.series?.name || t("noSeries") || "No Series"}</TableCell>
+                                <TableCell>{model.series?.name || t("noSeries")}</TableCell>
                                 <TableCell>
                                   {model.image_url ? (
                                     <div className="h-10 w-10 overflow-hidden rounded-md">
@@ -496,16 +496,16 @@ export default function ModelsPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-series">{t("series") || "Series"}</Label>
+                <Label htmlFor="edit-series">{t("series")}</Label>
                 <Select
-                  value={editModel.series_id || ""}
-                  onValueChange={(value) => setEditModel({ ...editModel, series_id: value || null })}
+                  value={editModel.series_id || "_none"}
+                  onValueChange={(value) => setEditModel({ ...editModel, series_id: value === "_none" ? null : value })}
                 >
                   <SelectTrigger id="edit-series">
-                    <SelectValue placeholder={t("selectSeries") || "Select Series"} />
+                    <SelectValue placeholder={t("selectSeries")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="no_series">{t("noSeries") || "No Series"}</SelectItem>
+                    <SelectItem value="_none">{t("noSeries")}</SelectItem>
                     {series.map((item) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.name}
