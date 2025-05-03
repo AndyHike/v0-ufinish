@@ -7,11 +7,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const id = params.id
     const supabase = createClient()
 
-    const { data, error } = await supabase
-      .from("models")
-      .select("*, product_lines(name, brand_id, brands(name))")
-      .eq("id", id)
-      .single()
+    const { data, error } = await supabase.from("models").select("*, brands(name)").eq("id", id).single()
 
     if (error) throw error
 
@@ -32,7 +28,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       .from("models")
       .update({
         name: body.name,
-        product_line_id: body.productLineId,
+        brand_id: body.brandId,
         image_url: body.imageUrl,
       })
       .eq("id", id)

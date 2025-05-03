@@ -65,6 +65,7 @@
     "next-intl": "latest",
     "crypto": "latest",
     "@supabase/auth-helpers-nextjs": "latest",
+    "@hello-pangea/dnd": "latest",
     "@formatjs/intl-localematcher": "latest",
     "negotiator": "latest",
     "papaparse": "latest",
@@ -72,8 +73,7 @@
     "uuid": "latest",
     "libphonenumber-js": "latest",
     "react-phone-number-input": "latest",
-    "cookie": "latest",
-    "@hello-pangea/dnd": "latest"
+    "cookie": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

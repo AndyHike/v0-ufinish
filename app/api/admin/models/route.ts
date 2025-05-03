@@ -6,16 +6,12 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const brandId = searchParams.get("brand_id")
-    const productLineId = searchParams.get("product_line_id")
 
     const supabase = createClient()
-    let query = supabase.from("models").select("*, product_lines(name, brand_id, brands(name))")
+    let query = supabase.from("models").select("*, brands(name)")
 
-    if (productLineId) {
-      query = query.eq("product_line_id", productLineId)
-    } else if (brandId) {
-      // If only brand_id is provided, get all models from product lines that belong to this brand
-      query = query.eq("product_lines.brand_id", brandId)
+    if (brandId) {
+      query = query.eq("brand_id", brandId)
     }
 
     const { data, error } = await query.order("position", { ascending: true, nullsLast: true })
@@ -48,7 +44,7 @@ export async function POST(request: Request) {
       .from("models")
       .insert({
         name: body.name,
-        product_line_id: body.productLineId,
+        brand_id: body.brandId,
         image_url: body.imageUrl || null,
         position: nextPosition,
       })

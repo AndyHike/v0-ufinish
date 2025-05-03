@@ -37,25 +37,15 @@ type Brand = {
   name: string
 }
 
-type ProductLine = {
-  id: string
-  name: string
-  brand_id: string
-}
-
 type Model = {
   id: string
   name: string
-  product_line_id: string
+  brand_id: string
   image_url: string | null
   created_at: string
   position: number
-  product_lines: {
+  brands: {
     name: string
-    brand_id: string
-    brands: {
-      name: string
-    }
   }
 }
 
@@ -65,7 +55,6 @@ export default function ModelsPage() {
   const { data: session } = useSession()
   const [models, setModels] = useState<Model[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
-  const [productLines, setProductLines] = useState<ProductLine[]>([])
   const [loading, setLoading] = useState(true)
   const [editModel, setEditModel] = useState<Model | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -74,32 +63,16 @@ export default function ModelsPage() {
   const [modelToDelete, setModelToDelete] = useState<Model | null>(null)
   const [isReorderMode, setIsReorderMode] = useState(false)
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>("")
-  const [selectedProductLineFilter, setSelectedProductLineFilter] = useState<string>("")
 
   useEffect(() => {
     Promise.all([fetchModels(), fetchBrands()])
       .then(() => setLoading(false))
       .catch(() => setLoading(false))
-  }, [selectedBrandFilter, selectedProductLineFilter])
-
-  useEffect(() => {
-    if (selectedBrandFilter) {
-      fetchProductLinesByBrand(selectedBrandFilter)
-    } else {
-      setProductLines([])
-      setSelectedProductLineFilter("")
-    }
   }, [selectedBrandFilter])
 
   async function fetchModels() {
     try {
-      let url = "/api/admin/models"
-
-      if (selectedProductLineFilter) {
-        url = `/api/admin/models?product_line_id=${selectedProductLineFilter}`
-      } else if (selectedBrandFilter) {
-        url = `/api/admin/models?brand_id=${selectedBrandFilter}`
-      }
+      const url = selectedBrandFilter ? `/api/admin/models?brand_id=${selectedBrandFilter}` : "/api/admin/models"
 
       const response = await fetch(url)
       const data = await response.json()
@@ -129,21 +102,6 @@ export default function ModelsPage() {
     }
   }
 
-  async function fetchProductLinesByBrand(brandId: string) {
-    try {
-      const response = await fetch(`/api/admin/product-lines?brand_id=${brandId}`)
-      const data = await response.json()
-      setProductLines(data)
-    } catch (error) {
-      console.error("Error fetching product lines:", error)
-      toast({
-        title: "Error",
-        description: "Failed to fetch product lines",
-        variant: "destructive",
-      })
-    }
-  }
-
   async function handleEditModel() {
     if (!editModel) return
 
@@ -155,7 +113,7 @@ export default function ModelsPage() {
         },
         body: JSON.stringify({
           name: editModel.name,
-          productLineId: editModel.product_line_id,
+          brandId: editModel.brand_id,
           imageUrl: editModel.image_url,
           userId: session?.user?.id,
         }),
@@ -284,49 +242,21 @@ export default function ModelsPage() {
         <CardHeader>
           <CardTitle>{t("models")}</CardTitle>
           <CardDescription>{t("modelsDescription")}</CardDescription>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <div>
-              <Label htmlFor="brand-filter">{t("filterByBrand")}</Label>
-              <Select
-                value={selectedBrandFilter}
-                onValueChange={(value) => {
-                  setSelectedBrandFilter(value)
-                  setSelectedProductLineFilter("")
-                }}
-              >
-                <SelectTrigger id="brand-filter" className="mt-1">
-                  <SelectValue placeholder={t("allBrands")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("allBrands")}</SelectItem>
-                  {brands.map((brand) => (
-                    <SelectItem key={brand.id} value={brand.id}>
-                      {brand.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="product-line-filter">{t("filterByProductLine") || "Filter by Product Line"}</Label>
-              <Select
-                value={selectedProductLineFilter}
-                onValueChange={setSelectedProductLineFilter}
-                disabled={!selectedBrandFilter || productLines.length === 0}
-              >
-                <SelectTrigger id="product-line-filter" className="mt-1">
-                  <SelectValue placeholder={t("allProductLines") || "All Product Lines"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("allProductLines") || "All Product Lines"}</SelectItem>
-                  {productLines.map((line) => (
-                    <SelectItem key={line.id} value={line.id}>
-                      {line.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="mt-4">
+            <Label htmlFor="brand-filter">{t("filterByBrand")}</Label>
+            <Select value={selectedBrandFilter} onValueChange={setSelectedBrandFilter}>
+              <SelectTrigger id="brand-filter" className="mt-1">
+                <SelectValue placeholder={t("allBrands")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allBrands")}</SelectItem>
+                {brands.map((brand) => (
+                  <SelectItem key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>
@@ -342,7 +272,6 @@ export default function ModelsPage() {
                     {isReorderMode && <TableHead className="w-[50px]"></TableHead>}
                     <TableHead>{t("name")}</TableHead>
                     <TableHead>{t("brand")}</TableHead>
-                    <TableHead>{t("productLine") || "Product Line"}</TableHead>
                     <TableHead>{t("image")}</TableHead>
                     <TableHead>{t("createdAt")}</TableHead>
                     <TableHead className="text-right">{t("actions")}</TableHead>
@@ -353,7 +282,7 @@ export default function ModelsPage() {
                     <TableBody {...provided.droppableProps} ref={provided.innerRef}>
                       {models.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={isReorderMode ? 7 : 6} className="text-center">
+                          <TableCell colSpan={isReorderMode ? 6 : 5} className="text-center">
                             {t("noModels")}
                           </TableCell>
                         </TableRow>
@@ -377,8 +306,7 @@ export default function ModelsPage() {
                                     {model.name}
                                   </Link>
                                 </TableCell>
-                                <TableCell>{model.product_lines?.brands?.name}</TableCell>
-                                <TableCell>{model.product_lines?.name}</TableCell>
+                                <TableCell>{model.brands?.name}</TableCell>
                                 <TableCell>
                                   {model.image_url ? (
                                     <div className="h-10 w-10 overflow-hidden rounded-md">
@@ -473,24 +401,21 @@ export default function ModelsPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-brand">{t("brand")}</Label>
-                <Input
-                  id="edit-brand"
-                  value={editModel.product_lines?.brands?.name || ""}
-                  disabled={true}
-                  className="bg-muted"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-product-line">{t("productLine") || "Product Line"}</Label>
-                <Input
-                  id="edit-product-line"
-                  value={editModel.product_lines?.name || ""}
-                  disabled={true}
-                  className="bg-muted"
-                />
-                <p className="text-sm text-muted-foreground mt-1">
-                  {t("productLineCannotBeChanged") || "Product line cannot be changed after creation"}
-                </p>
+                <Select
+                  value={editModel.brand_id}
+                  onValueChange={(value) => setEditModel({ ...editModel, brand_id: value })}
+                >
+                  <SelectTrigger id="edit-brand">
+                    <SelectValue placeholder={t("selectBrand")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-image">{t("imageUrl")}</Label>
