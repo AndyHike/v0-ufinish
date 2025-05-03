@@ -6,16 +6,12 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const brandId = searchParams.get("brand_id")
-    const productLineId = searchParams.get("product_line_id")
 
     const supabase = createClient()
-    let query = supabase.from("models").select("*, product_lines(name, brand_id, brands(name))")
+    let query = supabase.from("product_lines").select("*, brands(name)")
 
-    if (productLineId) {
-      query = query.eq("product_line_id", productLineId)
-    } else if (brandId) {
-      // If only brand_id is provided, get all models from product lines that belong to this brand
-      query = query.eq("product_lines.brand_id", brandId)
+    if (brandId) {
+      query = query.eq("brand_id", brandId)
     }
 
     const { data, error } = await query.order("position", { ascending: true, nullsLast: true })
@@ -24,8 +20,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error("Error fetching models:", error)
-    return NextResponse.json({ error: "Failed to fetch models" }, { status: 500 })
+    console.error("Error fetching product lines:", error)
+    return NextResponse.json({ error: "Failed to fetch product lines" }, { status: 500 })
   }
 }
 
@@ -36,7 +32,7 @@ export async function POST(request: Request) {
 
     // Get the highest position value
     const { data: positionData } = await supabase
-      .from("models")
+      .from("product_lines")
       .select("position")
       .order("position", { ascending: false })
       .limit(1)
@@ -45,11 +41,10 @@ export async function POST(request: Request) {
       positionData && positionData.length > 0 && positionData[0].position !== null ? positionData[0].position + 1 : 0
 
     const { data, error } = await supabase
-      .from("models")
+      .from("product_lines")
       .insert({
         name: body.name,
-        product_line_id: body.productLineId,
-        image_url: body.imageUrl || null,
+        brand_id: body.brandId,
         position: nextPosition,
       })
       .select()
@@ -60,7 +55,7 @@ export async function POST(request: Request) {
     // Log activity
     await logActivity({
       entityId: data.id,
-      entityType: "model",
+      entityType: "product_line",
       actionType: "create",
       userId: body.userId || null,
       details: { name: data.name },
@@ -68,7 +63,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error("Error creating model:", error)
-    return NextResponse.json({ error: "Failed to create model" }, { status: 500 })
+    console.error("Error creating product line:", error)
+    return NextResponse.json({ error: "Failed to create product line" }, { status: 500 })
   }
 }

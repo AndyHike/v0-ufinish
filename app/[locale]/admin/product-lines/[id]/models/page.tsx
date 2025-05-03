@@ -3,10 +3,9 @@
 import { useState, useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { useSession } from "next-auth/react"
+import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Dialog,
@@ -24,23 +23,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import { Plus, Pencil, Trash, MoveVertical, MoreHorizontal, DollarSign } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { AddModelDialog } from "@/components/admin/add-model-dialog"
-
-type Brand = {
-  id: string
-  name: string
-}
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 type ProductLine = {
   id: string
   name: string
   brand_id: string
+  brands: {
+    name: string
+  }
 }
 
 type Model = {
@@ -59,13 +57,15 @@ type Model = {
   }
 }
 
-export default function ModelsPage() {
+export default function ProductLineModelsPage() {
   const t = useTranslations("Admin")
   const { toast } = useToast()
   const { data: session } = useSession()
+  const params = useParams()
+  const productLineId = params.id as string
+
   const [models, setModels] = useState<Model[]>([])
-  const [brands, setBrands] = useState<Brand[]>([])
-  const [productLines, setProductLines] = useState<ProductLine[]>([])
+  const [productLine, setProductLine] = useState<ProductLine | null>(null)
   const [loading, setLoading] = useState(true)
   const [editModel, setEditModel] = useState<Model | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -73,35 +73,16 @@ export default function ModelsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [modelToDelete, setModelToDelete] = useState<Model | null>(null)
   const [isReorderMode, setIsReorderMode] = useState(false)
-  const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>("")
-  const [selectedProductLineFilter, setSelectedProductLineFilter] = useState<string>("")
 
   useEffect(() => {
-    Promise.all([fetchModels(), fetchBrands()])
+    Promise.all([fetchModels(), fetchProductLine()])
       .then(() => setLoading(false))
       .catch(() => setLoading(false))
-  }, [selectedBrandFilter, selectedProductLineFilter])
-
-  useEffect(() => {
-    if (selectedBrandFilter) {
-      fetchProductLinesByBrand(selectedBrandFilter)
-    } else {
-      setProductLines([])
-      setSelectedProductLineFilter("")
-    }
-  }, [selectedBrandFilter])
+  }, [productLineId])
 
   async function fetchModels() {
     try {
-      let url = "/api/admin/models"
-
-      if (selectedProductLineFilter) {
-        url = `/api/admin/models?product_line_id=${selectedProductLineFilter}`
-      } else if (selectedBrandFilter) {
-        url = `/api/admin/models?brand_id=${selectedBrandFilter}`
-      }
-
-      const response = await fetch(url)
+      const response = await fetch(`/api/admin/models?product_line_id=${productLineId}`)
       const data = await response.json()
       setModels(data)
     } catch (error) {
@@ -114,31 +95,16 @@ export default function ModelsPage() {
     }
   }
 
-  async function fetchBrands() {
+  async function fetchProductLine() {
     try {
-      const response = await fetch("/api/admin/brands")
+      const response = await fetch(`/api/admin/product-lines/${productLineId}`)
       const data = await response.json()
-      setBrands(data)
+      setProductLine(data)
     } catch (error) {
-      console.error("Error fetching brands:", error)
+      console.error("Error fetching product line:", error)
       toast({
         title: "Error",
-        description: "Failed to fetch brands",
-        variant: "destructive",
-      })
-    }
-  }
-
-  async function fetchProductLinesByBrand(brandId: string) {
-    try {
-      const response = await fetch(`/api/admin/product-lines?brand_id=${brandId}`)
-      const data = await response.json()
-      setProductLines(data)
-    } catch (error) {
-      console.error("Error fetching product lines:", error)
-      toast({
-        title: "Error",
-        description: "Failed to fetch product lines",
+        description: "Failed to fetch product line details",
         variant: "destructive",
       })
     }
@@ -265,8 +231,18 @@ export default function ModelsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t("models")}</h1>
-          <p className="text-muted-foreground">{t("manageModels")}</p>
+          <div className="flex items-center gap-2">
+            <Link href="/admin/product-lines" className="text-muted-foreground hover:text-foreground">
+              {t("productLines") || "Product Lines"}
+            </Link>
+            <span className="text-muted-foreground">/</span>
+            <span className="font-medium">{productLine?.name}</span>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight mt-2">{t("models")}</h1>
+          <p className="text-muted-foreground">
+            {t("manageModelsForProductLine", { productLine: productLine?.name }) ||
+              `Manage models for ${productLine?.name} product line`}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant={isReorderMode ? "default" : "outline"} onClick={() => setIsReorderMode(!isReorderMode)}>
@@ -282,52 +258,13 @@ export default function ModelsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("models")}</CardTitle>
-          <CardDescription>{t("modelsDescription")}</CardDescription>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <div>
-              <Label htmlFor="brand-filter">{t("filterByBrand")}</Label>
-              <Select
-                value={selectedBrandFilter}
-                onValueChange={(value) => {
-                  setSelectedBrandFilter(value)
-                  setSelectedProductLineFilter("")
-                }}
-              >
-                <SelectTrigger id="brand-filter" className="mt-1">
-                  <SelectValue placeholder={t("allBrands")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("allBrands")}</SelectItem>
-                  {brands.map((brand) => (
-                    <SelectItem key={brand.id} value={brand.id}>
-                      {brand.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="product-line-filter">{t("filterByProductLine") || "Filter by Product Line"}</Label>
-              <Select
-                value={selectedProductLineFilter}
-                onValueChange={setSelectedProductLineFilter}
-                disabled={!selectedBrandFilter || productLines.length === 0}
-              >
-                <SelectTrigger id="product-line-filter" className="mt-1">
-                  <SelectValue placeholder={t("allProductLines") || "All Product Lines"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("allProductLines") || "All Product Lines"}</SelectItem>
-                  {productLines.map((line) => (
-                    <SelectItem key={line.id} value={line.id}>
-                      {line.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <CardTitle>
+            {t("modelsForProductLine", { productLine: productLine?.name }) || `Models for ${productLine?.name}`}
+          </CardTitle>
+          <CardDescription>
+            {t("modelsForBrandDescription", { brand: productLine?.brands?.name }) ||
+              `Models for ${productLine?.brands?.name} ${productLine?.name} product line`}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -341,8 +278,6 @@ export default function ModelsPage() {
                   <TableRow>
                     {isReorderMode && <TableHead className="w-[50px]"></TableHead>}
                     <TableHead>{t("name")}</TableHead>
-                    <TableHead>{t("brand")}</TableHead>
-                    <TableHead>{t("productLine") || "Product Line"}</TableHead>
                     <TableHead>{t("image")}</TableHead>
                     <TableHead>{t("createdAt")}</TableHead>
                     <TableHead className="text-right">{t("actions")}</TableHead>
@@ -353,7 +288,7 @@ export default function ModelsPage() {
                     <TableBody {...provided.droppableProps} ref={provided.innerRef}>
                       {models.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={isReorderMode ? 7 : 6} className="text-center">
+                          <TableCell colSpan={isReorderMode ? 5 : 4} className="text-center">
                             {t("noModels")}
                           </TableCell>
                         </TableRow>
@@ -377,8 +312,6 @@ export default function ModelsPage() {
                                     {model.name}
                                   </Link>
                                 </TableCell>
-                                <TableCell>{model.product_lines?.brands?.name}</TableCell>
-                                <TableCell>{model.product_lines?.name}</TableCell>
                                 <TableCell>
                                   {model.image_url ? (
                                     <div className="h-10 w-10 overflow-hidden rounded-md">
@@ -451,7 +384,12 @@ export default function ModelsPage() {
       </Card>
 
       {/* Add Model Dialog */}
-      <AddModelDialog isOpen={isAddDialogOpen} onClose={() => setIsAddDialogOpen(false)} onModelAdded={fetchModels} />
+      <AddModelDialog
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onModelAdded={fetchModels}
+        productLineId={productLineId}
+      />
 
       {/* Edit Model Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -472,22 +410,8 @@ export default function ModelsPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-brand">{t("brand")}</Label>
-                <Input
-                  id="edit-brand"
-                  value={editModel.product_lines?.brands?.name || ""}
-                  disabled={true}
-                  className="bg-muted"
-                />
-              </div>
-              <div className="grid gap-2">
                 <Label htmlFor="edit-product-line">{t("productLine") || "Product Line"}</Label>
-                <Input
-                  id="edit-product-line"
-                  value={editModel.product_lines?.name || ""}
-                  disabled={true}
-                  className="bg-muted"
-                />
+                <Input id="edit-product-line" value={productLine?.name || ""} disabled={true} className="bg-muted" />
                 <p className="text-sm text-muted-foreground mt-1">
                   {t("productLineCannotBeChanged") || "Product line cannot be changed after creation"}
                 </p>

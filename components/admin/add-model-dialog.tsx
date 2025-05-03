@@ -23,25 +23,51 @@ type Brand = {
   name: string
 }
 
+type ProductLine = {
+  id: string
+  name: string
+  brand_id: string
+}
+
 interface AddModelDialogProps {
   isOpen: boolean
   onClose: () => void
   onModelAdded: () => void
+  productLineId?: string
 }
 
-export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialogProps) {
+export function AddModelDialog({ isOpen, onClose, onModelAdded, productLineId }: AddModelDialogProps) {
   const t = useTranslations("Admin")
   const { toast } = useToast()
   const { data: session } = useSession()
   const [brands, setBrands] = useState<Brand[]>([])
+  const [productLines, setProductLines] = useState<ProductLine[]>([])
   const [loading, setLoading] = useState(false)
-  const [newModel, setNewModel] = useState({ name: "", brandId: "", imageUrl: "" })
+  const [newModel, setNewModel] = useState({
+    name: "",
+    brandId: "",
+    productLineId: productLineId || "",
+    imageUrl: "",
+  })
+  const [selectedBrandId, setSelectedBrandId] = useState<string>("")
 
   useEffect(() => {
     if (isOpen) {
       fetchBrands()
+      if (productLineId) {
+        setNewModel((prev) => ({ ...prev, productLineId }))
+        fetchProductLineDetails(productLineId)
+      }
     }
-  }, [isOpen])
+  }, [isOpen, productLineId])
+
+  useEffect(() => {
+    if (selectedBrandId) {
+      fetchProductLinesByBrand(selectedBrandId)
+    } else {
+      setProductLines([])
+    }
+  }, [selectedBrandId])
 
   async function fetchBrands() {
     try {
@@ -58,11 +84,37 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
     }
   }
 
+  async function fetchProductLinesByBrand(brandId: string) {
+    try {
+      const response = await fetch(`/api/admin/product-lines?brand_id=${brandId}`)
+      const data = await response.json()
+      setProductLines(data)
+    } catch (error) {
+      console.error("Error fetching product lines:", error)
+      toast({
+        title: t("error"),
+        description: t("errorFetchingProductLines") || "Failed to fetch product lines",
+        variant: "destructive",
+      })
+    }
+  }
+
+  async function fetchProductLineDetails(productLineId: string) {
+    try {
+      const response = await fetch(`/api/admin/product-lines/${productLineId}`)
+      const data = await response.json()
+      setSelectedBrandId(data.brand_id)
+      setNewModel((prev) => ({ ...prev, brandId: data.brand_id }))
+    } catch (error) {
+      console.error("Error fetching product line details:", error)
+    }
+  }
+
   async function handleAddModel() {
-    if (!newModel.name || !newModel.brandId) {
+    if (!newModel.name || !newModel.productLineId) {
       toast({
         title: t("validationError"),
-        description: t("nameAndBrandRequired"),
+        description: t("nameAndProductLineRequired") || "Name and product line are required",
         variant: "destructive",
       })
       return
@@ -86,7 +138,7 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
         throw new Error("Failed to add model")
       }
 
-      setNewModel({ name: "", brandId: "", imageUrl: "" })
+      setNewModel({ name: "", brandId: "", productLineId: productLineId || "", imageUrl: "" })
       onModelAdded()
       onClose()
 
@@ -104,6 +156,11 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleBrandChange = (brandId: string) => {
+    setSelectedBrandId(brandId)
+    setNewModel((prev) => ({ ...prev, brandId, productLineId: "" }))
   }
 
   return (
@@ -132,7 +189,7 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
           </div>
           <div className="grid gap-2">
             <Label htmlFor="brand">{t("brand")}</Label>
-            <Select value={newModel.brandId} onValueChange={(value) => setNewModel({ ...newModel, brandId: value })}>
+            <Select value={selectedBrandId} onValueChange={handleBrandChange} disabled={!!productLineId}>
               <SelectTrigger id="brand">
                 <SelectValue placeholder={t("selectBrand")} />
               </SelectTrigger>
@@ -140,6 +197,25 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
                 {brands.map((brand) => (
                   <SelectItem key={brand.id} value={brand.id}>
                     {brand.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="product-line">{t("productLine") || "Product Line"}</Label>
+            <Select
+              value={newModel.productLineId}
+              onValueChange={(value) => setNewModel({ ...newModel, productLineId: value })}
+              disabled={!selectedBrandId || !!productLineId}
+            >
+              <SelectTrigger id="product-line">
+                <SelectValue placeholder={t("selectProductLine") || "Select product line"} />
+              </SelectTrigger>
+              <SelectContent>
+                {productLines.map((line) => (
+                  <SelectItem key={line.id} value={line.id}>
+                    {line.name}
                   </SelectItem>
                 ))}
               </SelectContent>
