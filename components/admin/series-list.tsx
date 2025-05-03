@@ -423,9 +423,9 @@ export function SeriesList({ brandId }: SeriesListProps) {
               <SelectValue placeholder={t("allBrands") || "All Brands"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t("allBrands") || "All Brands"}</SelectItem>
+              <SelectItem value="all">{t("allBrands") || "All Brands"}</SelectItem>
               {brands.map((brand) => (
-                <SelectItem key={brand.id} value={brand.id}>
+                <SelectItem key={brand.id} value={brand.id || "default-brand-id"}>
                   {brand.name}
                 </SelectItem>
               ))}
@@ -586,7 +586,7 @@ export function SeriesList({ brandId }: SeriesListProps) {
                 </SelectTrigger>
                 <SelectContent>
                   {brands.map((brand) => (
-                    <SelectItem key={brand.id} value={brand.id || "default"}>
+                    <SelectItem key={brand.id} value={brand.id || "default-brand-id"}>
                       {brand.name}
                     </SelectItem>
                   ))}
@@ -633,7 +633,7 @@ export function SeriesList({ brandId }: SeriesListProps) {
                   </SelectTrigger>
                   <SelectContent>
                     {brands.map((brand) => (
-                      <SelectItem key={brand.id} value={brand.id}>
+                      <SelectItem key={brand.id} value={brand.id || "default-brand-id"}>
                         {brand.name}
                       </SelectItem>
                     ))}
