@@ -430,7 +430,6 @@
     "andMoreRows": "...і ще {count} рядків",
     "importSuccess": "Імпорт успішно завершено",
     "importPartialSuccess": "Імпорт частково завершено",
-    "importPartialSuccessDescription": "Імпортовано {success}  "Імпорт частково завершено",
     "importPartialSuccessDescription": "Імпортовано {success} з {total} елементів з {failed} помилками",
     "importResultSummary": "Імпортовано {success} з {total} елементів з {failed} помилками",
     "showErrors": "Показати помилки",
@@ -589,7 +588,7 @@
     "premium": "Преміум",
     "free": "Безкоштовно",
     "basicDescription": "Безкоштовна діагностика та консультація",
-    "standardDescription": \"Найпоширеніші ремонти з гарантією",
+    "standardDescription": "Найпоширеніші ремонти з гарантією",
     "premiumDescription": "Складні ремонти з розширеною гарантією та пріоритетним обслуговуванням"
   },
   "Common": {
