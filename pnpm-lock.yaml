@@ -197,6 +197,9 @@ importers:
       vaul:
         specifier: ^0.9.6
         version: 0.9.6(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      wicg-inert:
+        specifier: latest
+        version: 3.1.3
       zod:
         specifier: latest
         version: 3.24.3
@@ -2406,6 +2409,9 @@ packages:
     engines: {node: '>= 8'}
     hasBin: true
 
+  wicg-inert@3.1.3:
+    resolution: {integrity: sha512-5L0PKK7iP+0Q/jv2ccgmkz/pfXbumZtlEyWS/xnX+L+Og3f7WjL4+iEs18k4IuldOX3PgGpza3qGndL9xUBjCQ==}
+
   wrap-ansi@7.0.0:
     resolution: {integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==}
     engines: {node: '>=10'}
@@ -4600,6 +4606,8 @@ snapshots:
   which@2.0.2:
     dependencies:
       isexe: 2.0.0
+
+  wicg-inert@3.1.3: {}
 
   wrap-ansi@7.0.0:
     dependencies:

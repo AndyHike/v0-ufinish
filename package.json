@@ -72,7 +72,8 @@
     "libphonenumber-js": "latest",
     "react-phone-number-input": "latest",
     "cookie": "latest",
-    "@hello-pangea/dnd": "latest"
+    "@hello-pangea/dnd": "latest",
+    "wicg-inert": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
