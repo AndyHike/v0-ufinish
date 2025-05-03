@@ -198,12 +198,10 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
                       {item.name}
                     </SelectItem>
                   ))
+                ) : newModel.brandId ? (
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">{t("noSeriesForBrand")}</div>
                 ) : (
-                  <SelectItem value="" disabled>
-                    {newModel.brandId
-                      ? t("noSeriesForBrand") || "No series found for this brand"
-                      : t("selectBrandFirst") || "Select a brand first"}
-                  </SelectItem>
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">{t("selectBrandFirst")}</div>
                 )}
               </SelectContent>
             </Select>

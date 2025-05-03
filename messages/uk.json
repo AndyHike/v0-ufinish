@@ -572,7 +572,9 @@
     "addNewStatusDescription": "Додайте новий статус замовлення для відстеження в системі",
     "editStatusDescription": "Редагуйте існуючий статус замовлення",
     "deleteStatusConfirmation": "Ви впевнені, що хочете видалити статус \"{status}\"? Ця дія не може бути скасована.",
-    "image": "Зображення"
+    "image": "Зображення",
+    "noSeriesForBrand": "Немає серій для цього бренду",
+    "selectBrandFirst": "Спочатку виберіть бренд"
   },
   "About": {
     "about": "Про нас",

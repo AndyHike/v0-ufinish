@@ -538,9 +538,7 @@ export default function ModelsPage() {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>
-                        {t("noSeriesForBrand") || "No series found for this brand"}
-                      </SelectItem>
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">{t("noSeriesForBrand")}</div>
                     )}
                   </SelectContent>
                 </Select>
