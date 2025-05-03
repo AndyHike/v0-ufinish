@@ -2,49 +2,42 @@
 
 import { useEffect, useRef } from "react"
 
-/**
- * Хук для керування фокусом в модальних вікнах та діалогах
- * Запобігає проблемам з aria-hidden та фокусом
- */
-export function useFocusTrap(isOpen: boolean, onClose?: () => void) {
-  // Зберігаємо елемент, який мав фокус до відкриття модального вікна
-  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null)
-  // Посилання на контейнер модального вікна
-  const containerRef = useRef<HTMLDivElement>(null)
+interface UseFocusTrapOptions {
+  enabled?: boolean
+  onEscape?: () => void
+}
 
-  // Зберігаємо елемент, який мав фокус до відкриття модального вікна
+export function useFocusTrap(options: UseFocusTrapOptions = {}) {
+  const { enabled = true, onEscape } = options
+  const containerRef = useRef<HTMLElement | null>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  // Зберігаємо попередній елемент з фокусом
   useEffect(() => {
-    if (isOpen) {
-      previouslyFocusedElementRef.current = document.activeElement as HTMLElement
-    }
-  }, [isOpen])
+    if (!enabled) return
 
-  // Встановлюємо фокус на перший фокусований елемент при відкритті модального вікна
+    previousFocusRef.current = document.activeElement as HTMLElement
+  }, [enabled])
+
+  // Встановлюємо фокус на перший фокусований елемент при монтуванні
   useEffect(() => {
-    if (isOpen && containerRef.current) {
-      const focusableElements = containerRef.current.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      )
+    if (!enabled || !containerRef.current) return
 
-      if (focusableElements.length > 0) {
-        // Встановлюємо фокус на перший елемент з затримкою, щоб дати час для рендерингу
-        setTimeout(() => {
-          ;(focusableElements[0] as HTMLElement).focus()
-        }, 0)
-      }
+    const focusableElements = containerRef.current.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    )
+
+    if (focusableElements.length > 0) {
+      focusableElements[0].focus()
     }
-  }, [isOpen])
+  }, [enabled])
 
-  // Повертаємо фокус на елемент, який мав фокус до відкриття модального вікна
+  // Повертаємо фокус на попередній елемент при розмонтуванні
   useEffect(() => {
     return () => {
-      if (previouslyFocusedElementRef.current) {
+      if (previousFocusRef.current && document.body.contains(previousFocusRef.current)) {
         try {
-          // Перевіряємо, чи елемент все ще в DOM
-          if (document.body.contains(previouslyFocusedElementRef.current)) {
-            // Повертаємо фокус при розмонтуванні компонента
-            previouslyFocusedElementRef.current.focus()
-          }
+          previousFocusRef.current.focus()
         } catch (e) {
           console.error("Error returning focus:", e)
         }
@@ -52,50 +45,21 @@ export function useFocusTrap(isOpen: boolean, onClose?: () => void) {
     }
   }, [])
 
-  // Обробка клавіші Escape
+  // Обробляємо клавішу Escape
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen && onClose) {
-        onClose()
+    if (!enabled || !onEscape) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onEscape()
       }
     }
 
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown)
-    }
-
+    document.addEventListener("keydown", handleKeyDown)
     return () => {
       document.removeEventListener("keydown", handleKeyDown)
     }
-  }, [isOpen, onClose])
-
-  // Запобігаємо проблемам з aria-hidden
-  useEffect(() => {
-    if (isOpen && containerRef.current) {
-      // Знаходимо всі елементи з aria-hidden="true"
-      const ariaHiddenElements = document.querySelectorAll('[aria-hidden="true"]')
-
-      // Зберігаємо оригінальні значення для відновлення
-      const originalValues = new Map<Element, string | null>()
-
-      // Тимчасово видаляємо aria-hidden з елементів, які містять наш контейнер
-      ariaHiddenElements.forEach((el) => {
-        if (el.contains(containerRef.current)) {
-          originalValues.set(el, el.getAttribute("aria-hidden"))
-          el.removeAttribute("aria-hidden")
-        }
-      })
-
-      // Відновлюємо оригінальні значення при розмонтуванні
-      return () => {
-        originalValues.forEach((value, element) => {
-          if (value !== null) {
-            element.setAttribute("aria-hidden", value)
-          }
-        })
-      }
-    }
-  }, [isOpen])
+  }, [enabled, onEscape])
 
   return { containerRef }
 }

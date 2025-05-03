@@ -1,9 +1,7 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect } from "react"
-import { RadixUiPatch } from "@/lib/radix-ui-patch"
 
 interface InertProviderProps {
   children: React.ReactNode
@@ -21,10 +19,5 @@ export function InertProvider({ children }: InertProviderProps) {
     }
   }, [])
 
-  return (
-    <>
-      <RadixUiPatch />
-      {children}
-    </>
-  )
+  return <>{children}</>
 }
