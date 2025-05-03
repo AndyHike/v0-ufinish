@@ -365,7 +365,10 @@
     "modelReorderedSuccess": "Порядок моделей успішно оновлено",
     "modelReorderedError": "Не вдалося оновити порядок моделей",
     "filterByBrand": "Фільтрувати за брендом",
+    "filterBySeries": "Фільтрувати за серією",
     "allBrands": "Всі бренди",
+    "allSeries": "Всі серії",
+    "selectSeries": "Виберіть серію",
     "searchModels": "Пошук моделей...",
     "modelServices": "Послуги для {model}",
     "modelServicesDescription": "Керування послугами та цінами для {model} від {brand}",
@@ -429,6 +432,8 @@
     "previewData": "Попередній перегляд даних",
     "andMoreRows": "...і ще {count} рядків",
     "importSuccess": "Імпорт успішно завершено",
+    "importPartialSuccess": "Імпорт частково завершено",
+    "  "Імпорт успішно завершено",
     "importPartialSuccess": "Імпорт частково завершено",
     "importPartialSuccessDescription": "Імпортовано {success} з {total} елементів з {failed} помилками",
     "importResultSummary": "Імпортовано {success} з {total} елементів з {failed} помилками",
@@ -588,8 +593,8 @@
     "premium": "Преміум",
     "free": "Безкоштовно",
     "basicDescription": "Безкоштовна діагностика та консультація",
-    "standardDescription": "Найпоширеніші ремонти з гарантією",
-    "premiumDescription": "Складні ремонти з розширеною гарантією та пріоритетним обслуговуванням"
+    "standardDescription": \"Найпоширеніші ремонти з гарантією",
+    "premiumDescription": "Складні ремонти з розширеною гарантією та пріоритетнимим обслуговуванням"
   },
   "Common": {
     "requestService": "Замовити послугу",
