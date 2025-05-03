@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import OptimizedImage from "@/components/ui/optimized-image"
+import Image from "next/image"
 
-// Оновимо тип Brand, щоб включити серії
+// Update Brand type to include series
 type Brand = {
   id: string
   name: string
@@ -105,29 +105,31 @@ export function BrandsSection() {
               <ChevronLeft className="h-5 w-5" />
             </button>
 
-            <div id="brands-scroll" className="scrollbar-hide">
-              <div
-                className="flex overflow-x-auto gap-6 pb-4 snap-x scrollbar-hide"
-                style={{ scrollBehavior: "smooth" }}
-              >
+            <div id="brands-scroll" className="overflow-x-auto pb-6">
+              <div className="flex gap-6 min-w-max px-4" style={{ scrollBehavior: "smooth" }}>
                 {brands.map((brand) => (
-                  <div key={brand.id} className="flex-none w-[200px] snap-start">
+                  <div key={brand.id} className="flex-none w-[180px]">
                     <Link href={`/brands/${brand.id}`}>
                       <Card className="border-none shadow-sm hover:shadow-md transition-shadow duration-300 h-32">
-                        <CardContent className="p-6 flex flex-col items-center justify-center h-full">
+                        <CardContent className="p-4 flex flex-col items-center justify-center h-full">
                           {brand.logo_url ? (
-                            <OptimizedImage
-                              src={brand.logo_url || "/placeholder.svg"}
-                              alt={brand.name}
-                              width={200}
-                              height={100}
-                              className="h-16 w-auto object-contain"
-                              sizes="200px"
-                            />
+                            <div className="relative h-16 w-full mb-2">
+                              <Image
+                                src={brand.logo_url || "/placeholder.svg"}
+                                alt={brand.name}
+                                width={160}
+                                height={80}
+                                className="object-contain"
+                                onError={(e) => {
+                                  // Replace broken image with placeholder
+                                  ;(e.target as HTMLImageElement).src = "/placeholder.svg"
+                                }}
+                              />
+                            </div>
                           ) : (
-                            <div className="text-lg font-medium">{brand.name}</div>
+                            <div className="text-lg font-medium mb-2">{brand.name}</div>
                           )}
-                          <span className="mt-2 text-sm text-center">{brand.name}</span>
+                          <span className="text-sm text-center line-clamp-1">{brand.name}</span>
                         </CardContent>
                       </Card>
                     </Link>

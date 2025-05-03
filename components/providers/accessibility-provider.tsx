@@ -2,29 +2,21 @@
 
 import type React from "react"
 
-import { AriaHiddenPatch } from "@/lib/accessibility-patch"
 import { useEffect } from "react"
+import { fixAriaHidden } from "@/lib/fix-aria-hidden"
 
-interface AccessibilityProviderProps {
-  children: React.ReactNode
-}
-
-export function AccessibilityProvider({ children }: AccessibilityProviderProps) {
-  // Завантажуємо поліфіл для атрибуту inert
+export function AccessibilityProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    // Перевіряємо, чи браузер підтримує атрибут inert
-    if (typeof window !== "undefined" && !("inert" in HTMLElement.prototype)) {
-      // Якщо ні, завантажуємо поліфіл
-      import("wicg-inert").then(() => {
-        console.log("Inert polyfill loaded")
-      })
+    // Apply the fix when the component mounts
+    const cleanup = fixAriaHidden()
+
+    // Clean up when the component unmounts
+    return () => {
+      if (typeof cleanup === "function") {
+        cleanup()
+      }
     }
   }, [])
 
-  return (
-    <>
-      <AriaHiddenPatch />
-      {children}
-    </>
-  )
+  return <>{children}</>
 }

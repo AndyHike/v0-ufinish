@@ -1,23 +1,47 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 
-export const revalidate = 86400 // Cache for 24 hours
+// Cache the response for 1 day
+export const revalidate = 86400
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const lat = searchParams.get("lat") || "50.0755381"
-  const lng = searchParams.get("lng") || "14.4194684"
-  const zoom = searchParams.get("zoom") || "15"
-  const width = searchParams.get("width") || "800"
-  const height = searchParams.get("height") || "400"
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const address = searchParams.get("address")
 
-  // Use a placeholder if no API key is available
-  if (!process.env.GOOGLE_MAPS_API_KEY) {
-    return NextResponse.json({
-      url: `/placeholder.svg?height=${height}&width=${width}&query=map of Prague`,
-    })
+    if (!address) {
+      return NextResponse.json({ error: "Address is required" }, { status: 400 })
+    }
+
+    // Get API key from environment variables or use a placeholder
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY
+
+    // If no API key, return a placeholder image URL
+    if (!apiKey) {
+      return NextResponse.json(
+        { url: `/placeholder.svg?height=400&width=800&query=map of ${address}` },
+        {
+          status: 200,
+          headers: {
+            "Cache-Control": "public, max-age=86400, s-maxage=86400",
+          },
+        },
+      )
+    }
+
+    // Create a static map URL
+    const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(address)}&zoom=15&size=800x400&markers=color:red|${encodeURIComponent(address)}&key=${apiKey}`
+
+    return NextResponse.json(
+      { url: staticMapUrl },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "public, max-age=86400, s-maxage=86400",
+        },
+      },
+    )
+  } catch (error) {
+    console.error("Error in static map route:", error)
+    return NextResponse.json({ error: "Failed to generate static map" }, { status: 500 })
   }
-
-  const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${width}x${height}&markers=color:red%7C${lat},${lng}&key=${process.env.GOOGLE_MAPS_API_KEY}`
-
-  return NextResponse.json({ url: mapUrl })
 }

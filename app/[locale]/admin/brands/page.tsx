@@ -27,7 +27,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-// Додамо імпорт для Layers іконки
 import { Plus, Pencil, Trash, Upload, X, ArrowUp, ArrowDown, Layers } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
@@ -316,10 +315,16 @@ export default function BrandsPage() {
         throw new Error("Failed to update brand")
       }
 
-      await fetchBrands() // Refresh the brands list
-      setEditBrand({ ...editBrand, logo_url: null })
+      // Update the local state first to prevent UI blocking
+      const updatedBrands = brands.map((brand) => (brand.id === editBrand.id ? { ...brand, logo_url: null } : brand))
+      setBrands(updatedBrands)
+
+      // Close the dialog before fetching to prevent UI blocking
       setIsDeleteImageDialogOpen(false)
       setImagePreview(null)
+
+      // Then fetch the updated data
+      await fetchBrands()
 
       toast({
         title: t("success"),
@@ -692,6 +697,10 @@ export default function BrandsPage() {
                               width={40}
                               height={40}
                               className="h-full w-full object-contain"
+                              onError={(e) => {
+                                // Replace broken image with placeholder
+                                ;(e.target as HTMLImageElement).src = "/placeholder.svg"
+                              }}
                             />
                           </div>
                         ) : (
@@ -700,7 +709,6 @@ export default function BrandsPage() {
                       </TableCell>
                       <TableCell>{new Date(brand.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
-                        {/* Додамо кнопку для управління серіями в DropdownMenu для кожного бренду */}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon">
@@ -816,7 +824,16 @@ export default function BrandsPage() {
                 </div>
                 {imagePreview && (
                   <div className="mt-2 relative w-20 h-20 border rounded overflow-hidden">
-                    <Image src={imagePreview || "/placeholder.svg"} alt="Preview" fill className="object-contain" />
+                    <Image
+                      src={imagePreview || "/placeholder.svg"}
+                      alt="Preview"
+                      fill
+                      className="object-contain"
+                      onError={(e) => {
+                        // Replace broken image with placeholder
+                        ;(e.target as HTMLImageElement).src = "/placeholder.svg"
+                      }}
+                    />
                   </div>
                 )}
               </div>
