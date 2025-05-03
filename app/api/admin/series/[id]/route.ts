@@ -7,14 +7,14 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const id = params.id
     const supabase = createClient()
 
-    const { data, error } = await supabase.from("models").select("*, brands(name), series(name)").eq("id", id).single()
+    const { data, error } = await supabase.from("series").select("*, brands(name)").eq("id", id).single()
 
     if (error) throw error
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error("Error fetching model:", error)
-    return NextResponse.json({ error: "Failed to fetch model" }, { status: 500 })
+    console.error("Error fetching series:", error)
+    return NextResponse.json({ error: "Failed to fetch series" }, { status: 500 })
   }
 }
 
@@ -25,12 +25,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const supabase = createClient()
 
     const { data, error } = await supabase
-      .from("models")
+      .from("series")
       .update({
         name: body.name,
         brand_id: body.brandId,
-        series_id: body.seriesId || null,
-        image_url: body.imageUrl,
       })
       .eq("id", id)
       .select()
@@ -41,7 +39,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     // Log activity
     await logActivity({
       entityId: id,
-      entityType: "model",
+      entityType: "series",
       actionType: "update",
       userId: body.userId || null,
       details: { name: data.name },
@@ -49,8 +47,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error("Error updating model:", error)
-    return NextResponse.json({ error: "Failed to update model" }, { status: 500 })
+    console.error("Error updating series:", error)
+    return NextResponse.json({ error: "Failed to update series" }, { status: 500 })
   }
 }
 
@@ -59,27 +57,27 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     const id = params.id
     const supabase = createClient()
 
-    // Get model info before deletion for logging
-    const { data: modelData } = await supabase.from("models").select("name").eq("id", id).single()
+    // Get series info before deletion for logging
+    const { data: seriesData } = await supabase.from("series").select("name").eq("id", id).single()
 
-    const { error } = await supabase.from("models").delete().eq("id", id)
+    const { error } = await supabase.from("series").delete().eq("id", id)
 
     if (error) throw error
 
     // Log activity
-    if (modelData) {
+    if (seriesData) {
       await logActivity({
         entityId: id,
-        entityType: "model",
+        entityType: "series",
         actionType: "delete",
-        userId: null, // We don't have userId in the request
-        details: { name: modelData.name },
+        userId: null,
+        details: { name: seriesData.name },
       })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error deleting model:", error)
-    return NextResponse.json({ error: "Failed to delete model" }, { status: 500 })
+    console.error("Error deleting series:", error)
+    return NextResponse.json({ error: "Failed to delete series" }, { status: 500 })
   }
 }

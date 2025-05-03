@@ -6,17 +6,12 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const brandId = searchParams.get("brand_id")
-    const seriesId = searchParams.get("series_id")
 
     const supabase = createClient()
-    let query = supabase.from("models").select("*, brands(name), series(name)")
+    let query = supabase.from("series").select("*, brands(name)")
 
     if (brandId) {
       query = query.eq("brand_id", brandId)
-    }
-
-    if (seriesId) {
-      query = query.eq("series_id", seriesId)
     }
 
     const { data, error } = await query.order("position", { ascending: true, nullsLast: true })
@@ -25,8 +20,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error("Error fetching models:", error)
-    return NextResponse.json({ error: "Failed to fetch models" }, { status: 500 })
+    console.error("Error fetching series:", error)
+    return NextResponse.json({ error: "Failed to fetch series" }, { status: 500 })
   }
 }
 
@@ -37,7 +32,7 @@ export async function POST(request: Request) {
 
     // Get the highest position value
     const { data: positionData } = await supabase
-      .from("models")
+      .from("series")
       .select("position")
       .order("position", { ascending: false })
       .limit(1)
@@ -46,12 +41,10 @@ export async function POST(request: Request) {
       positionData && positionData.length > 0 && positionData[0].position !== null ? positionData[0].position + 1 : 0
 
     const { data, error } = await supabase
-      .from("models")
+      .from("series")
       .insert({
         name: body.name,
         brand_id: body.brandId,
-        series_id: body.seriesId || null,
-        image_url: body.imageUrl || null,
         position: nextPosition,
       })
       .select()
@@ -62,7 +55,7 @@ export async function POST(request: Request) {
     // Log activity
     await logActivity({
       entityId: data.id,
-      entityType: "model",
+      entityType: "series",
       actionType: "create",
       userId: body.userId || null,
       details: { name: data.name },
@@ -70,7 +63,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error("Error creating model:", error)
-    return NextResponse.json({ error: "Failed to create model" }, { status: 500 })
+    console.error("Error creating series:", error)
+    return NextResponse.json({ error: "Failed to create series" }, { status: 500 })
   }
 }
