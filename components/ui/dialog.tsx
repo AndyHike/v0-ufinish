@@ -5,7 +5,6 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { useFocusTrap } from "@/hooks/use-focus-trap"
 
 const Dialog = DialogPrimitive.Root
 
@@ -34,31 +33,30 @@ const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
-  const [isOpen, setIsOpen] = React.useState(false)
-  const { containerRef } = useFocusTrap({
-    enabled: isOpen,
-    onEscape: () => {
-      if (props.onEscapeKeyDown) {
-        props.onEscapeKeyDown(new KeyboardEvent("keydown", { key: "Escape" }))
-      }
-    },
-  })
+  // Зберігаємо попередній елемент з фокусом
+  const previousFocusRef = React.useRef<HTMLElement | null>(null)
 
+  // Зберігаємо елемент, який мав фокус до відкриття діалогу
   React.useEffect(() => {
-    setIsOpen(true)
-    return () => setIsOpen(false)
+    previousFocusRef.current = document.activeElement as HTMLElement
+
+    // Повертаємо фокус на елемент, який мав фокус до відкриття діалогу
+    return () => {
+      if (previousFocusRef.current && document.body.contains(previousFocusRef.current)) {
+        try {
+          previousFocusRef.current.focus()
+        } catch (e) {
+          console.error("Error returning focus:", e)
+        }
+      }
+    }
   }, [])
 
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
-        ref={(node) => {
-          // Об'єднуємо refs
-          if (typeof ref === "function") ref(node)
-          else if (ref) ref.current = node
-          if (containerRef.current !== node) containerRef.current = node
-        }}
+        ref={ref}
         className={cn(
           "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
           className,
@@ -69,7 +67,17 @@ const DialogContent = React.forwardRef<
           if (props.onCloseAutoFocus) {
             props.onCloseAutoFocus(e)
           }
+          // Повертаємо фокус на попередній елемент
+          if (previousFocusRef.current && document.body.contains(previousFocusRef.current)) {
+            try {
+              previousFocusRef.current.focus()
+            } catch (e) {
+              console.error("Error returning focus:", e)
+            }
+          }
         }}
+        // Важливо: використовуємо inert замість aria-hidden
+        data-state-inert="false"
         {...props}
       >
         {children}

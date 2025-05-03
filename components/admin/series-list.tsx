@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useTranslations } from "next-intl"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
@@ -28,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast"
 import { Plus, Pencil, Trash, MoveVertical, MoreHorizontal } from "lucide-react"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
+import { useFixAriaHidden } from "@/lib/fix-aria-hidden"
 
 type Brand = {
   id: string
@@ -45,7 +46,12 @@ type Series = {
   }
 }
 
-export function SeriesList({ brandId = "" }: { brandId?: string }) {
+type SeriesListProps = {
+  brandId?: string
+  brandName?: string
+}
+
+export function SeriesList({ brandId = "", brandName }: SeriesListProps) {
   const t = useTranslations("Admin")
   const { toast } = useToast()
   const { data: session } = useSession()
@@ -61,13 +67,13 @@ export function SeriesList({ brandId = "" }: { brandId?: string }) {
   const [isReorderMode, setIsReorderMode] = useState(false)
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>(brandId || "")
 
+  // Використовуємо хук для виправлення проблеми з aria-hidden
   useEffect(() => {
-    Promise.all([fetchSeries(), fetchBrands()])
-      .then(() => setLoading(false))
-      .catch(() => setLoading(false))
-  }, [selectedBrandFilter])
+    const cleanup = useFixAriaHidden()
+    return cleanup
+  }, [])
 
-  async function fetchSeries() {
+  const fetchSeries = useCallback(async () => {
     try {
       let url = "/api/admin/series"
 
@@ -90,9 +96,9 @@ export function SeriesList({ brandId = "" }: { brandId?: string }) {
         variant: "destructive",
       })
     }
-  }
+  }, [selectedBrandFilter, t, toast])
 
-  async function fetchBrands() {
+  const fetchBrands = useCallback(async () => {
     try {
       const response = await fetch("/api/admin/brands")
       const data = await response.json()
@@ -105,7 +111,13 @@ export function SeriesList({ brandId = "" }: { brandId?: string }) {
         variant: "destructive",
       })
     }
-  }
+  }, [t, toast])
+
+  useEffect(() => {
+    Promise.all([fetchSeries(), fetchBrands()])
+      .then(() => setLoading(false))
+      .catch(() => setLoading(false))
+  }, [fetchSeries, fetchBrands])
 
   async function handleAddSeries() {
     if (!newSeries.name || !newSeries.brandId) {
