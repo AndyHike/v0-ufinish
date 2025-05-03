@@ -1,20 +1,23 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
-export async function GET(request: NextRequest) {
+export const revalidate = 86400 // Cache for 24 hours
+
+export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const lat = searchParams.get("lat")
-  const lng = searchParams.get("lng")
+  const lat = searchParams.get("lat") || "50.0755381"
+  const lng = searchParams.get("lng") || "14.4194684"
   const zoom = searchParams.get("zoom") || "15"
   const width = searchParams.get("width") || "800"
   const height = searchParams.get("height") || "400"
 
-  if (!lat || !lng) {
-    return NextResponse.json({ error: "Missing required parameters" }, { status: 400 })
+  // Use a placeholder if no API key is available
+  if (!process.env.GOOGLE_MAPS_API_KEY) {
+    return NextResponse.json({
+      url: `/placeholder.svg?height=${height}&width=${width}&query=map of Prague`,
+    })
   }
 
-  // Створюємо URL для статичної карти з серверним API-ключем
-  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${width}x${height}&markers=color:red%7C${lat},${lng}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+  const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${width}x${height}&markers=color:red%7C${lat},${lng}&key=${process.env.GOOGLE_MAPS_API_KEY}`
 
-  // Перенаправляємо запит на Google Maps API
-  return NextResponse.redirect(staticMapUrl)
+  return NextResponse.json({ url: mapUrl })
 }

@@ -77,7 +77,8 @@
     "path": "latest",
     "sharp": "latest",
     "glob": "latest",
-    "@next/bundle-analyzer": "latest"
+    "@next/bundle-analyzer": "latest",
+    "react-intersection-observer": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
