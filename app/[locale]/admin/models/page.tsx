@@ -31,6 +31,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { AddModelDialog } from "@/components/admin/add-model-dialog"
+import { useAsyncAction } from "@/hooks/use-async-action"
 
 type Brand = {
   id: string
@@ -75,7 +76,29 @@ export default function ModelsPage() {
   const [isReorderMode, setIsReorderMode] = useState(false)
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>("")
   const [selectedSeriesFilter, setSelectedSeriesFilter] = useState<string>("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { execute: executeEditModel, isLoading: isEditLoading } = useAsyncAction({
+    successMessage: t("modelUpdatedSuccess"),
+    errorMessage: t("modelUpdatedError"),
+    onSuccess: () => {
+      setIsEditDialogOpen(false)
+      setEditModel(null)
+    },
+  })
+
+  const { execute: executeDeleteModel, isLoading: isDeleteLoading } = useAsyncAction({
+    successMessage: t("modelDeletedSuccess"),
+    errorMessage: t("modelDeletedError"),
+    onSuccess: () => {
+      setIsDeleteDialogOpen(false)
+      setModelToDelete(null)
+    },
+  })
+
+  const { execute: executeReorderModels, isLoading: isReorderLoading } = useAsyncAction({
+    successMessage: t("modelReorderedSuccess"),
+    errorMessage: t("modelReorderedError"),
+  })
 
   useEffect(() => {
     Promise.all([fetchModels(), fetchBrands()])
@@ -155,9 +178,7 @@ export default function ModelsPage() {
   async function handleEditModel() {
     if (!editModel) return
 
-    try {
-      setIsSubmitting(true)
-
+    await executeEditModel(async () => {
       const response = await fetch(`/api/admin/models/${editModel.id}`, {
         method: "PUT",
         headers: {
@@ -177,31 +198,14 @@ export default function ModelsPage() {
       }
 
       await fetchModels()
-      setIsEditDialogOpen(false)
-      setEditModel(null)
-
-      toast({
-        title: t("success"),
-        description: t("modelUpdatedSuccess"),
-      })
-    } catch (error) {
-      console.error("Error updating model:", error)
-      toast({
-        title: t("error"),
-        description: t("modelUpdatedError"),
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
+      return response.json()
+    })
   }
 
   async function handleDeleteModel() {
     if (!modelToDelete) return
 
-    try {
-      setIsSubmitting(true)
-
+    await executeDeleteModel(async () => {
       const response = await fetch(`/api/admin/models/${modelToDelete.id}`, {
         method: "DELETE",
       })
@@ -211,23 +215,8 @@ export default function ModelsPage() {
       }
 
       await fetchModels()
-      setIsDeleteDialogOpen(false)
-      setModelToDelete(null)
-
-      toast({
-        title: t("success"),
-        description: t("modelDeletedSuccess"),
-      })
-    } catch (error) {
-      console.error("Error deleting model:", error)
-      toast({
-        title: t("error"),
-        description: t("modelDeletedError"),
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
+      return response.json()
+    })
   }
 
   async function handleReorderModels(result: any) {
@@ -245,7 +234,7 @@ export default function ModelsPage() {
 
     setModels(updatedItems)
 
-    try {
+    await executeReorderModels(async () => {
       const response = await fetch("/api/admin/models/reorder", {
         method: "POST",
         headers: {
@@ -263,20 +252,8 @@ export default function ModelsPage() {
         throw new Error("Failed to reorder models")
       }
 
-      toast({
-        title: t("success"),
-        description: t("modelReorderedSuccess"),
-      })
-    } catch (error) {
-      console.error("Error reordering models:", error)
-      toast({
-        title: t("error"),
-        description: t("modelReorderedError"),
-        variant: "destructive",
-      })
-      // Revert to original order
-      await fetchModels()
-    }
+      return response.json()
+    })
   }
 
   return (
@@ -287,7 +264,11 @@ export default function ModelsPage() {
           <p className="text-muted-foreground">{t("manageModels")}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant={isReorderMode ? "default" : "outline"} onClick={() => setIsReorderMode(!isReorderMode)}>
+          <Button
+            variant={isReorderMode ? "default" : "outline"}
+            onClick={() => setIsReorderMode(!isReorderMode)}
+            disabled={isReorderLoading}
+          >
             <MoveVertical className="mr-2 h-4 w-4" />
             {isReorderMode ? t("doneReordering") : t("reorderModels")}
           </Button>
@@ -467,7 +448,7 @@ export default function ModelsPage() {
       <AddModelDialog isOpen={isAddDialogOpen} onClose={() => setIsAddDialogOpen(false)} onModelAdded={fetchModels} />
 
       {/* Edit Model Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => !isEditLoading && setIsEditDialogOpen(open)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("editModel")}</DialogTitle>
@@ -482,6 +463,7 @@ export default function ModelsPage() {
                   value={editModel.name}
                   onChange={(e) => setEditModel({ ...editModel, name: e.target.value })}
                   placeholder={t("modelNamePlaceholder")}
+                  disabled={isEditLoading}
                 />
               </div>
               <div className="grid gap-2">
@@ -492,6 +474,7 @@ export default function ModelsPage() {
                     setEditModel({ ...editModel, brand_id: value, series_id: null })
                     fetchSeries(value)
                   }}
+                  disabled={isEditLoading}
                 >
                   <SelectTrigger id="edit-brand">
                     <SelectValue placeholder={t("selectBrand")} />
@@ -510,6 +493,7 @@ export default function ModelsPage() {
                 <Select
                   value={editModel.series_id || "_none"}
                   onValueChange={(value) => setEditModel({ ...editModel, series_id: value === "_none" ? null : value })}
+                  disabled={isEditLoading}
                 >
                   <SelectTrigger id="edit-series">
                     <SelectValue placeholder={t("selectSeries")} />
@@ -531,23 +515,24 @@ export default function ModelsPage() {
                   value={editModel.image_url || ""}
                   onChange={(e) => setEditModel({ ...editModel, image_url: e.target.value })}
                   placeholder={t("imageUrlPlaceholder")}
+                  disabled={isEditLoading}
                 />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isSubmitting}>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isEditLoading}>
               {t("cancel")}
             </Button>
-            <Button onClick={handleEditModel} disabled={isSubmitting}>
-              {isSubmitting ? t("saving") : t("save")}
+            <Button onClick={handleEditModel} disabled={isEditLoading}>
+              {isEditLoading ? t("saving") : t("save")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete Model Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => !isDeleteLoading && setIsDeleteDialogOpen(open)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("deleteModel")}</DialogTitle>
@@ -557,11 +542,11 @@ export default function ModelsPage() {
             <p>{t("deleteModelConfirmation", { model: modelToDelete?.name })}</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isSubmitting}>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleteLoading}>
               {t("cancel")}
             </Button>
-            <Button variant="destructive" onClick={handleDeleteModel} disabled={isSubmitting}>
-              {isSubmitting ? t("deleting") : t("confirmDelete")}
+            <Button variant="destructive" onClick={handleDeleteModel} disabled={isDeleteLoading}>
+              {isDeleteLoading ? t("deleting") : t("confirmDelete")}
             </Button>
           </DialogFooter>
         </DialogContent>

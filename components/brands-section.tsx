@@ -78,6 +78,9 @@ export function BrandsSection() {
     )
   }
 
+  // Determine if we should center the brands (when there are few)
+  const shouldCenterBrands = brands.length <= 3
+
   return (
     <section className="py-12 bg-gray-50">
       <div className="container px-4 mx-auto">
@@ -97,17 +100,21 @@ export function BrandsSection() {
         ) : brands.length > 0 ? (
           <div className="relative max-w-4xl mx-auto">
             {/* Custom navigation arrows positioned outside the content */}
-            <button
-              onClick={() => document.getElementById("brands-scroll")?.scrollBy(-200, 0)}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex"
-              aria-label="Previous brands"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
+            {brands.length > 3 && (
+              <button
+                onClick={() => document.getElementById("brands-scroll")?.scrollBy(-200, 0)}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex"
+                aria-label="Previous brands"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+            )}
 
             <div id="brands-scroll" className="scrollbar-hide">
               <div
-                className="flex overflow-x-auto gap-6 pb-4 snap-x scrollbar-hide"
+                className={`flex overflow-x-auto gap-6 pb-4 snap-x scrollbar-hide ${
+                  shouldCenterBrands ? "justify-center" : ""
+                }`}
                 style={{ scrollBehavior: "smooth" }}
               >
                 {brands.map((brand) => (
@@ -138,13 +145,15 @@ export function BrandsSection() {
               </div>
             </div>
 
-            <button
-              onClick={() => document.getElementById("brands-scroll")?.scrollBy(200, 0)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex"
-              aria-label="Next brands"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
+            {brands.length > 3 && (
+              <button
+                onClick={() => document.getElementById("brands-scroll")?.scrollBy(200, 0)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex"
+                aria-label="Next brands"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            )}
           </div>
         ) : (
           <p className="text-center text-gray-500">{t("noBrands")}</p>

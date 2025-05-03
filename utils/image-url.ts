@@ -20,3 +20,6 @@ export function formatImageUrl(url: string | null | undefined): string {
   // Інакше додаємо / на початку
   return `/${url}`
 }
+
+// Alias for backward compatibility
+export const getImageUrl = formatImageUrl

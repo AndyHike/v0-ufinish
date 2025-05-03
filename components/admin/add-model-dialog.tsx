@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useTranslations } from "next-intl"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
@@ -17,6 +17,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import { X } from "lucide-react"
+import { useAsyncAction } from "@/hooks/use-async-action"
 
 type Brand = {
   id: string
@@ -41,8 +42,18 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
   const { data: session } = useSession()
   const [brands, setBrands] = useState<Brand[]>([])
   const [series, setSeries] = useState<Series[]>([])
-  const [loading, setLoading] = useState(false)
   const [newModel, setNewModel] = useState({ name: "", brandId: "", seriesId: "", imageUrl: "" })
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  const { execute, isLoading } = useAsyncAction({
+    successMessage: t("modelAddedSuccess"),
+    errorMessage: t("modelAddedError"),
+    onSuccess: () => {
+      setNewModel({ name: "", brandId: "", seriesId: "", imageUrl: "" })
+      onModelAdded()
+      onClose()
+    },
+  })
 
   useEffect(() => {
     if (isOpen) {
@@ -98,9 +109,7 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
       return
     }
 
-    setLoading(true)
-
-    try {
+    await execute(async () => {
       const response = await fetch("/api/admin/models", {
         method: "POST",
         headers: {
@@ -116,35 +125,20 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
         throw new Error("Failed to add model")
       }
 
-      setNewModel({ name: "", brandId: "", seriesId: "", imageUrl: "" })
-      onModelAdded()
-      onClose()
-
-      toast({
-        title: t("success"),
-        description: t("modelAddedSuccess"),
-      })
-    } catch (error) {
-      console.error("Error adding model:", error)
-      toast({
-        title: t("error"),
-        description: t("modelAddedError"),
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
+      return response.json()
+    })
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={isOpen} onOpenChange={(open) => !isLoading && onClose()}>
+      <DialogContent className="sm:max-w-[425px]" ref={dialogRef}>
         <DialogHeader>
           <DialogTitle>{t("addNewModel")}</DialogTitle>
           <DialogDescription>{t("addNewModelDescription")}</DialogDescription>
           <button
-            onClick={onClose}
+            onClick={() => !isLoading && onClose()}
             className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+            disabled={isLoading}
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
@@ -158,6 +152,7 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
               value={newModel.name}
               onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
               placeholder={t("modelNamePlaceholder")}
+              disabled={isLoading}
             />
           </div>
           <div className="grid gap-2">
@@ -165,6 +160,7 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
             <Select
               value={newModel.brandId}
               onValueChange={(value) => setNewModel({ ...newModel, brandId: value, seriesId: "" })}
+              disabled={isLoading}
             >
               <SelectTrigger id="brand">
                 <SelectValue placeholder={t("selectBrand")} />
@@ -183,13 +179,13 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
             <Select
               value={newModel.seriesId}
               onValueChange={(value) => setNewModel({ ...newModel, seriesId: value })}
-              disabled={!newModel.brandId || series.length === 0}
+              disabled={isLoading || !newModel.brandId || series.length === 0}
             >
               <SelectTrigger id="series">
                 <SelectValue placeholder={t("selectSeries") || "Select Series"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">{t("noSeries") || "No Series"}</SelectItem>
+                <SelectItem value="_none">{t("noSeries") || "No Series"}</SelectItem>
                 {series.map((item) => (
                   <SelectItem key={item.id} value={item.id}>
                     {item.name}
@@ -205,15 +201,16 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
               value={newModel.imageUrl}
               onChange={(e) => setNewModel({ ...newModel, imageUrl: e.target.value })}
               placeholder={t("imageUrlPlaceholder")}
+              disabled={isLoading}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={loading}>
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
             {t("cancel")}
           </Button>
-          <Button onClick={handleAddModel} disabled={loading}>
-            {loading ? t("processing") : t("add")}
+          <Button onClick={handleAddModel} disabled={isLoading}>
+            {isLoading ? t("processing") : t("add")}
           </Button>
         </DialogFooter>
       </DialogContent>
