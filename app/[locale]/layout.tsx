@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { NextIntlClientProvider } from "next-intl"
 import { notFound } from "next/navigation"
@@ -7,7 +5,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { getCurrentUser } from "@/lib/auth/session"
 import { getMessages } from "@/lib/get-messages"
-import { useInertPolyfill } from "@/lib/inert-polyfill"
+import { InertProvider } from "@/components/providers/inert-provider"
 
 export default async function LocaleLayout({
   children,
@@ -16,9 +14,6 @@ export default async function LocaleLayout({
   children: React.ReactNode
   params: { locale: string }
 }) {
-  // Застосовуємо поліфіл для атрибуту inert
-  useInertPolyfill()
-
   let messages
   try {
     messages = await getMessages(locale)
@@ -31,11 +26,13 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <div className="flex min-h-screen flex-col">
-        <Header user={user} />
-        <main className="flex-1">{children}</main>
-        <Footer />
-      </div>
+      <InertProvider>
+        <div className="flex min-h-screen flex-col">
+          <Header user={user} />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </div>
+      </InertProvider>
     </NextIntlClientProvider>
   )
 }

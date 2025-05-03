@@ -71,7 +71,6 @@
     "uuid": "latest",
     "libphonenumber-js": "latest",
     "react-phone-number-input": "latest",
-    "cookie": "latest",
     "@hello-pangea/dnd": "latest",
     "wicg-inert": "latest"
   },

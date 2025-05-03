@@ -1,7 +1,6 @@
 "use client"
 
 import React from "react"
-import { useEffect } from "react"
 
 /**
  * Поліфіл для атрибуту inert
@@ -10,6 +9,7 @@ import { useEffect } from "react"
 
 // Перевіряємо, чи підтримується атрибут inert
 export function isInertSupported(): boolean {
+  if (typeof window === "undefined") return false
   return "inert" in HTMLElement.prototype
 }
 
@@ -96,17 +96,4 @@ export function useInert(ref: React.RefObject<HTMLElement>, shouldBeInert: boole
       }
     }
   }, [ref, shouldBeInert])
-}
-
-export function useInertPolyfill() {
-  useEffect(() => {
-    // Перевіряємо, чи браузер підтримує атрибут inert
-    if (!("inert" in document.createElement("div"))) {
-      // Якщо ні, завантажуємо поліфіл
-      import("wicg-inert").then((inertPolyfill) => {
-        // Поліфіл автоматично застосовується до всіх елементів з атрибутом inert
-        console.log("Inert polyfill loaded")
-      })
-    }
-  }, [])
 }
