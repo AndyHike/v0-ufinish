@@ -62,7 +62,7 @@ export function ModelsList() {
       name: "9 Pro",
       brand: "OnePlus",
       brandLogo: "/abstract-red-white-lines.png",
-      image: "/placeholder.svg?height=40&width=40&query=oneplus 9 pro",
+      image: "/placeholder.svg?key=gt34u",
       year: "2021",
       createdAt: "18.05.2023",
     },
@@ -105,11 +105,12 @@ export function ModelsList() {
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 overflow-hidden rounded-md">
                     <Image
-                      src={model.image || "/placeholder.svg"}
+                      src={model.image || "/placeholder.svg?height=32&width=32&query=phone model"}
                       alt={model.name}
                       width={32}
                       height={32}
                       className="h-full w-full object-contain"
+                      unoptimized
                     />
                   </div>
                   <span className="font-medium">{model.name}</span>
@@ -119,11 +120,12 @@ export function ModelsList() {
                 <div className="flex items-center gap-2">
                   <div className="h-5 w-5 overflow-hidden rounded-full">
                     <Image
-                      src={model.brandLogo || "/placeholder.svg"}
+                      src={model.brandLogo || "/placeholder.svg?height=20&width=20&query=brand logo"}
                       alt={model.brand}
                       width={20}
                       height={20}
                       className="h-full w-full object-contain"
+                      unoptimized
                     />
                   </div>
                   {model.brand}

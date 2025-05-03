@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
 import { getSession } from "@/lib/auth/session"
+import { formatImageUrl } from "@/utils/image-url"
 
 export async function GET() {
   try {
@@ -21,17 +22,22 @@ export async function GET() {
     }
 
     // Sort brands by position if available, otherwise by name
-    const sortedData = data.sort((a, b) => {
-      // If both have position, sort by position
-      if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
-        return a.position - b.position
-      }
-      // If only one has position, prioritize the one with position
-      if (a.position !== null && a.position !== undefined) return -1
-      if (b.position !== null && b.position !== undefined) return 1
-      // If neither has position, sort by name
-      return a.name.localeCompare(b.name)
-    })
+    const sortedData = data
+      .sort((a, b) => {
+        // If both have position, sort by position
+        if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
+          return a.position - b.position
+        }
+        // If only one has position, prioritize the one with position
+        if (a.position !== null && a.position !== undefined) return -1
+        if (b.position !== null && b.position !== undefined) return 1
+        // If neither has position, sort by name
+        return a.name.localeCompare(b.name)
+      })
+      .map((brand) => ({
+        ...brand,
+        logo_url: brand.logo_url ? formatImageUrl(brand.logo_url) : null,
+      }))
 
     return NextResponse.json(sortedData)
   } catch (error) {

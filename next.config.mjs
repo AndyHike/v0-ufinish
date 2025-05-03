@@ -14,6 +14,17 @@ const nextConfig = {
   // Optimize images for static export
   images: {
     unoptimized: true,
+    domains: ['new.devicehelp.cz', 'localhost'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
+    ],
   },
   // Disable source maps in production to reduce build size
   productionBrowserSourceMaps: false,

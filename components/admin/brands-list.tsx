@@ -51,7 +51,7 @@ export function BrandsList() {
     {
       id: "5",
       name: "OnePlus",
-      logo: "/placeholder.svg?height=40&width=40&query=oneplus logo",
+      logo: "/placeholder.svg?key=gppxq",
       models: 8,
       createdAt: "18.05.2023",
     },
@@ -89,11 +89,12 @@ export function BrandsList() {
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 overflow-hidden rounded-md">
                     <Image
-                      src={brand.logo || "/placeholder.svg"}
+                      src={brand.logo || "/placeholder.svg?height=32&width=32&query=brand"}
                       alt={brand.name}
                       width={32}
                       height={32}
                       className="h-full w-full object-contain"
+                      unoptimized
                     />
                   </div>
                   <span className="font-medium">{brand.name}</span>
