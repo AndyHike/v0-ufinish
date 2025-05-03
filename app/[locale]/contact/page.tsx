@@ -10,6 +10,17 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Phone, Mail, MapPin, Clock } from "lucide-react"
+import dynamic from "next/dynamic"
+
+// Динамічно імпортуємо компонент карти для відкладеного завантаження
+const ContactMap = dynamic(() => import("@/components/map/contact-map"), {
+  loading: () => (
+    <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
+      <p className="text-gray-500">Карта завантажується...</p>
+    </div>
+  ),
+  ssr: true,
+})
 
 export default function ContactPage() {
   const t = useTranslations("Contact")
@@ -137,17 +148,7 @@ export default function ContactPage() {
 
       <div className="mt-12">
         <h2 className="mb-6 text-2xl font-bold">{t("ourLocation")}</h2>
-        <div className="aspect-video overflow-hidden rounded-lg">
-          <iframe
-            title={t("mapTitle")}
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d20472.97391809471!2d14.4194684!3d50.0755381!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b94ea69e1a1e1%3A0x7c93c7aaef9e8b!2zUHJhaGEgMiwgxIxlc2tv!5e0!3m2!1scs!2scz!4v1650000000000!5m2!1scs!2scz"
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-          ></iframe>
-        </div>
+        <ContactMap address={t("addressDetails")} height={400} className="shadow-md" />
       </div>
     </div>
   )

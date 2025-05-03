@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { useTranslations, useLocale } from "next-intl"
-import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import OptimizedImage from "@/components/ui/optimized-image"
 
 // Оновимо тип Brand, щоб включити серії
 type Brand = {
@@ -116,16 +116,14 @@ export function BrandsSection() {
                       <Card className="border-none shadow-sm hover:shadow-md transition-shadow duration-300 h-32">
                         <CardContent className="p-6 flex flex-col items-center justify-center h-full">
                           {brand.logo_url ? (
-                            <div className="relative h-16 w-full">
-                              <Image
-                                src={brand.logo_url || "/placeholder.svg"}
-                                alt={brand.name}
-                                width={120}
-                                height={80}
-                                className="object-contain mx-auto"
-                                style={{ maxHeight: "100%", width: "auto" }}
-                              />
-                            </div>
+                            <OptimizedImage
+                              src={brand.logo_url || "/placeholder.svg"}
+                              alt={brand.name}
+                              width={200}
+                              height={100}
+                              className="h-16 w-auto object-contain"
+                              sizes="200px"
+                            />
                           ) : (
                             <div className="text-lg font-medium">{brand.name}</div>
                           )}

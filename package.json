@@ -72,7 +72,12 @@
     "libphonenumber-js": "latest",
     "react-phone-number-input": "latest",
     "@hello-pangea/dnd": "latest",
-    "wicg-inert": "latest"
+    "wicg-inert": "latest",
+    "@next/bundle-analyzer": "latest",
+    "fs": "latest",
+    "path": "latest",
+    "sharp": "latest",
+    "glob": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
