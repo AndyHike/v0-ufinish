@@ -73,7 +73,7 @@ export default async function SeriesPage({ params }: Props) {
           className="mb-8 flex items-center text-muted-foreground hover:text-foreground"
         >
           <ChevronLeft className="mr-1 h-4 w-4" />
-          {t("backToBrand", { brand: series.brands?.name }) || `Back to ${series.brands?.name}`}
+          {t("backToBrand", { brand: series.brands?.name })}
         </Link>
 
         <div className="mb-12">
@@ -85,6 +85,7 @@ export default async function SeriesPage({ params }: Props) {
                   alt={series.brands.name}
                   fill
                   className="object-contain"
+                  unoptimized
                 />
               </div>
             )}
@@ -92,12 +93,11 @@ export default async function SeriesPage({ params }: Props) {
           </div>
           <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{series.name}</h1>
           <p className="mt-2 max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            {t("seriesPageDescription", { series: series.name, brand: series.brands?.name }) ||
-              `Browse all ${series.name} models from ${series.brands?.name}`}
+            {t("seriesPageDescription", { series: series.name, brand: series.brands?.name })}
           </p>
         </div>
 
-        <h2 className="mb-6 text-2xl font-bold">{t("availableModels") || "Available Models"}</h2>
+        <h2 className="mb-6 text-2xl font-bold">{t("availableModels")}</h2>
 
         {models && models.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -114,6 +114,7 @@ export default async function SeriesPage({ params }: Props) {
                     width={200}
                     height={200}
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    unoptimized
                   />
                 </div>
                 <h3 className="text-lg font-medium group-hover:underline">{model.name}</h3>
@@ -121,7 +122,7 @@ export default async function SeriesPage({ params }: Props) {
             ))}
           </div>
         ) : (
-          <p>{t("noModelsAvailable") || "No models available for this series"}</p>
+          <p>{t("noModelsAvailable")}</p>
         )}
       </div>
     </div>

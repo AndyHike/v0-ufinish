@@ -107,6 +107,14 @@
     "viewAllModels": "Переглянути всі моделі",
     "modelsWithoutSeries": "Моделі без серії"
   },
+  "Series": {
+    "backToBrand": "Назад до {brand}",
+    "seriesPageDescription": "Перегляньте всі моделі {series} від {brand}",
+    "availableModels": "Доступні моделі",
+    "noModelsAvailable": "Поки що немає доступних моделей для цієї серії.",
+    "seriesNotFound": "Серію не знайдено",
+    "seriesNotFoundDesc": "Запитана серія не знайдена."
+  },
   "Models": {
     "repairServices": "Послуги з ремонту",
     "modelNotFound": "Модель не знайдено",
@@ -349,6 +357,8 @@
     "imageUploadError": "Не вдалося завантажити зображення",
     "invalidFileType": "Недійсний тип файлу. Будь ласка, завантажте зображення.",
     "fileTooLarge": "Файл занадто великий. Максимальний розмір - 2МБ.",
+    "order": "Порядок",  "Недійсний тип файлу. Будь ласка, завантажте зображення.",
+    "fileTooLarge": "Файл занадто великий. Максимальний розмір - 2МБ.",
     "order": "Порядок",
     "brandReorderedSuccess": "Порядок брендів успішно оновлено",
     "brandReorderedError": "Не вдалося оновити порядок брендів",
@@ -470,7 +480,7 @@
     "manualSyncDescription": "Вручну запустіть синхронізацію користувачів без ID RemOnline",
     "syncNow": "Синхронізувати зараз",
     "syncing": "Синхронізація...",
-    "syncFailed": "Помилка синхронізації",
+    "syncFailed": \"Помилка синхронізації",
     "syncCompleted": "Синхронізація завершена",
     "syncProcessed": "Оброблено {count} користувачів",
     "syncResults": "Результати синхронізації",

@@ -103,6 +103,14 @@
     "pageTitle": "Choose Your Phone Model",
     "pageDescription": "Select your phone brand to see available models and repair prices"
   },
+  "Series": {
+    "backToBrand": "Back to {brand}",
+    "seriesPageDescription": "Browse all {series} models from {brand}",
+    "availableModels": "Available Models",
+    "noModelsAvailable": "No models available for this series yet.",
+    "seriesNotFound": "Series Not Found",
+    "seriesNotFoundDesc": "The requested series could not be found."
+  },
   "Models": {
     "repairServices": "Repair Services",
     "modelNotFound": "Model Not Found",

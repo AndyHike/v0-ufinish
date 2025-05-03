@@ -114,6 +114,14 @@
     "priceOnRequest": "Cena na vyžádání",
     "requestService": "Požádat o službu"
   },
+  "Series": {
+    "backToBrand": "Zpět na {brand}",
+    "seriesPageDescription": "Prohlédněte si všechny modely {series} od {brand}",
+    "availableModels": "Dostupné modely",
+    "noModelsAvailable": "Pro tuto sérii zatím nejsou k dispozici žádné modely.",
+    "seriesNotFound": "Série nenalezena",
+    "seriesNotFoundDesc": "Požadovaná série nebyla nalezena."
+  },
   "Testimonials": {
     "title": "Recenze zákazníků",
     "subtitle": "Zjistěte, co říkají naši zákazníci o našich službách.",
