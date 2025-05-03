@@ -233,6 +233,7 @@ export default function BrandsPage() {
       setIsEditDialogOpen(false)
       setSelectedFile(null)
       setImagePreview(null)
+      setEditBrand(null)
 
       toast({
         title: t("success"),

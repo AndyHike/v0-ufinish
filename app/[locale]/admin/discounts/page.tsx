@@ -86,26 +86,36 @@ export default function DiscountsPage() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    const newDiscount = {
-      id: String(discounts.length + 1),
-      userId: formData.userId,
-      code: formData.code,
-      percentage: Number.parseInt(formData.percentage),
-      expiresAt: formData.expiresAt,
+      const newDiscount = {
+        id: String(discounts.length + 1),
+        userId: formData.userId,
+        code: formData.code,
+        percentage: Number.parseInt(formData.percentage),
+        expiresAt: formData.expiresAt,
+      }
+
+      setDiscounts([...discounts, newDiscount])
+      setFormData({ userId: "", code: "", percentage: "", expiresAt: "" })
+      setIsAddDialogOpen(false)
+
+      toast({
+        title: t("discountAdded"),
+        description: t("discountAddedDescription", { code: newDiscount.code }),
+      })
+    } catch (error) {
+      console.error("Error adding discount:", error)
+      toast({
+        title: t("error"),
+        description: t("errorAddingDiscount"),
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
-
-    setDiscounts([...discounts, newDiscount])
-    setFormData({ userId: "", code: "", percentage: "", expiresAt: "" })
-    setIsAddDialogOpen(false)
-    setIsSubmitting(false)
-
-    toast({
-      title: t("discountAdded"),
-      description: t("discountAddedDescription", { code: newDiscount.code }),
-    })
   }
 
   const handleEditDiscount = async (e: React.FormEvent) => {
@@ -114,29 +124,40 @@ export default function DiscountsPage() {
 
     setIsSubmitting(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    const updatedDiscounts = discounts.map((discount) =>
-      discount.id === currentDiscount.id
-        ? {
-            ...discount,
-            userId: formData.userId,
-            code: formData.code,
-            percentage: Number.parseInt(formData.percentage),
-            expiresAt: formData.expiresAt,
-          }
-        : discount,
-    )
+      const updatedDiscounts = discounts.map((discount) =>
+        discount.id === currentDiscount.id
+          ? {
+              ...discount,
+              userId: formData.userId,
+              code: formData.code,
+              percentage: Number.parseInt(formData.percentage),
+              expiresAt: formData.expiresAt,
+            }
+          : discount,
+      )
 
-    setDiscounts(updatedDiscounts)
-    setIsEditDialogOpen(false)
-    setIsSubmitting(false)
+      setDiscounts(updatedDiscounts)
+      setIsEditDialogOpen(false)
+      setCurrentDiscount(null)
 
-    toast({
-      title: t("discountUpdated"),
-      description: t("discountUpdatedDescription", { code: formData.code }),
-    })
+      toast({
+        title: t("discountUpdated"),
+        description: t("discountUpdatedDescription", { code: formData.code }),
+      })
+    } catch (error) {
+      console.error("Error updating discount:", error)
+      toast({
+        title: t("error"),
+        description: t("errorUpdatingDiscount"),
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleDeleteDiscount = async () => {
@@ -144,19 +165,30 @@ export default function DiscountsPage() {
 
     setIsSubmitting(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    const updatedDiscounts = discounts.filter((discount) => discount.id !== currentDiscount.id)
+      const updatedDiscounts = discounts.filter((discount) => discount.id !== currentDiscount.id)
 
-    setDiscounts(updatedDiscounts)
-    setIsDeleteDialogOpen(false)
-    setIsSubmitting(false)
+      setDiscounts(updatedDiscounts)
+      setIsDeleteDialogOpen(false)
+      setCurrentDiscount(null)
 
-    toast({
-      title: t("discountDeleted"),
-      description: t("discountDeletedDescription", { code: currentDiscount.code }),
-    })
+      toast({
+        title: t("discountDeleted"),
+        description: t("discountDeletedDescription", { code: currentDiscount.code }),
+      })
+    } catch (error) {
+      console.error("Error deleting discount:", error)
+      toast({
+        title: t("error"),
+        description: t("errorDeletingDiscount"),
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const openEditDialog = (discount: any) => {

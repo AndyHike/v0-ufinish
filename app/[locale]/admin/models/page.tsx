@@ -75,6 +75,7 @@ export default function ModelsPage() {
   const [isReorderMode, setIsReorderMode] = useState(false)
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>("")
   const [selectedSeriesFilter, setSelectedSeriesFilter] = useState<string>("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     Promise.all([fetchModels(), fetchBrands()])
@@ -155,6 +156,8 @@ export default function ModelsPage() {
     if (!editModel) return
 
     try {
+      setIsSubmitting(true)
+
       const response = await fetch(`/api/admin/models/${editModel.id}`, {
         method: "PUT",
         headers: {
@@ -175,6 +178,7 @@ export default function ModelsPage() {
 
       await fetchModels()
       setIsEditDialogOpen(false)
+      setEditModel(null)
 
       toast({
         title: t("success"),
@@ -187,6 +191,8 @@ export default function ModelsPage() {
         description: t("modelUpdatedError"),
         variant: "destructive",
       })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -194,6 +200,8 @@ export default function ModelsPage() {
     if (!modelToDelete) return
 
     try {
+      setIsSubmitting(true)
+
       const response = await fetch(`/api/admin/models/${modelToDelete.id}`, {
         method: "DELETE",
       })
@@ -217,6 +225,8 @@ export default function ModelsPage() {
         description: t("modelDeletedError"),
         variant: "destructive",
       })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -526,10 +536,12 @@ export default function ModelsPage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isSubmitting}>
               {t("cancel")}
             </Button>
-            <Button onClick={handleEditModel}>{t("save")}</Button>
+            <Button onClick={handleEditModel} disabled={isSubmitting}>
+              {isSubmitting ? t("saving") : t("save")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -545,11 +557,11 @@ export default function ModelsPage() {
             <p>{t("deleteModelConfirmation", { model: modelToDelete?.name })}</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isSubmitting}>
               {t("cancel")}
             </Button>
-            <Button variant="destructive" onClick={handleDeleteModel}>
-              {t("confirmDelete")}
+            <Button variant="destructive" onClick={handleDeleteModel} disabled={isSubmitting}>
+              {isSubmitting ? t("deleting") : t("confirmDelete")}
             </Button>
           </DialogFooter>
         </DialogContent>

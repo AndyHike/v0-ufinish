@@ -66,6 +66,9 @@ export function SeriesList({ brandId }: SeriesListProps) {
   const [reordering, setReordering] = useState(false)
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>(brandId || "")
   const [error, setError] = useState<string | null>(null)
+  const [isAddSeriesSubmitting, setIsAddSeriesSubmitting] = useState(false)
+  const [isEditSeriesSubmitting, setIsEditSeriesSubmitting] = useState(false)
+  const [isDeleteSeriesSubmitting, setIsDeleteSeriesSubmitting] = useState(false)
 
   useEffect(() => {
     Promise.all([fetchSeries(), fetchBrands()])
@@ -134,6 +137,8 @@ export function SeriesList({ brandId }: SeriesListProps) {
       return
     }
 
+    setIsAddSeriesSubmitting(true)
+
     try {
       const response = await fetch("/api/admin/series", {
         method: "POST",
@@ -165,6 +170,8 @@ export function SeriesList({ brandId }: SeriesListProps) {
         description: t("seriesAddedError") || "Failed to add series",
         variant: "destructive",
       })
+    } finally {
+      setIsAddSeriesSubmitting(false)
     }
   }
 
@@ -177,6 +184,8 @@ export function SeriesList({ brandId }: SeriesListProps) {
       })
       return
     }
+
+    setIsEditSeriesSubmitting(true)
 
     try {
       const response = await fetch(`/api/admin/series/${editSeries.id}`, {
@@ -198,6 +207,7 @@ export function SeriesList({ brandId }: SeriesListProps) {
 
       await fetchSeries()
       setIsEditDialogOpen(false)
+      setEditSeries(null)
 
       toast({
         title: t("success"),
@@ -210,11 +220,15 @@ export function SeriesList({ brandId }: SeriesListProps) {
         description: t("seriesUpdatedError") || "Failed to update series",
         variant: "destructive",
       })
+    } finally {
+      setIsEditSeriesSubmitting(false)
     }
   }
 
   async function handleDeleteSeries() {
     if (!seriesToDelete) return
+
+    setIsDeleteSeriesSubmitting(true)
 
     try {
       const response = await fetch(`/api/admin/series/${seriesToDelete.id}`, {
@@ -240,6 +254,8 @@ export function SeriesList({ brandId }: SeriesListProps) {
         description: t("seriesDeletedError") || "Failed to delete series",
         variant: "destructive",
       })
+    } finally {
+      setIsDeleteSeriesSubmitting(false)
     }
   }
 
@@ -408,7 +424,7 @@ export function SeriesList({ brandId }: SeriesListProps) {
             <MoveVertical className="mr-2 h-4 w-4" />
             {isReorderMode ? t("doneReordering") || "Done" : t("reorderSeries") || "Reorder"}
           </Button>
-          <Button onClick={() => setIsAddDialogOpen(true)}>
+          <Button onClick={() => setIsAddDialogOpen(true)} disabled={isAddSeriesSubmitting}>
             <Plus className="mr-2 h-4 w-4" />
             {t("addSeries") || "Add Series"}
           </Button>
@@ -595,10 +611,12 @@ export function SeriesList({ brandId }: SeriesListProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isAddSeriesSubmitting}>
               {t("cancel") || "Cancel"}
             </Button>
-            <Button onClick={handleAddSeries}>{t("add") || "Add"}</Button>
+            <Button onClick={handleAddSeries} disabled={isAddSeriesSubmitting}>
+              {t("add") || "Add"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -643,10 +661,12 @@ export function SeriesList({ brandId }: SeriesListProps) {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isEditSeriesSubmitting}>
               {t("cancel") || "Cancel"}
             </Button>
-            <Button onClick={handleEditSeries}>{t("save") || "Save"}</Button>
+            <Button onClick={handleEditSeries} disabled={isEditSeriesSubmitting}>
+              {t("save") || "Save"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -667,10 +687,10 @@ export function SeriesList({ brandId }: SeriesListProps) {
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleteSeriesSubmitting}>
               {t("cancel") || "Cancel"}
             </Button>
-            <Button variant="destructive" onClick={handleDeleteSeries}>
+            <Button variant="destructive" onClick={handleDeleteSeries} disabled={isDeleteSeriesSubmitting}>
               {t("confirmDelete") || "Delete"}
             </Button>
           </DialogFooter>
