@@ -7,6 +7,26 @@ type ModelImportRow = {
   image_url?: string
 }
 
+// Функція для перевірки та форматування URL зображень
+function formatImageUrl(url: string | undefined | null): string | null {
+  if (!url || url.trim() === "") return null
+
+  const trimmedUrl = url.trim()
+
+  // Якщо URL починається з http або https, повертаємо його як є
+  if (trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://")) {
+    return trimmedUrl
+  }
+
+  // Якщо URL починається з /, вважаємо його локальним
+  if (trimmedUrl.startsWith("/")) {
+    return trimmedUrl
+  }
+
+  // Інакше додаємо / на початку
+  return `/${trimmedUrl}`
+}
+
 export async function POST(request: Request) {
   try {
     const { data } = await request.json()
@@ -69,7 +89,7 @@ export async function POST(request: Request) {
           if (row.image_url) {
             const { error: updateError } = await supabase
               .from("models")
-              .update({ image_url: row.image_url })
+              .update({ image_url: formatImageUrl(row.image_url) })
               .eq("id", existingModel.id)
 
             if (updateError) {
@@ -87,7 +107,7 @@ export async function POST(request: Request) {
         const { error: modelError } = await supabase.from("models").insert({
           name: row.model,
           brand_id: brandId,
-          image_url: row.image_url || null,
+          image_url: formatImageUrl(row.image_url),
         })
 
         if (modelError) {

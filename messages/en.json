@@ -532,7 +532,14 @@
     "pleaseWait": "Please wait",
     "addNewStatusDescription": "Add a new order status to track in the system",
     "editStatusDescription": "Edit an existing order status",
-    "deleteStatusConfirmation": "Are you sure you want to delete the status \"{status}\"? This action cannot be undone."
+    "deleteStatusConfirmation": "Are you sure you want to delete the status \"{status}\"? This action cannot be undone.",
+    "uploadImage": "Upload Image",
+    "imageUploadedSuccess": "Image uploaded successfully",
+    "imageUploadFailed": "Failed to upload image",
+    "invalidFileType": "Invalid file type. Please select an image",
+    "fileTooLarge": "File too large. Maximum size: 2MB",
+    "modelImage": "Model Image",
+    "imageLoadError": "Error loading image. Using default image"
   },
   "About": {
     "about": "About Us",

@@ -32,6 +32,7 @@ import Link from "next/link"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { AddModelDialog } from "@/components/admin/add-model-dialog"
 import { useAsyncAction } from "@/hooks/use-async-action"
+import { ImageUpload } from "@/components/admin/image-upload"
 
 type Brand = {
   id: string
@@ -544,13 +545,10 @@ export default function ModelsPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-image">{t("imageUrl")}</Label>
-                <Input
-                  id="edit-image"
-                  value={editModel.image_url || ""}
-                  onChange={(e) => setEditModel({ ...editModel, image_url: e.target.value })}
-                  placeholder={t("imageUrlPlaceholder")}
-                  disabled={isEditLoading}
+                <Label>{t("modelImage")}</Label>
+                <ImageUpload
+                  onImageUploaded={(url) => setEditModel({ ...editModel, image_url: url })}
+                  currentImageUrl={editModel.image_url}
                 />
               </div>
             </div>

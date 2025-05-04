@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast"
 import { X } from "lucide-react"
 import { useAsyncAction } from "@/hooks/use-async-action"
+import { ImageUpload } from "./image-upload"
 
 type Brand = {
   id: string
@@ -207,13 +208,10 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="image-url">{t("imageUrl")}</Label>
-            <Input
-              id="image-url"
-              value={newModel.imageUrl}
-              onChange={(e) => setNewModel({ ...newModel, imageUrl: e.target.value })}
-              placeholder={t("imageUrlPlaceholder")}
-              disabled={isLoading}
+            <Label>{t("modelImage")}</Label>
+            <ImageUpload
+              onImageUploaded={(url) => setNewModel({ ...newModel, imageUrl: url })}
+              currentImageUrl={newModel.imageUrl}
             />
           </div>
         </div>

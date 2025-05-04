@@ -89,6 +89,25 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
     })
   }
 
+  function formatImageUrl(url: string | undefined): string | null {
+    if (!url || url.trim() === "") return null
+
+    const trimmedUrl = url.trim()
+
+    // Якщо URL починається з http або https, повертаємо його як є
+    if (trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://")) {
+      return trimmedUrl
+    }
+
+    // Якщо URL починається з /, вважаємо його локальним
+    if (trimmedUrl.startsWith("/")) {
+      return trimmedUrl
+    }
+
+    // Інакше додаємо / на початку
+    return `/${trimmedUrl}`
+  }
+
   async function handleUpload() {
     if (!file || parsedData.length === 0) return
 
@@ -113,10 +132,16 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
         const end = Math.min(start + batchSize, parsedData.length)
         const batch = parsedData.slice(start, end)
 
+        // Форматуємо URL зображень перед відправкою
+        const formattedBatch = batch.map((item) => ({
+          ...item,
+          image_url: formatImageUrl(item.image_url),
+        }))
+
         const response = await fetch("/api/admin/bulk-import/models", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: batch }),
+          body: JSON.stringify({ data: formattedBatch }),
         })
 
         const batchResult = await response.json()
@@ -184,7 +209,19 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
     ]
 
     const csv = Papa.unparse(template)
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+
+    // Додаємо інструкції як коментар на початку CSV
+    const csvWithInstructions =
+      "# Інструкції для імпорту моделей:\n" +
+      "# 1. Колонки brand і model є обов'язковими\n" +
+      "# 2. Для image_url можна використовувати:\n" +
+      "#    - Повні URL (https://...)\n" +
+      "#    - Відносні шляхи (/images/...)\n" +
+      "#    - Залишити порожнім для моделей без зображень\n" +
+      "\n" +
+      csv
+
+    const blob = new Blob([csvWithInstructions], { type: "text/csv;charset=utf-8;" })
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.href = url
