@@ -46,22 +46,26 @@ export default async function BrandsPage({ params }: { params: { locale: string 
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
             {brands.map((brand) => (
               <Link key={brand.id} href={`/${locale}/brands/${brand.id}`} className="group flex flex-col items-center">
-                <div className="relative mb-4 h-32 w-32 overflow-hidden rounded-xl bg-white p-4 shadow-sm transition-all duration-300 group-hover:shadow-md">
+                <div className="relative mb-4 h-32 w-32 overflow-hidden rounded-xl bg-white p-4 shadow-lg transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white to-slate-50"></div>
                   {brand.logo_url ? (
-                    <Image
-                      src={brand.logo_url || "/placeholder.svg"}
-                      alt={brand.name}
-                      fill
-                      className="object-contain transition-transform duration-300 group-hover:scale-105"
-                    />
+                    <div className="relative z-10 h-full w-full">
+                      <Image
+                        src={brand.logo_url || "/placeholder.svg"}
+                        alt={brand.name}
+                        fill
+                        className="object-contain transition-transform duration-300 group-hover:scale-110"
+                      />
+                    </div>
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center">
+                    <div className="relative z-10 flex h-full w-full items-center justify-center">
                       <span className="text-2xl font-medium text-gray-400">{brand.name.charAt(0)}</span>
                     </div>
                   )}
-                  <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-primary/10 to-primary/5 opacity-0 transition-opacity group-hover:opacity-100"></div>
+                  <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-primary/30 to-primary/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
                 </div>
                 <h2 className="text-lg font-medium group-hover:text-primary transition-colors">{brand.name}</h2>
+                <div className="mt-2 h-0.5 w-0 bg-primary/30 transition-all duration-300 group-hover:w-12"></div>
               </Link>
             ))}
           </div>

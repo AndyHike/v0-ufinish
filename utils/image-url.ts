@@ -1,25 +1,25 @@
 /**
- * Форматує URL зображення для правильного відображення
- * Обробляє як локальні, так і віддалені URL
+ * Formats an image URL to ensure it's properly accessible
+ * This function handles both absolute URLs and relative paths
  */
-export function formatImageUrl(url: string | null | undefined): string {
-  if (!url) {
-    return "/abstract-geometric-shapes.png"
-  }
+export function formatImageUrl(url: string): string {
+  if (!url) return url
 
-  // Якщо URL починається з http або https, повертаємо його як є
+  // If it's already an absolute URL, return it as is
   if (url.startsWith("http://") || url.startsWith("https://")) {
     return url
   }
 
-  // Якщо URL починається з /, вважаємо його локальним
+  // If it's a relative path starting with '/', it's from the public folder
   if (url.startsWith("/")) {
     return url
   }
 
-  // Інакше додаємо / на початку
-  return `/${url}`
-}
+  // Otherwise, assume it's a storage URL that needs to be constructed
+  // This is just an example - adjust according to your actual storage setup
+  const baseStorageUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/`
+    : "/"
 
-// Alias for backward compatibility
-export const getImageUrl = formatImageUrl
+  return `${baseStorageUrl}${url}`
+}
