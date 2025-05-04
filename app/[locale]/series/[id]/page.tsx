@@ -5,6 +5,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { createServerClient } from "@/utils/supabase/server"
 import { ChevronLeft } from "lucide-react"
+import { formatCurrency } from "@/lib/format-currency"
 
 type Props = {
   params: {
@@ -33,14 +34,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       t("seriesPageDescription", { series: series.name, brand: series.brands?.name }) ||
       `Browse all ${series.name} models from ${series.brands?.name}`,
   }
-}
-
-async function formatCurrency(amount: number, currency = "USD") {
-  const formatter = new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: currency,
-  })
-  return formatter.format(amount)
 }
 
 export default async function SeriesPage({ params }: Props) {
@@ -72,6 +65,9 @@ export default async function SeriesPage({ params }: Props) {
     console.error("[SeriesPage] Error fetching models:", modelsError)
   }
 
+  // Додамо логування для діагностики
+  console.log(`[SeriesPage] Fetched ${models?.length || 0} models for series ${id}:`, models)
+
   return (
     <div className="container px-4 py-8 md:px-6 md:py-16">
       <div className="mx-auto max-w-6xl">
@@ -99,7 +95,7 @@ export default async function SeriesPage({ params }: Props) {
                   alt={series.brands?.name || "Brand"}
                   fill
                   className="object-contain"
-                  priority
+                  unoptimized
                 />
               </div>
               <div>
@@ -120,6 +116,14 @@ export default async function SeriesPage({ params }: Props) {
 
         <h2 className="mb-6 text-2xl font-bold">{t("availableModels") || "Available Models"}</h2>
 
+        {/* Додамо діагностичну інформацію */}
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <h3 className="mb-2 font-semibold">Debug Information:</h3>
+          <p>Series ID: {id}</p>
+          <p>Brand ID: {series.brand_id}</p>
+          <p>Total models in database for this series: {models?.length || 0}</p>
+        </div>
+
         {models && models.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {models.map((model) => (
@@ -136,6 +140,7 @@ export default async function SeriesPage({ params }: Props) {
                       width={80}
                       height={80}
                       className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-110"
+                      unoptimized
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200">
