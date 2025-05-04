@@ -14,13 +14,9 @@ import Papa from "papaparse"
 
 type ServiceImportRow = {
   brand: string
+  series?: string
   model: string
-  service_uk: string
-  service_en?: string
-  service_cs?: string
-  description_uk?: string
-  description_en?: string
-  description_cs?: string
+  service: string
   price: string | number
 }
 
@@ -41,7 +37,6 @@ export function BulkServiceImport({ onSuccess }: BulkServiceImportProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [file, setFile] = useState<File | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [progress, setProgress] = useState(0)
   const [result, setResult] = useState<ImportResult | null>(null)
@@ -74,7 +69,7 @@ export function BulkServiceImport({ onSuccess }: BulkServiceImportProps) {
 
         // Validate the data structure
         const data = results.data as ServiceImportRow[]
-        const requiredColumns = ["brand", "model", "service_uk", "price"]
+        const requiredColumns = ["brand", "model", "service"]
         const hasRequiredColumns = requiredColumns.every((col) =>
           Object.keys(data[0] || {})
             .map((k) => k.toLowerCase())
@@ -119,10 +114,19 @@ export function BulkServiceImport({ onSuccess }: BulkServiceImportProps) {
         const end = Math.min(start + batchSize, parsedData.length)
         const batch = parsedData.slice(start, end)
 
+        // Фільтруємо рядки з пустими послугами
+        const filteredBatch = batch.filter((item) => item.service && item.service.trim() !== "")
+
+        if (filteredBatch.length === 0) {
+          // Пропускаємо порожній пакет
+          setProgress(Math.round((end / parsedData.length) * 100))
+          continue
+        }
+
         const response = await fetch("/api/admin/bulk-import/services", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: batch }),
+          body: JSON.stringify({ data: filteredBatch }),
         })
 
         const batchResult = await response.json()
@@ -171,7 +175,6 @@ export function BulkServiceImport({ onSuccess }: BulkServiceImportProps) {
       })
     } finally {
       setIsProcessing(false)
-      setIsUploading(false)
     }
   }
 
@@ -179,30 +182,55 @@ export function BulkServiceImport({ onSuccess }: BulkServiceImportProps) {
     const template = [
       {
         brand: "Apple",
+        series: "iPhone",
         model: "iPhone 13",
-        service_uk: "Заміна екрану",
-        description_uk: "Професійна заміна розбитого або пошкодженого екрану",
-        service_en: "Screen Replacement",
-        description_en: "Professional replacement of broken or damaged screens",
-        service_cs: "Výměna displeje",
-        description_cs: "Profesionální výměna rozbitého nebo poškozeného displeje",
-        price: 2500,
+        service: "Screen Replacement",
+        price: 150,
+      },
+      {
+        brand: "Apple",
+        series: "iPhone",
+        model: "iPhone 13",
+        service: "Battery Replacement",
+        price: 80,
       },
       {
         brand: "Samsung",
+        series: "Galaxy S",
         model: "Galaxy S21",
-        service_uk: "Заміна батареї",
-        description_uk: "Відновлення тривалості роботи вашого телефону з новою батареєю",
-        service_en: "Battery Replacement",
-        description_en: "Restore your phone's battery life with a new battery",
-        service_cs: "Výměna baterie",
-        description_cs: "Obnovení výdrže vašeho telefonu s novou baterií",
-        price: 1200,
+        service: "Screen Replacement",
+        price: 140,
+      },
+      {
+        brand: "Samsung",
+        series: "Galaxy S",
+        model: "Galaxy S21",
+        service: "",
+        price: "",
+      },
+      {
+        brand: "Xiaomi",
+        series: "",
+        model: "Redmi Note 10",
+        service: "Screen Replacement",
+        price: "",
       },
     ]
 
     const csv = Papa.unparse(template)
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+
+    // Додаємо інструкції як коментар на початку CSV
+    const csvWithInstructions =
+      "# Інструкції для імпорту послуг:\n" +
+      "# 1. Колонки brand, model і service є обов'язковими\n" +
+      "# 2. Колонка series є необов'язковою\n" +
+      "# 3. Якщо колонка service порожня, рядок буде пропущено\n" +
+      "# 4. Якщо колонка price порожня, буде встановлено 'Ціна за запитом'\n" +
+      "# 5. Якщо послуга вже існує для моделі, вона буде оновлена\n" +
+      "\n" +
+      csv
+
+    const blob = new Blob([csvWithInstructions], { type: "text/csv;charset=utf-8;" })
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.href = url
@@ -215,7 +243,7 @@ export function BulkServiceImport({ onSuccess }: BulkServiceImportProps) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">{t("importServicePrices")}</h3>
+        <h3 className="text-lg font-medium">{t("importServices")}</h3>
         <Button variant="outline" onClick={downloadTemplate}>
           <FileSpreadsheet className="mr-2 h-4 w-4" />
           <Download className="mr-2 h-4 w-4" />
@@ -332,16 +360,13 @@ export function BulkServiceImport({ onSuccess }: BulkServiceImportProps) {
                     {t("brand")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("series")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("model")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("serviceUk")}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("serviceEn")}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("serviceCs")}
+                    {t("service")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("price")}
@@ -352,16 +377,15 @@ export function BulkServiceImport({ onSuccess }: BulkServiceImportProps) {
                 {parsedData.slice(0, 5).map((row, index) => (
                   <tr key={index}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{row.brand}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.series || "-"}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{row.model}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.service_uk}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.service_en || "-"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.service_cs || "-"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.price}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.service || "-"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.price || t("priceOnRequest")}</td>
                   </tr>
                 ))}
                 {parsedData.length > 5 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-sm text-center text-gray-500">
+                    <td colSpan={5} className="px-6 py-4 text-sm text-center text-gray-500">
                       {t("andMoreRows", { count: parsedData.length - 5 })}
                     </td>
                   </tr>

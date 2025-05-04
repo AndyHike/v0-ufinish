@@ -14,6 +14,7 @@ import Papa from "papaparse"
 
 type ModelImportRow = {
   brand: string
+  series?: string
   model: string
   image_url?: string
 }
@@ -35,7 +36,6 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [file, setFile] = useState<File | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [progress, setProgress] = useState(0)
   const [result, setResult] = useState<ImportResult | null>(null)
@@ -190,7 +190,6 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
       })
     } finally {
       setIsProcessing(false)
-      setIsUploading(false)
     }
   }
 
@@ -198,13 +197,21 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
     const template = [
       {
         brand: "Apple",
+        series: "iPhone",
         model: "iPhone 13",
         image_url: "https://example.com/iphone13.jpg",
       },
       {
         brand: "Samsung",
+        series: "Galaxy S",
         model: "Galaxy S21",
         image_url: "",
+      },
+      {
+        brand: "Xiaomi",
+        series: "",
+        model: "Redmi Note 10",
+        image_url: "/images/redmi-note-10.jpg",
       },
     ]
 
@@ -212,9 +219,10 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
 
     // Додаємо інструкції як коментар на початку CSV
     const csvWithInstructions =
-      "# Інструкції для імпорту моделей:\n" +
+      "# Інструкції для імпорту моделей телефонів:\n" +
       "# 1. Колонки brand і model є обов'язковими\n" +
-      "# 2. Для image_url можна використовувати:\n" +
+      "# 2. Колонка series є необов'язковою\n" +
+      "# 3. Для image_url можна використовувати:\n" +
       "#    - Повні URL (https://...)\n" +
       "#    - Відносні шляхи (/images/...)\n" +
       "#    - Залишити порожнім для моделей без зображень\n" +
@@ -351,6 +359,9 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
                     {t("brand")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("series")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("model")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -362,13 +373,14 @@ export function BulkModelImport({ onSuccess }: BulkModelImportProps) {
                 {parsedData.slice(0, 5).map((row, index) => (
                   <tr key={index}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{row.brand}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.series || "-"}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{row.model}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm truncate max-w-xs">{row.image_url || "-"}</td>
                   </tr>
                 ))}
                 {parsedData.length > 5 && (
                   <tr>
-                    <td colSpan={3} className="px-6 py-4 text-sm text-center text-gray-500">
+                    <td colSpan={4} className="px-6 py-4 text-sm text-center text-gray-500">
                       {t("andMoreRows", { count: parsedData.length - 5 })}
                     </td>
                   </tr>

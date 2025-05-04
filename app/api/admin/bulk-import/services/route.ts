@@ -3,13 +3,9 @@ import { createClient } from "@/lib/supabase"
 
 type ServiceImportRow = {
   brand: string
+  series?: string
   model: string
-  service_uk: string
-  service_en?: string
-  service_cs?: string
-  description_uk?: string
-  description_en?: string
-  description_cs?: string
+  service: string
   price: string | number
 }
 
@@ -33,160 +29,64 @@ export async function POST(request: Request) {
     for (const row of data) {
       try {
         // Validate row data
-        if (!row.brand || !row.model || !row.service_uk) {
+        if (!row.brand || !row.model || !row.service) {
           result.failed++
           result.errors.push(`Missing required fields for row: ${JSON.stringify(row)}`)
           continue
         }
 
-        // 1. Find or create brand
-        let brandId: string
-        const { data: existingBrand } = await supabase.from("brands").select("id").eq("name", row.brand).maybeSingle()
+        // 1. Find brand
+        const { data: brand } = await supabase.from("brands").select("id").eq("name", row.brand).maybeSingle()
 
-        if (existingBrand) {
-          brandId = existingBrand.id
-        } else {
-          // Create new brand
-          const { data: newBrand, error: brandError } = await supabase
-            .from("brands")
-            .insert({ name: row.brand })
-            .select("id")
-            .single()
-
-          if (brandError) {
-            result.failed++
-            result.errors.push(`Failed to create brand "${row.brand}": ${brandError.message}`)
-            continue
-          }
-
-          brandId = newBrand.id
+        if (!brand) {
+          result.failed++
+          result.errors.push(`Brand "${row.brand}" not found`)
+          continue
         }
 
-        // 2. Find or create model
-        let modelId: string
-        const { data: existingModel } = await supabase
+        // 2. Find series if provided
+        let seriesId: string | null = null
+        if (row.series && row.series.trim() !== "") {
+          const { data: series } = await supabase
+            .from("series")
+            .select("id")
+            .eq("name", row.series)
+            .eq("brand_id", brand.id)
+            .maybeSingle()
+
+          if (series) {
+            seriesId = series.id
+          } else {
+            result.failed++
+            result.errors.push(`Series "${row.series}" not found for brand "${row.brand}"`)
+            continue
+          }
+        }
+
+        // 3. Find model
+        const { data: model } = await supabase
           .from("models")
           .select("id")
           .eq("name", row.model)
-          .eq("brand_id", brandId)
+          .eq("brand_id", brand.id)
           .maybeSingle()
 
-        if (existingModel) {
-          modelId = existingModel.id
-        } else {
-          // Create new model
-          const { data: newModel, error: modelError } = await supabase
-            .from("models")
-            .insert({ name: row.model, brand_id: brandId })
-            .select("id")
-            .single()
-
-          if (modelError) {
-            result.failed++
-            result.errors.push(`Failed to create model "${row.model}": ${modelError.message}`)
-            continue
-          }
-
-          modelId = newModel.id
+        if (!model) {
+          result.failed++
+          result.errors.push(`Model "${row.model}" not found for brand "${row.brand}"`)
+          continue
         }
 
-        // 3. Find or create service with translations
-        let serviceId: string
-
-        // Try to find existing service by Ukrainian name (primary language)
-        const { data: existingService } = await supabase
+        // 4. Find service
+        const { data: service } = await supabase
           .from("services_translations")
           .select("service_id")
-          .eq("name", row.service_uk)
-          .eq("locale", "uk")
+          .eq("name", row.service)
+          .eq("locale", "uk") // Використовуємо українську локаль як основну
           .maybeSingle()
 
-        if (existingService) {
-          serviceId = existingService.service_id
-
-          // Update existing translations
-          const translationPromises = []
-
-          // Update Ukrainian translation (always required)
-          translationPromises.push(
-            supabase
-              .from("services_translations")
-              .update({
-                name: row.service_uk,
-                description: row.description_uk || "",
-              })
-              .eq("service_id", serviceId)
-              .eq("locale", "uk"),
-          )
-
-          // Update English translation if provided
-          if (row.service_en) {
-            const { data: existingEnTranslation } = await supabase
-              .from("services_translations")
-              .select("id")
-              .eq("service_id", serviceId)
-              .eq("locale", "en")
-              .maybeSingle()
-
-            if (existingEnTranslation) {
-              translationPromises.push(
-                supabase
-                  .from("services_translations")
-                  .update({
-                    name: row.service_en,
-                    description: row.description_en || "",
-                  })
-                  .eq("service_id", serviceId)
-                  .eq("locale", "en"),
-              )
-            } else {
-              translationPromises.push(
-                supabase.from("services_translations").insert({
-                  service_id: serviceId,
-                  name: row.service_en,
-                  description: row.description_en || "",
-                  locale: "en",
-                }),
-              )
-            }
-          }
-
-          // Update Czech translation if provided
-          if (row.service_cs) {
-            const { data: existingCsTranslation } = await supabase
-              .from("services_translations")
-              .select("id")
-              .eq("service_id", serviceId)
-              .eq("locale", "cs")
-              .maybeSingle()
-
-            if (existingCsTranslation) {
-              translationPromises.push(
-                supabase
-                  .from("services_translations")
-                  .update({
-                    name: row.service_cs,
-                    description: row.description_cs || "",
-                  })
-                  .eq("service_id", serviceId)
-                  .eq("locale", "cs"),
-              )
-            } else {
-              translationPromises.push(
-                supabase.from("services_translations").insert({
-                  service_id: serviceId,
-                  name: row.service_cs,
-                  description: row.description_cs || "",
-                  locale: "cs",
-                }),
-              )
-            }
-          }
-
-          // Execute all translation updates
-          await Promise.all(translationPromises)
-        } else {
-          // Create new service
+        if (!service) {
+          // Створюємо новий сервіс, якщо він не існує
           const { data: newService, error: serviceError } = await supabase
             .from("services")
             .insert({})
@@ -195,89 +95,82 @@ export async function POST(request: Request) {
 
           if (serviceError) {
             result.failed++
-            result.errors.push(`Failed to create service "${row.service_uk}": ${serviceError.message}`)
+            result.errors.push(`Failed to create service "${row.service}": ${serviceError.message}`)
             continue
           }
 
-          serviceId = newService.id
-
-          // Add service translations for all provided languages
-          const translationInserts = [
-            // Ukrainian translation (required)
-            {
-              service_id: serviceId,
-              name: row.service_uk,
-              description: row.description_uk || "",
-              locale: "uk",
-            },
-          ]
-
-          // Add English translation if provided
-          if (row.service_en) {
-            translationInserts.push({
-              service_id: serviceId,
-              name: row.service_en,
-              description: row.description_en || "",
-              locale: "en",
-            })
-          }
-
-          // Add Czech translation if provided
-          if (row.service_cs) {
-            translationInserts.push({
-              service_id: serviceId,
-              name: row.service_cs,
-              description: row.description_cs || "",
-              locale: "cs",
-            })
-          }
-
-          const { error: translationError } = await supabase.from("services_translations").insert(translationInserts)
+          // Додаємо переклад для сервісу
+          const { error: translationError } = await supabase.from("services_translations").insert({
+            service_id: newService.id,
+            name: row.service,
+            description: "",
+            locale: "uk",
+          })
 
           if (translationError) {
             result.failed++
-            result.errors.push(
-              `Failed to create service translations for "${row.service_uk}": ${translationError.message}`,
-            )
+            result.errors.push(`Failed to create service translation "${row.service}": ${translationError.message}`)
             continue
           }
-        }
 
-        // 4. Create or update model service
-        const price = row.price === "" ? null : typeof row.price === "string" ? Number.parseFloat(row.price) : row.price
+          // 5. Create model service
+          const price =
+            row.price === "" ? null : typeof row.price === "string" ? Number.parseFloat(row.price) : row.price
 
-        // Check if model service already exists
-        const { data: existingModelService } = await supabase
-          .from("model_services")
-          .select("id")
-          .eq("model_id", modelId)
-          .eq("service_id", serviceId)
-          .maybeSingle()
-
-        if (existingModelService) {
-          // Update existing model service
-          const { error: updateError } = await supabase
-            .from("model_services")
-            .update({ price })
-            .eq("id", existingModelService.id)
-
-          if (updateError) {
-            result.failed++
-            result.errors.push(`Failed to update price for ${row.model} - ${row.service_uk}: ${updateError.message}`)
-            continue
-          }
-        } else {
-          // Create new model service
-          const { error: createError } = await supabase.from("model_services").insert({
-            model_id: modelId,
-            service_id: serviceId,
+          const { error: modelServiceError } = await supabase.from("model_services").insert({
+            model_id: model.id,
+            service_id: newService.id,
             price,
           })
 
-          if (createError) {
+          if (modelServiceError) {
             result.failed++
-            result.errors.push(`Failed to create price for ${row.model} - ${row.service_uk}: ${createError.message}`)
+            result.errors.push(
+              `Failed to create model service for "${row.model}" - "${row.service}": ${modelServiceError.message}`,
+            )
             continue
+          }
+        } else {
+          // 5. Check if model service already exists
+          const { data: modelService } = await supabase
+            .from("model_services")
+            .select("id")
+            .eq("model_id", model.id)
+            .eq("service_id", service.service_id)
+            .maybeSingle()
+
+          const price =
+            row.price === "" ? null : typeof row.price === "string" ? Number.parseFloat(row.price) : row.price
+
+          if (modelService) {
+            // Update existing model service
+            const { error: updateError } = await supabase
+              .from("model_services")
+              .update({ price })
+              .eq("id", modelService.id)
+
+            if (updateError) {
+              result.failed++
+              result.errors.push(
+                `Failed to update model service for "${row.model}" - "${row.service}": ${updateError.message}`,
+              )
+              continue
+            }
+          } else {
+            // Create new model service
+            const { error: createError } = await supabase.from("model_services").insert({
+              model_id: model.id,
+              service_id: service.service_id,
+              price,
+            })
+
+            if (createError) {
+              result.failed++
+              result.errors.push(
+                `Failed to create model service for "${row.model}" - "${row.service}": ${createError.message}`,
+              )
+              continue
+            }
           }
         }
 

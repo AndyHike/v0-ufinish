@@ -16,6 +16,7 @@ import {
   Repeat,
   FileSpreadsheet,
   Wrench,
+  Database,
 } from "lucide-react"
 
 export function AdminSidebar() {
@@ -92,6 +93,12 @@ export function AdminSidebar() {
       href: "/admin/settings",
       icon: Settings,
       active: isActive("/admin/settings"),
+    },
+    {
+      title: t("bulkImport"),
+      href: `/admin/bulk-import`,
+      icon: Database,
+      active: isActive("/admin/bulk-import"),
     },
   ]
 

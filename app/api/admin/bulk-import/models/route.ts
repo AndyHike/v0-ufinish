@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase"
 
 type ModelImportRow = {
   brand: string
+  series?: string
   model: string
   image_url?: string
 }
@@ -76,12 +77,43 @@ export async function POST(request: Request) {
           brandId = newBrand.id
         }
 
-        // 2. Check if model already exists
+        // 2. Find or create series if provided
+        let seriesId: string | null = null
+        if (row.series && row.series.trim() !== "") {
+          const { data: existingSeries } = await supabase
+            .from("series")
+            .select("id")
+            .eq("name", row.series)
+            .eq("brand_id", brandId)
+            .maybeSingle()
+
+          if (existingSeries) {
+            seriesId = existingSeries.id
+          } else {
+            // Create new series
+            const { data: newSeries, error: seriesError } = await supabase
+              .from("series")
+              .insert({ name: row.series, brand_id: brandId })
+              .select("id")
+              .single()
+
+            if (seriesError) {
+              result.failed++
+              result.errors.push(`Failed to create series "${row.series}": ${seriesError.message}`)
+              continue
+            }
+
+            seriesId = newSeries.id
+          }
+        }
+
+        // 3. Check if model already exists
         const { data: existingModel } = await supabase
           .from("models")
           .select("id")
           .eq("name", row.model)
           .eq("brand_id", brandId)
+          .eq("series_id", seriesId)
           .maybeSingle()
 
         if (existingModel) {
@@ -103,10 +135,11 @@ export async function POST(request: Request) {
           continue
         }
 
-        // 3. Create new model
+        // 4. Create new model
         const { error: modelError } = await supabase.from("models").insert({
           name: row.model,
           brand_id: brandId,
+          series_id: seriesId,
           image_url: formatImageUrl(row.image_url),
         })
 
