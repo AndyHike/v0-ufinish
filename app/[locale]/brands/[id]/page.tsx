@@ -51,13 +51,6 @@ export default async function BrandPage({ params }: Props) {
     notFound()
   }
 
-  // Fetch models for this brand ordered by position
-  const { data: models } = await supabase
-    .from("models")
-    .select("*")
-    .eq("brand_id", id)
-    .order("position", { ascending: true })
-
   // Оновимо запит до бази даних, щоб отримати моделі без серії
   const { data: modelsWithoutSeries, error: modelsError } = await supabase
     .from("models")
@@ -65,6 +58,9 @@ export default async function BrandPage({ params }: Props) {
     .eq("brand_id", id)
     .is("series_id", null)
     .order("position", { ascending: true })
+
+  // Перевіряємо, чи є моделі без серії
+  const hasModelsWithoutSeries = modelsWithoutSeries && modelsWithoutSeries.length > 0
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
@@ -111,15 +107,15 @@ export default async function BrandPage({ params }: Props) {
           </div>
         )}
 
-        {/* Розділ моделей */}
-        <div>
-          <h2 className="mb-6 border-b pb-2 text-2xl font-bold">
-            {brand.series && brand.series.length > 0
-              ? t("modelsWithoutSeries") || "Models without series"
-              : t("availableModels") || "Available Models"}
-          </h2>
+        {/* Розділ моделей без серії - показуємо тільки якщо є моделі */}
+        {hasModelsWithoutSeries && (
+          <div>
+            <h2 className="mb-6 border-b pb-2 text-2xl font-bold">
+              {brand.series && brand.series.length > 0
+                ? t("modelsWithoutSeries") || "Models without series"
+                : t("availableModels") || "Available Models"}
+            </h2>
 
-          {modelsWithoutSeries && modelsWithoutSeries.length > 0 ? (
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {modelsWithoutSeries.map((model) => (
                 <Link
@@ -151,12 +147,15 @@ export default async function BrandPage({ params }: Props) {
                 </Link>
               ))}
             </div>
-          ) : (
-            <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-              <p className="text-muted-foreground">{t("noModelsAvailable", { brand: brand.name })}</p>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Якщо немає ні серій, ні моделей без серій, показуємо повідомлення */}
+        {(!brand.series || brand.series.length === 0) && !hasModelsWithoutSeries && (
+          <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+            <p className="text-muted-foreground">{t("noModelsAvailable", { brand: brand.name })}</p>
+          </div>
+        )}
       </div>
     </div>
   )
