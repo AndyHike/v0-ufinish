@@ -1,21 +1,25 @@
 /**
  * Форматує URL зображення для правильного відображення
- * @param url URL зображення
- * @returns Відформатований URL
+ * Обробляє як локальні, так і віддалені URL
  */
-export function formatImageUrl(url: string | null): string | null {
-  if (!url) return null
+export function formatImageUrl(url: string | null | undefined): string {
+  if (!url) {
+    return "/abstract-geometric-shapes.png"
+  }
 
-  // Якщо URL вже є абсолютним (починається з http:// або https://)
+  // Якщо URL починається з http або https, повертаємо його як є
   if (url.startsWith("http://") || url.startsWith("https://")) {
     return url
   }
 
-  // Якщо URL починається з /, вважаємо його відносним до кореня сайту
+  // Якщо URL починається з /, вважаємо його локальним
   if (url.startsWith("/")) {
     return url
   }
 
-  // В іншому випадку додаємо / на початку
+  // Інакше додаємо / на початку
   return `/${url}`
 }
+
+// Alias for backward compatibility
+export const getImageUrl = formatImageUrl

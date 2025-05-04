@@ -481,123 +481,106 @@ export function SeriesList({ brandId }: SeriesListProps) {
             </div>
           ) : (
             <DragDropContext onDragEnd={handleReorderSeries}>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {isReorderMode && <TableHead className="w-[50px]"></TableHead>}
-                      <TableHead>{t("name") || "Name"}</TableHead>
-                      {!brandId && <TableHead>{t("brand") || "Brand"}</TableHead>}
-                      <TableHead className="hidden md:table-cell">{t("createdAt") || "Created At"}</TableHead>
-                      <TableHead className="text-right">{t("actions") || "Actions"}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <Droppable droppableId="series" isDropDisabled={!isReorderMode}>
-                    {(provided) => (
-                      <TableBody {...provided.droppableProps} ref={provided.innerRef}>
-                        {series.length === 0 ? (
-                          <TableRow>
-                            <TableCell
-                              colSpan={isReorderMode ? (brandId ? 4 : 5) : brandId ? 3 : 4}
-                              className="text-center"
-                            >
-                              {t("noSeries") || "No series found"}
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          series.map((item, index) => (
-                            <Draggable
-                              key={item.id}
-                              draggableId={item.id}
-                              index={index}
-                              isDragDisabled={!isReorderMode}
-                            >
-                              {(provided) => (
-                                <TableRow
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  className="transition-colors hover:bg-muted/30"
-                                >
-                                  {isReorderMode && (
-                                    <TableCell {...provided.dragHandleProps} className="w-[50px]">
-                                      <div className="flex items-center justify-center">
-                                        <MoveVertical className="h-5 w-5 text-muted-foreground" />
-                                      </div>
-                                    </TableCell>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {isReorderMode && <TableHead className="w-[50px]"></TableHead>}
+                    <TableHead>{t("name") || "Name"}</TableHead>
+                    {!brandId && <TableHead>{t("brand") || "Brand"}</TableHead>}
+                    <TableHead>{t("createdAt") || "Created At"}</TableHead>
+                    <TableHead className="text-right">{t("actions") || "Actions"}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <Droppable droppableId="series" isDropDisabled={!isReorderMode}>
+                  {(provided) => (
+                    <TableBody {...provided.droppableProps} ref={provided.innerRef}>
+                      {series.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={isReorderMode ? (brandId ? 4 : 5) : brandId ? 3 : 4}
+                            className="text-center"
+                          >
+                            {t("noSeries") || "No series found"}
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        series.map((item, index) => (
+                          <Draggable key={item.id} draggableId={item.id} index={index} isDragDisabled={!isReorderMode}>
+                            {(provided) => (
+                              <TableRow ref={provided.innerRef} {...provided.draggableProps}>
+                                {isReorderMode && (
+                                  <TableCell {...provided.dragHandleProps}>
+                                    <MoveVertical className="h-5 w-5 text-muted-foreground" />
+                                  </TableCell>
+                                )}
+                                <TableCell className="font-medium">{item.name}</TableCell>
+                                {!brandId && <TableCell>{item.brands?.name}</TableCell>}
+                                <TableCell>{new Date(item.created_at).toLocaleDateString()}</TableCell>
+                                <TableCell className="text-right">
+                                  {!isReorderMode ? (
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                          <MoreHorizontal className="h-4 w-4" />
+                                          <span className="sr-only">{t("openMenu") || "Open Menu"}</span>
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel>{t("actions") || "Actions"}</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setEditSeries(item)
+                                            setIsEditDialogOpen(true)
+                                          }}
+                                        >
+                                          <Pencil className="mr-2 h-4 w-4" />
+                                          {t("edit") || "Edit"}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          className="text-destructive"
+                                          onClick={() => {
+                                            setSeriesToDelete(item)
+                                            setIsDeleteDialogOpen(true)
+                                          }}
+                                        >
+                                          <Trash className="mr-2 h-4 w-4" />
+                                          {t("delete") || "Delete"}
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  ) : (
+                                    <div className="flex justify-end space-x-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => moveSeriesUp(index)}
+                                        disabled={index === 0 || reordering}
+                                      >
+                                        <ArrowUp className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => moveSeriesDown(index)}
+                                        disabled={index === series.length - 1 || reordering}
+                                      >
+                                        <ArrowDown className="h-4 w-4" />
+                                      </Button>
+                                    </div>
                                   )}
-                                  <TableCell className="font-medium">{item.name}</TableCell>
-                                  {!brandId && <TableCell>{item.brands?.name}</TableCell>}
-                                  <TableCell className="hidden md:table-cell">
-                                    {new Date(item.created_at).toLocaleDateString()}
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                    {!isReorderMode ? (
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">{t("openMenu") || "Open Menu"}</span>
-                                          </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                          <DropdownMenuLabel>{t("actions") || "Actions"}</DropdownMenuLabel>
-                                          <DropdownMenuSeparator />
-                                          <DropdownMenuItem
-                                            onClick={() => {
-                                              setEditSeries(item)
-                                              setIsEditDialogOpen(true)
-                                            }}
-                                          >
-                                            <Pencil className="mr-2 h-4 w-4" />
-                                            {t("edit") || "Edit"}
-                                          </DropdownMenuItem>
-                                          <DropdownMenuSeparator />
-                                          <DropdownMenuItem
-                                            className="text-destructive"
-                                            onClick={() => {
-                                              setSeriesToDelete(item)
-                                              setIsDeleteDialogOpen(true)
-                                            }}
-                                          >
-                                            <Trash className="mr-2 h-4 w-4" />
-                                            {t("delete") || "Delete"}
-                                          </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    ) : (
-                                      <div className="flex justify-end space-x-1">
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() => moveSeriesUp(index)}
-                                          disabled={index === 0 || reordering}
-                                          className="h-8 w-8"
-                                        >
-                                          <ArrowUp className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() => moveSeriesDown(index)}
-                                          disabled={index === series.length - 1 || reordering}
-                                          className="h-8 w-8"
-                                        >
-                                          <ArrowDown className="h-4 w-4" />
-                                        </Button>
-                                      </div>
-                                    )}
-                                  </TableCell>
-                                </TableRow>
-                              )}
-                            </Draggable>
-                          ))
-                        )}
-                        {provided.placeholder}
-                      </TableBody>
-                    )}
-                  </Droppable>
-                </Table>
-              </div>
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </Draggable>
+                        ))
+                      )}
+                      {provided.placeholder}
+                    </TableBody>
+                  )}
+                </Droppable>
+              </Table>
             </DragDropContext>
           )}
         </CardContent>

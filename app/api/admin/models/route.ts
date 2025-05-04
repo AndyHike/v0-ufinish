@@ -1,14 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
 import { logActivity } from "@/lib/admin/activity-logger"
+import { formatImageUrl } from "@/utils/image-url"
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const brandId = searchParams.get("brand_id")
     const seriesId = searchParams.get("series_id")
-
-    console.log(`[API] Fetching models with filters - brandId: ${brandId}, seriesId: ${seriesId}`)
 
     const supabase = createClient()
     let query = supabase.from("models").select("*, brands(name), series(name)")
@@ -23,15 +22,17 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query.order("position", { ascending: true, nullsLast: true })
 
-    if (error) {
-      console.error("[API] Error fetching models:", error)
-      throw error
-    }
+    if (error) throw error
 
-    console.log(`[API] Successfully fetched ${data.length} models`)
-    return NextResponse.json(data)
+    // Форматуємо URL зображень
+    const formattedData = data.map((model) => ({
+      ...model,
+      image_url: model.image_url ? formatImageUrl(model.image_url) : null,
+    }))
+
+    return NextResponse.json(formattedData)
   } catch (error) {
-    console.error("[API] Error in models API:", error)
+    console.error("Error fetching models:", error)
     return NextResponse.json({ error: "Failed to fetch models" }, { status: 500 })
   }
 }
@@ -39,8 +40,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    console.log("[API] Creating new model with data:", body)
-
     const supabase = createClient()
 
     // Get the highest position value
@@ -58,19 +57,14 @@ export async function POST(request: Request) {
       .insert({
         name: body.name,
         brand_id: body.brandId,
-        series_id: body.seriesId === "_none" ? null : body.seriesId || null,
+        series_id: body.seriesId || null,
         image_url: body.imageUrl || null,
         position: nextPosition,
       })
       .select()
       .single()
 
-    if (error) {
-      console.error("[API] Error creating model:", error)
-      throw error
-    }
-
-    console.log("[API] Successfully created model:", data)
+    if (error) throw error
 
     // Log activity
     await logActivity({
@@ -83,7 +77,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error("[API] Error in create model API:", error)
+    console.error("Error creating model:", error)
     return NextResponse.json({ error: "Failed to create model" }, { status: 500 })
   }
 }
