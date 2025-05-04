@@ -60,7 +60,7 @@ export default async function BrandPage({ params }: Props) {
   // Оновимо запит до бази даних, щоб отримати моделі без серії
   const { data: modelsWithoutSeries, error: modelsError } = await supabase
     .from("models")
-    .select("id, name, image_url")
+    .select("id, name, image_url, base_price")
     .eq("brand_id", id)
     .is("series_id", null)
     .order("position", { ascending: true })
@@ -68,21 +68,24 @@ export default async function BrandPage({ params }: Props) {
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-12 flex flex-col items-center gap-6 md:flex-row">
-          <div className="relative h-32 w-32 overflow-hidden rounded-lg">
-            <Image
-              src={brand.logo_url || "/placeholder.svg?height=128&width=128&query=phone+brand+logo"}
-              alt={brand.name}
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{brand.name}</h1>
-            <p className="mt-2 max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              {t("brandPageDescription", { brand: brand.name })}
-            </p>
+        {/* Brand Header with Gradient Background */}
+        <div className="mb-12 rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 p-8 shadow-sm">
+          <div className="flex flex-col items-center gap-6 md:flex-row">
+            <div className="relative h-32 w-32 overflow-hidden rounded-xl bg-white p-4 shadow-sm">
+              <Image
+                src={brand.logo_url || "/placeholder.svg?height=128&width=128&query=phone+brand+logo"}
+                alt={brand.name}
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{brand.name}</h1>
+              <p className="mt-2 max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                {t("brandPageDescription", { brand: brand.name })}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -94,10 +97,12 @@ export default async function BrandPage({ params }: Props) {
                 <Link
                   key={series.id}
                   href={`/${locale}/series/${series.id}`}
-                  className="group rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                  className="group relative overflow-hidden rounded-xl border-0 bg-gradient-to-br from-white to-slate-50 p-6 shadow-md transition-all duration-300 hover:shadow-lg"
                 >
-                  <h3 className="text-lg font-medium group-hover:underline">{series.name}</h3>
+                  <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-slate-200 to-slate-300"></div>
+                  <h3 className="text-lg font-medium group-hover:text-primary">{series.name}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{t("viewAllModels") || "View all models"}</p>
+                  <div className="absolute bottom-0 left-0 h-0 w-full bg-gradient-to-r from-primary/20 to-primary/10 transition-all duration-300 group-hover:h-1"></div>
                 </Link>
               ))}
             </div>
@@ -116,17 +121,35 @@ export default async function BrandPage({ params }: Props) {
               <Link
                 href={`/${locale}/models/${model.id}`}
                 key={model.id}
-                className="flex flex-col items-center rounded-lg border p-4 shadow-sm transition-all hover:shadow-md"
+                className="group flex flex-col items-center rounded-xl border-0 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
               >
-                <h3 className="text-lg font-medium">{model.name}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {t("startingFrom", { price: formatCurrency(model.base_price) })}
-                </p>
+                <div className="relative mb-4 h-16 w-16 overflow-hidden">
+                  {model.image_url ? (
+                    <Image
+                      src={model.image_url || "/placeholder.svg"}
+                      alt={model.name}
+                      fill
+                      className="object-contain"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-100">
+                      <span className="text-xl font-medium text-slate-400">{model.name.charAt(0)}</span>
+                    </div>
+                  )}
+                </div>
+                <h3 className="text-center text-lg font-medium group-hover:text-primary">{model.name}</h3>
+                {model.base_price && (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t("startingFrom", { price: formatCurrency(model.base_price) })}
+                  </p>
+                )}
               </Link>
             ))}
           </div>
         ) : (
-          <p>{t("noModelsAvailable", { brand: brand.name })}</p>
+          <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+            <p className="text-muted-foreground">{t("noModelsAvailable", { brand: brand.name })}</p>
+          </div>
         )}
       </div>
     </div>

@@ -82,7 +82,7 @@ export function BrandsSection() {
   const shouldCenterBrands = brands.length <= 3
 
   return (
-    <section className="py-12 bg-gray-50">
+    <section className="py-12 bg-gradient-to-b from-white to-gray-50">
       <div className="container px-4 mx-auto">
         <h2 className="text-3xl font-bold text-center mb-8">{t("title")}</h2>
         <p className="text-center text-gray-600 mb-10 max-w-2xl mx-auto">{t("description")}</p>
@@ -90,11 +90,9 @@ export function BrandsSection() {
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <Card key={i} className="border-none shadow-sm">
-                <CardContent className="p-6 flex items-center justify-center">
-                  <Skeleton className="h-16 w-full" />
-                </CardContent>
-              </Card>
+              <div key={i} className="rounded-xl bg-white p-6 shadow-sm">
+                <Skeleton className="h-16 w-full" />
+              </div>
             ))}
           </div>
         ) : brands.length > 0 ? (
@@ -103,7 +101,7 @@ export function BrandsSection() {
             {brands.length > 3 && (
               <button
                 onClick={() => document.getElementById("brands-scroll")?.scrollBy(-200, 0)}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex hover:bg-gray-50 transition-colors"
                 aria-label="Previous brands"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -119,11 +117,11 @@ export function BrandsSection() {
               >
                 {brands.map((brand) => (
                   <div key={brand.id} className="flex-none w-[200px] snap-start">
-                    <Link href={`/brands/${brand.id}`}>
-                      <Card className="border-none shadow-sm hover:shadow-md transition-shadow duration-300 h-32">
-                        <CardContent className="p-6 flex flex-col items-center justify-center h-full">
+                    <Link href={`/${locale}/brands/${brand.id}`}>
+                      <Card className="border-0 shadow-sm hover:shadow-md transition-all duration-300 h-32 bg-white rounded-xl overflow-hidden group">
+                        <CardContent className="p-6 flex flex-col items-center justify-center h-full relative">
                           {brand.logo_url ? (
-                            <div className="relative h-16 w-full">
+                            <div className="relative h-16 w-full transition-transform duration-300 group-hover:scale-105">
                               <Image
                                 src={brand.logo_url || "/placeholder.svg"}
                                 alt={brand.name}
@@ -134,9 +132,14 @@ export function BrandsSection() {
                               />
                             </div>
                           ) : (
-                            <div className="text-lg font-medium">{brand.name}</div>
+                            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+                              {brand.name}
+                            </div>
                           )}
-                          <span className="mt-2 text-sm text-center">{brand.name}</span>
+                          <span className="mt-2 text-sm text-center text-muted-foreground group-hover:text-primary transition-colors">
+                            {brand.name}
+                          </span>
+                          <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-primary/10 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         </CardContent>
                       </Card>
                     </Link>
@@ -148,7 +151,7 @@ export function BrandsSection() {
             {brands.length > 3 && (
               <button
                 onClick={() => document.getElementById("brands-scroll")?.scrollBy(200, 0)}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex hover:bg-gray-50 transition-colors"
                 aria-label="Next brands"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -160,8 +163,8 @@ export function BrandsSection() {
         )}
 
         <div className="text-center mt-8">
-          <Button asChild variant="outline">
-            <Link href="/brands">{t("allBrandsButton")}</Link>
+          <Button asChild variant="outline" className="rounded-full px-6 shadow-sm hover:shadow transition-all">
+            <Link href={`/${locale}/brands`}>{t("allBrandsButton")}</Link>
           </Button>
         </div>
       </div>

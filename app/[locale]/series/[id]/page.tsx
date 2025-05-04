@@ -4,7 +4,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { createServerClient } from "@/utils/supabase/server"
-import { ChevronLeft } from "lucide-react"
 
 type Props = {
   params: {
@@ -54,10 +53,12 @@ export default async function SeriesPage({ params }: Props) {
     notFound()
   }
 
+  const brand = series.brands
+
   // Fetch models for this series
   const { data: models, error: modelsError } = await supabase
     .from("models")
-    .select("id, name, image_url, created_at")
+    .select("id, name, image_url, created_at, base_price")
     .eq("series_id", id)
     .order("position", { ascending: true })
 
@@ -65,64 +66,82 @@ export default async function SeriesPage({ params }: Props) {
     console.error("[SeriesPage] Error fetching models:", modelsError)
   }
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: "USD", // Replace with your desired currency
+    }).format(amount)
+  }
+
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
       <div className="mx-auto max-w-5xl">
-        <Link
-          href={`/${locale}/brands/${series.brand_id}`}
-          className="mb-8 flex items-center text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft className="mr-1 h-4 w-4" />
-          {t("backToBrand", { brand: series.brands?.name })}
-        </Link>
-
-        <div className="mb-12">
-          <div className="mb-2 flex items-center gap-2">
-            {series.brands?.logo_url && (
-              <div className="relative h-6 w-6 overflow-hidden rounded-full">
-                <Image
-                  src={series.brands.logo_url || "/placeholder.svg"}
-                  alt={series.brands.name}
-                  fill
-                  className="object-contain"
-                  unoptimized
-                />
+        {/* Series Header with Gradient Background */}
+        <div className="mb-12 rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 p-8 shadow-sm">
+          <div className="flex flex-col items-center gap-6 md:flex-row">
+            <div className="relative h-32 w-32 overflow-hidden rounded-xl bg-white p-4 shadow-sm">
+              <Image
+                src={brand?.logo_url || "/placeholder.svg?height=128&width=128&query=phone+brand+logo"}
+                alt={brand?.name || series.name}
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                {brand && (
+                  <Link href={`/${locale}/brands/${brand.id}`} className="text-muted-foreground hover:text-primary">
+                    {brand.name}
+                  </Link>
+                )}
+                {brand && <span className="text-muted-foreground">/</span>}
+                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{series.name}</h1>
               </div>
-            )}
-            <span className="text-sm text-muted-foreground">{series.brands?.name}</span>
+              <p className="mt-2 max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                {t("seriesPageDescription", { series: series.name, brand: brand?.name || "" })}
+              </p>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{series.name}</h1>
-          <p className="mt-2 max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            {t("seriesPageDescription", { series: series.name, brand: series.brands?.name })}
-          </p>
         </div>
 
         <h2 className="mb-6 text-2xl font-bold">{t("availableModels")}</h2>
 
         {models && models.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
             {models.map((model) => (
               <Link
-                key={model.id}
                 href={`/${locale}/models/${model.id}`}
-                className="group rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                key={model.id}
+                className="group flex flex-col items-center rounded-xl border-0 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
               >
-                <div className="mb-3 aspect-square overflow-hidden rounded-md bg-muted">
-                  <Image
-                    src={model.image_url || "/placeholder.svg?height=200&width=200&query=phone+model"}
-                    alt={model.name}
-                    width={200}
-                    height={200}
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                    unoptimized
-                  />
+                <div className="relative mb-4 h-16 w-16 overflow-hidden">
+                  {model.image_url ? (
+                    <Image
+                      src={model.image_url || "/placeholder.svg"}
+                      alt={model.name}
+                      fill
+                      className="object-contain"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-100">
+                      <span className="text-xl font-medium text-slate-400">{model.name.charAt(0)}</span>
+                    </div>
+                  )}
                 </div>
-                <h3 className="text-lg font-medium group-hover:underline">{model.name}</h3>
+                <h3 className="text-center text-lg font-medium group-hover:text-primary">{model.name}</h3>
+                {model.base_price && (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t("startingFrom", { price: formatCurrency(model.base_price) })}
+                  </p>
+                )}
               </Link>
             ))}
           </div>
         ) : (
-          <p>{t("noModelsAvailable")}</p>
+          <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+            <p className="text-muted-foreground">{t("noModelsAvailable", { brand: series.name })}</p>
+          </div>
         )}
       </div>
     </div>
