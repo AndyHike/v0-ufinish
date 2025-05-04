@@ -87,20 +87,29 @@ export default async function BrandPage({ params }: Props) {
         {/* Розділ серій */}
         {brand.series && brand.series.length > 0 && (
           <div className="mb-12">
-            <h2 className="mb-6 border-b pb-2 text-2xl font-bold">{t("series") || "Series"}</h2>
+            <h2 className="mb-6 inline-block border-b-2 border-primary pb-2 text-2xl font-bold">
+              {t("productLines") || "Лінійки продуктів"}
+            </h2>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {brand.series.map((series) => (
                 <Link
                   key={series.id}
                   href={`/${locale}/series/${series.id}`}
-                  className="group flex items-center justify-between rounded-lg bg-white p-5 shadow-sm hover:shadow"
+                  className="group relative overflow-hidden rounded-lg bg-gradient-to-r from-slate-50 to-white p-5 shadow-md transition-all hover:shadow-lg"
                 >
-                  <div>
-                    <h3 className="text-xl font-medium group-hover:text-primary">{series.name}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{t("viewAllModels") || "View all models"}</p>
+                  {/* Декоративна лінія зліва */}
+                  <div className="absolute bottom-0 left-0 top-0 w-1 bg-primary opacity-70"></div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-medium text-slate-800 group-hover:text-primary">{series.name}</h3>
+                      <p className="mt-1 text-sm text-slate-600">{t("viewAllModels") || "Переглянути всі моделі"}</p>
+                    </div>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors group-hover:bg-primary group-hover:text-white">
+                      <ChevronRight className="h-5 w-5" />
+                    </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
                 </Link>
               ))}
             </div>
@@ -110,10 +119,10 @@ export default async function BrandPage({ params }: Props) {
         {/* Розділ моделей без серії - показуємо тільки якщо є моделі */}
         {hasModelsWithoutSeries && (
           <div>
-            <h2 className="mb-6 border-b pb-2 text-2xl font-bold">
+            <h2 className="mb-6 inline-block border-b-2 border-primary pb-2 text-2xl font-bold">
               {brand.series && brand.series.length > 0
-                ? t("modelsWithoutSeries") || "Models without series"
-                : t("availableModels") || "Available Models"}
+                ? t("otherModels") || "Інші моделі"
+                : t("availableModels") || "Доступні моделі"}
             </h2>
 
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
