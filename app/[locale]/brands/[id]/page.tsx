@@ -51,36 +51,28 @@ export default async function BrandPage({ params }: Props) {
     notFound()
   }
 
-  // Fetch models for this brand ordered by position
-  const { data: models } = await supabase
+  // Отримуємо всі моделі для цього бренду
+  const { data: models, error: modelsError } = await supabase
     .from("models")
-    .select("*")
+    .select("id, name, image_url, base_price, series_id")
     .eq("brand_id", id)
     .order("position", { ascending: true })
 
-  // Оновимо запит до бази даних, щоб отримати моделі без серії
-  const { data: modelsWithoutSeries, error: modelsError } = await supabase
-    .from("models")
-    .select("id, name, image_url, base_price")
-    .eq("brand_id", id)
-    .is("series_id", null)
-    .order("position", { ascending: true })
+  if (modelsError) {
+    console.error("[BrandPage] Error fetching models:", modelsError)
+  }
+
+  // Фільтруємо моделі без серії на стороні клієнта
+  const modelsWithoutSeries = models?.filter((model) => !model.series_id) || []
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
       <div className="mx-auto max-w-5xl">
         {/* Сучасний заголовок бренду */}
-        <div className="mb-12 overflow-hidden rounded-2xl bg-gradient-to-br from-white via-slate-50 to-slate-100 shadow-md">
+        <div className="mb-12 overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="relative">
-            {/* Фонові елементи */}
-            <div className="absolute inset-0 opacity-5">
-              <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/20"></div>
-              <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-primary/20"></div>
-            </div>
-
             <div className="relative z-10 flex flex-col items-center gap-8 p-8 md:flex-row md:p-10">
-              <div className="relative h-32 w-32 overflow-hidden rounded-2xl bg-white p-4 shadow-lg">
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-white opacity-80"></div>
+              <div className="relative h-32 w-32 overflow-hidden rounded-2xl bg-slate-50 p-4 shadow-sm">
                 <Image
                   src={brand.logo_url || "/placeholder.svg?height=128&width=128&query=phone+brand+logo"}
                   alt={brand.name}
@@ -110,22 +102,15 @@ export default async function BrandPage({ params }: Props) {
                 <Link
                   key={series.id}
                   href={`/${locale}/series/${series.id}`}
-                  className="group relative overflow-hidden rounded-xl bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  className="group relative overflow-hidden rounded-xl bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
                 >
-                  {/* Фонові елементи */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white to-slate-50"></div>
-                  <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-primary/30 to-primary/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-
-                  {/* Вміст */}
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-medium transition-colors group-hover:text-primary">{series.name}</h3>
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:text-primary">
-                        <ChevronRight className="h-5 w-5" />
-                      </div>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-medium transition-colors group-hover:text-primary">{series.name}</h3>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-400 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:text-primary">
+                      <ChevronRight className="h-5 w-5" />
                     </div>
-                    <p className="mt-2 text-sm text-muted-foreground">{t("viewAllModels") || "View all models"}</p>
                   </div>
+                  <p className="mt-2 text-sm text-muted-foreground">{t("viewAllModels") || "View all models"}</p>
                 </Link>
               ))}
             </div>
@@ -140,12 +125,12 @@ export default async function BrandPage({ params }: Props) {
         </h2>
 
         {modelsWithoutSeries && modelsWithoutSeries.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
             {modelsWithoutSeries.map((model) => (
               <Link
                 href={`/${locale}/models/${model.id}`}
                 key={model.id}
-                className="group flex flex-col items-center rounded-xl bg-white p-4 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                className="group flex flex-col items-center rounded-xl bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
               >
                 <div className="relative mb-4 h-16 w-16 overflow-hidden sm:h-20 sm:w-20">
                   {model.image_url ? (
@@ -155,9 +140,10 @@ export default async function BrandPage({ params }: Props) {
                       width={80}
                       height={80}
                       className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-110"
+                      unoptimized
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200">
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-50">
                       <Smartphone className="h-8 w-8 text-slate-400" />
                     </div>
                   )}
@@ -170,7 +156,6 @@ export default async function BrandPage({ params }: Props) {
                     {t("startingFrom", { price: formatCurrency(model.base_price) })}
                   </p>
                 )}
-                <div className="mt-3 h-0.5 w-0 bg-primary/30 transition-all duration-300 group-hover:w-12"></div>
               </Link>
             ))}
           </div>
