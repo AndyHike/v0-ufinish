@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 import { createServerClient } from "@/utils/supabase/server"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/format-currency"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, Smartphone } from "lucide-react"
 
 type Props = {
   params: {
@@ -70,21 +70,25 @@ export default async function BrandPage({ params }: Props) {
     <div className="container px-4 py-12 md:px-6 md:py-24">
       <div className="mx-auto max-w-5xl">
         {/* Заголовок бренду */}
-        <div className="mb-12 flex flex-col items-center gap-6 md:flex-row">
-          <div className="relative h-32 w-32 overflow-hidden rounded-lg shadow-sm">
-            <Image
-              src={brand.logo_url || "/placeholder.svg?height=128&width=128&query=phone+brand+logo"}
-              alt={brand.name}
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{brand.name}</h1>
-            <p className="mt-2 max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              {t("brandPageDescription", { brand: brand.name })}
-            </p>
+        <div className="mb-12 overflow-hidden rounded-xl bg-white p-6 shadow-sm">
+          <div className="flex flex-col items-center gap-6 md:flex-row">
+            <div className="relative h-32 w-32 overflow-hidden rounded-xl bg-slate-50 p-4 shadow-sm">
+              <Image
+                src={brand.logo_url || "/placeholder.svg?height=128&width=128&query=phone+brand+logo"}
+                alt={brand.name}
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div>
+              <h1 className="text-center text-3xl font-bold tracking-tighter md:text-left sm:text-4xl md:text-5xl">
+                {brand.name}
+              </h1>
+              <p className="mt-2 max-w-[900px] text-center text-muted-foreground md:text-left md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                {t("brandPageDescription", { brand: brand.name })}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -97,10 +101,10 @@ export default async function BrandPage({ params }: Props) {
                 <Link
                   key={series.id}
                   href={`/${locale}/series/${series.id}`}
-                  className="group rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                  className="group rounded-xl border bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
                 >
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium group-hover:text-primary">{series.name}</h3>
+                    <h3 className="text-xl font-medium transition-colors group-hover:text-primary">{series.name}</h3>
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-400 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:text-primary">
                       <ChevronRight className="h-5 w-5" />
                     </div>
@@ -120,22 +124,43 @@ export default async function BrandPage({ params }: Props) {
         </h2>
 
         {modelsWithoutSeries && modelsWithoutSeries.length > 0 ? (
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
             {modelsWithoutSeries.map((model) => (
               <Link
                 href={`/${locale}/models/${model.id}`}
                 key={model.id}
-                className="flex flex-col items-center rounded-lg border p-4 shadow-sm transition-all hover:shadow-md"
+                className="group flex flex-col items-center rounded-xl border bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
               >
-                <h3 className="text-lg font-medium">{model.name}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {t("startingFrom", { price: formatCurrency(model.base_price) })}
-                </p>
+                <div className="relative mb-4 h-16 w-16 overflow-hidden sm:h-20 sm:w-20">
+                  {model.image_url ? (
+                    <Image
+                      src={model.image_url || "/placeholder.svg"}
+                      alt={model.name}
+                      width={80}
+                      height={80}
+                      className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-50">
+                      <Smartphone className="h-8 w-8 text-slate-400" />
+                    </div>
+                  )}
+                </div>
+                <h3 className="text-center text-base font-medium transition-colors group-hover:text-primary sm:text-lg">
+                  {model.name}
+                </h3>
+                {model.base_price && (
+                  <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
+                    {t("startingFrom", { price: formatCurrency(model.base_price) })}
+                  </p>
+                )}
               </Link>
             ))}
           </div>
         ) : (
-          <p>{t("noModelsAvailable", { brand: brand.name })}</p>
+          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+            <p className="text-muted-foreground">{t("noModelsAvailable", { brand: brand.name })}</p>
+          </div>
         )}
       </div>
     </div>
