@@ -61,7 +61,7 @@ export default async function SeriesPage({ params }: Props) {
   // Fetch models for this series
   const { data: models, error: modelsError } = await supabase
     .from("models")
-    .select("id, name, image_url, base_price")
+    .select("id, name, image_url, base_price, series_id")
     .eq("series_id", id)
     .order("position", { ascending: true })
 
@@ -69,7 +69,7 @@ export default async function SeriesPage({ params }: Props) {
     console.error("[SeriesPage] Error fetching models:", modelsError)
   }
 
-  console.log(`[SeriesPage] Fetched ${models?.length || 0} models`)
+  console.log(`[SeriesPage] Fetched ${models?.length || 0} models:`, models)
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
@@ -81,6 +81,26 @@ export default async function SeriesPage({ params }: Props) {
           <ChevronLeft className="mr-1 h-4 w-4" />
           {t("backToBrand", { brand: series.brands?.name }) || `Back to ${series.brands?.name}`}
         </Link>
+
+        {/* Debug information - will be removed in production */}
+        <div className="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <h3 className="mb-2 font-semibold">Debug Information:</h3>
+          <p>Series ID: {id}</p>
+          <p>Brand ID: {series.brand_id}</p>
+          <p>Total models in database for this series: {models?.length || 0}</p>
+          {models && models.length > 0 && (
+            <div className="mt-2">
+              <p className="font-medium">All models:</p>
+              <ul className="ml-4 list-disc">
+                {models.map((model) => (
+                  <li key={model.id}>
+                    {model.name} (ID: {model.id}, Series ID: {model.series_id})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
 
         <div className="mb-12 overflow-hidden rounded-2xl bg-gradient-to-br from-white via-slate-50 to-slate-100">
           <div className="relative">

@@ -111,6 +111,8 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
     }
 
     await execute(async () => {
+      console.log("Adding model with data:", newModel)
+
       const response = await fetch("/api/admin/models", {
         method: "POST",
         headers: {
@@ -123,10 +125,14 @@ export function AddModelDialog({ isOpen, onClose, onModelAdded }: AddModelDialog
       })
 
       if (!response.ok) {
-        throw new Error("Failed to add model")
+        const errorData = await response.json()
+        console.error("Server error:", errorData)
+        throw new Error(errorData.error || "Failed to add model")
       }
 
-      return response.json()
+      const result = await response.json()
+      console.log("Model added successfully:", result)
+      return result
     })
   }
 
