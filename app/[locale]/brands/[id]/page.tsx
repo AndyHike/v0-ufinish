@@ -87,7 +87,7 @@ export default async function BrandPage({ params }: Props) {
         {/* Розділ серій */}
         {brand.series && brand.series.length > 0 && (
           <div className="mb-12">
-            <h2 className="mb-6 inline-block border-b-2 border-primary pb-2 text-2xl font-bold">
+            <h2 className="mb-8 inline-block border-b-2 border-primary pb-2 text-2xl font-bold">
               {t("productLines") || "Лінійки продуктів"}
             </h2>
 
@@ -96,17 +96,17 @@ export default async function BrandPage({ params }: Props) {
                 <Link
                   key={series.id}
                   href={`/${locale}/series/${series.id}`}
-                  className="group relative overflow-hidden rounded-lg bg-gradient-to-r from-slate-50 to-white p-5 shadow-md transition-all hover:shadow-lg"
+                  className="group relative overflow-hidden rounded-lg bg-white p-5 shadow-md transition-all hover:shadow-lg"
                 >
                   {/* Декоративна лінія зліва */}
-                  <div className="absolute bottom-0 left-0 top-0 w-1 bg-primary opacity-70"></div>
+                  <div className="absolute bottom-0 left-0 top-0 w-1 bg-primary"></div>
 
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-medium text-slate-800 group-hover:text-primary">{series.name}</h3>
                       <p className="mt-1 text-sm text-slate-600">{t("viewAllModels") || "Переглянути всі моделі"}</p>
                     </div>
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors group-hover:bg-primary group-hover:text-white">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary">
                       <ChevronRight className="h-5 w-5" />
                     </div>
                   </div>
