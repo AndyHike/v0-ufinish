@@ -1,43 +1,29 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
-import type { Database } from "@/types/supabase"
 import { cookies } from "next/headers"
 
-export function createServerClient() {
-  const cookieStore = cookies()
-
+export const createClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!supabaseUrl || !supabaseKey) {
-    console.error("Missing Supabase environment variables")
+  if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("Missing Supabase environment variables")
   }
 
-  return createSupabaseClient<Database>(supabaseUrl, supabaseKey, {
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
-        return cookieStore.get(name)?.value
+        return cookies().get(name)?.value
       },
       set(name: string, value: string, options: any) {
-        try {
-          cookieStore.set({ name, value, ...options })
-        } catch (error) {
-          // Handle `cookies.set()` error
-          console.error("Error setting cookie:", error)
-        }
+        cookies().set({ name, value, ...options })
       },
       remove(name: string, options: any) {
-        try {
-          cookieStore.set({ name, value: "", ...options })
-        } catch (error) {
-          // Handle `cookies.remove()` error
-          console.error("Error removing cookie:", error)
-        }
+        cookies().delete({ name, ...options })
       },
     },
   })
 }
 
-// For backward compatibility
-export const createClient = createServerClient
-export const createServerSupabaseClient = createServerClient
+// Export the createServerClient function that's being referenced elsewhere
+export const createServerClient = createClient
+export const createServerSupabaseClient = createClient

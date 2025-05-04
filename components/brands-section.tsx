@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
@@ -81,21 +82,19 @@ export function BrandsSection() {
   const shouldCenterBrands = brands.length <= 3
 
   return (
-    <section className="py-16 bg-gradient-to-b from-white to-slate-50">
+    <section className="py-12 bg-gray-50">
       <div className="container px-4 mx-auto">
-        <div className="relative mb-16 text-center">
-          <div className="absolute left-1/2 top-0 -z-10 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5"></div>
-          <h2 className="text-3xl font-bold mb-4">{t("title")}</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">{t("description")}</p>
-          <div className="mt-4 mx-auto h-1 w-20 rounded-full bg-gradient-to-r from-primary/30 to-primary/10"></div>
-        </div>
+        <h2 className="text-3xl font-bold text-center mb-8">{t("title")}</h2>
+        <p className="text-center text-gray-600 mb-10 max-w-2xl mx-auto">{t("description")}</p>
 
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="rounded-xl bg-white p-6 shadow-sm">
-                <Skeleton className="h-16 w-full" />
-              </div>
+              <Card key={i} className="border-none shadow-sm">
+                <CardContent className="p-6 flex items-center justify-center">
+                  <Skeleton className="h-16 w-full" />
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : brands.length > 0 ? (
@@ -104,7 +103,7 @@ export function BrandsSection() {
             {brands.length > 3 && (
               <button
                 onClick={() => document.getElementById("brands-scroll")?.scrollBy(-200, 0)}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex hover:bg-gray-50 transition-colors"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex"
                 aria-label="Previous brands"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -120,12 +119,11 @@ export function BrandsSection() {
               >
                 {brands.map((brand) => (
                   <div key={brand.id} className="flex-none w-[200px] snap-start">
-                    <Link href={`/${locale}/brands/${brand.id}`}>
-                      <div className="group h-36 rounded-xl bg-white p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden relative">
-                        <div className="absolute inset-0 bg-gradient-to-br from-white to-slate-50"></div>
-                        <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                    <Link href={`/brands/${brand.id}`}>
+                      <Card className="border-none shadow-sm hover:shadow-md transition-shadow duration-300 h-32">
+                        <CardContent className="p-6 flex flex-col items-center justify-center h-full">
                           {brand.logo_url ? (
-                            <div className="relative h-16 w-full transition-transform duration-300 group-hover:scale-110">
+                            <div className="relative h-16 w-full">
                               <Image
                                 src={brand.logo_url || "/placeholder.svg"}
                                 alt={brand.name}
@@ -136,16 +134,11 @@ export function BrandsSection() {
                               />
                             </div>
                           ) : (
-                            <div className="text-lg font-medium group-hover:text-primary transition-colors">
-                              {brand.name}
-                            </div>
+                            <div className="text-lg font-medium">{brand.name}</div>
                           )}
-                          <span className="mt-2 text-sm text-center text-muted-foreground group-hover:text-primary transition-colors">
-                            {brand.name}
-                          </span>
-                          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary/30 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        </div>
-                      </div>
+                          <span className="mt-2 text-sm text-center">{brand.name}</span>
+                        </CardContent>
+                      </Card>
                     </Link>
                   </div>
                 ))}
@@ -155,7 +148,7 @@ export function BrandsSection() {
             {brands.length > 3 && (
               <button
                 onClick={() => document.getElementById("brands-scroll")?.scrollBy(200, 0)}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex hover:bg-gray-50 transition-colors"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-2 shadow-md z-10 hidden md:flex"
                 aria-label="Next brands"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -166,15 +159,9 @@ export function BrandsSection() {
           <p className="text-center text-gray-500">{t("noBrands")}</p>
         )}
 
-        <div className="text-center mt-10">
-          <Button
-            asChild
-            variant="outline"
-            className="rounded-full px-8 py-6 shadow-md hover:shadow-lg transition-all bg-white hover:bg-slate-50"
-          >
-            <Link href={`/${locale}/brands`}>
-              <span className="text-base">{t("allBrandsButton")}</span>
-            </Link>
+        <div className="text-center mt-8">
+          <Button asChild variant="outline">
+            <Link href="/brands">{t("allBrandsButton")}</Link>
           </Button>
         </div>
       </div>

@@ -4,132 +4,82 @@ import { logActivity } from "@/lib/admin/activity-logger"
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
+    const id = params.id
     const supabase = createClient()
 
-    const { data, error } = await supabase
-      .from("models")
-      .select("*, brands(name, logo_url), series(name)")
-      .eq("id", id)
-      .single()
+    const { data, error } = await supabase.from("models").select("*, brands(name), series(name)").eq("id", id).single()
 
-    if (error) {
-      console.error("Error fetching model:", error)
-      return NextResponse.json({ error: "Model not found" }, { status: 404 })
-    }
+    if (error) throw error
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error("Error in get model API:", error)
+    console.error("Error fetching model:", error)
     return NextResponse.json({ error: "Failed to fetch model" }, { status: 500 })
   }
 }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
-    const { name, brandId, seriesId, imageUrl, userId } = await request.json()
-
-    if (!name || !brandId) {
-      return NextResponse.json({ error: "Name and brand are required" }, { status: 400 })
-    }
-
+    const id = params.id
+    const body = await request.json()
     const supabase = createClient()
 
     const { data, error } = await supabase
       .from("models")
       .update({
-        name,
-        brand_id: brandId,
-        series_id: seriesId || null,
-        image_url: imageUrl || null,
+        name: body.name,
+        brand_id: body.brandId,
+        series_id: body.seriesId || null,
+        image_url: body.imageUrl,
       })
       .eq("id", id)
       .select()
+      .single()
 
-    if (error) {
-      console.error("Error updating model:", error)
-      throw error
-    }
+    if (error) throw error
 
-    // Log the activity
-    if (userId) {
-      await logActivity({
-        userId,
-        action: "update",
-        resourceType: "model",
-        resourceId: id,
-        details: `Updated model: ${name}`,
-      })
-    }
+    // Log activity
+    await logActivity({
+      entityId: id,
+      entityType: "model",
+      actionType: "update",
+      userId: body.userId || null,
+      details: { name: data.name },
+    })
 
-    return NextResponse.json(data[0])
+    return NextResponse.json(data)
   } catch (error) {
-    console.error("Error in update model API:", error)
+    console.error("Error updating model:", error)
     return NextResponse.json({ error: "Failed to update model" }, { status: 500 })
   }
 }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
+    const id = params.id
     const supabase = createClient()
 
-    // Get the model name for logging
-    const { data: model, error: fetchError } = await supabase
-      .from("models")
-      .select("name, brand_id")
-      .eq("id", id)
-      .single()
+    // Get model info before deletion for logging
+    const { data: modelData } = await supabase.from("models").select("name").eq("id", id).single()
 
-    if (fetchError) {
-      console.error("Error fetching model for deletion:", fetchError)
-      return NextResponse.json({ error: "Model not found" }, { status: 404 })
-    }
-
-    // Delete the model
     const { error } = await supabase.from("models").delete().eq("id", id)
 
-    if (error) {
-      console.error("Error deleting model:", error)
-      throw error
-    }
+    if (error) throw error
 
-    // Update positions for remaining models
-    const { data: remainingModels, error: fetchRemainingError } = await supabase
-      .from("models")
-      .select("id, position")
-      .eq("brand_id", model.brand_id)
-      .order("position", { ascending: true })
-
-    if (!fetchRemainingError && remainingModels) {
-      // Update positions to be sequential
-      const updates = remainingModels.map((item, index) => ({
-        id: item.id,
-        position: index,
-      }))
-
-      for (const update of updates) {
-        await supabase.from("models").update({ position: update.position }).eq("id", update.id)
-      }
-    }
-
-    // Log the activity
-    const url = new URL(request.url)
-    const userId = url.searchParams.get("userId")
-    if (userId) {
+    // Log activity
+    if (modelData) {
       await logActivity({
-        userId,
-        action: "delete",
-        resourceType: "model",
-        resourceId: id,
-        details: `Deleted model: ${model.name}`,
+        entityId: id,
+        entityType: "model",
+        actionType: "delete",
+        userId: null, // We don't have userId in the request
+        details: { name: modelData.name },
       })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error in delete model API:", error)
+    console.error("Error deleting model:", error)
     return NextResponse.json({ error: "Failed to delete model" }, { status: 500 })
   }
 }
