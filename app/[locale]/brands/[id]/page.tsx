@@ -40,13 +40,30 @@ export default async function BrandPage({ params }: Props) {
 
   const supabase = createServerClient()
 
+  console.log(`[BrandPage] Fetching brand with ID: ${id}`)
+
   // Fetch the brand with its series
-  const { data: brand, error: brandError } = await supabase.from("brands").select("*, series(*)").eq("id", id).single()
+  const { data: brand, error: brandError } = await supabase.from("brands").select("*").eq("id", id).single()
 
   if (brandError || !brand) {
-    console.error("Error fetching brand:", brandError)
+    console.error("[BrandPage] Error fetching brand:", brandError)
     notFound()
   }
+
+  console.log("[BrandPage] Fetched brand:", brand)
+
+  // Fetch series for this brand
+  const { data: seriesData, error: seriesError } = await supabase
+    .from("series")
+    .select("*")
+    .eq("brand_id", id)
+    .order("position", { ascending: true })
+
+  if (seriesError) {
+    console.error("[BrandPage] Error fetching series:", seriesError)
+  }
+
+  console.log(`[BrandPage] Fetched ${seriesData?.length || 0} series`)
 
   // Fetch models without series for this brand
   const { data: modelsWithoutSeries, error: modelsError } = await supabase
@@ -57,11 +74,13 @@ export default async function BrandPage({ params }: Props) {
     .order("position", { ascending: true })
 
   if (modelsError) {
-    console.error("Error fetching models without series:", modelsError)
+    console.error("[BrandPage] Error fetching models without series:", modelsError)
   }
 
+  console.log(`[BrandPage] Fetched ${modelsWithoutSeries?.length || 0} models without series`)
+
   // Sort series by position
-  const sortedSeries = brand.series ? [...brand.series].sort((a, b) => (a.position || 0) - (b.position || 0)) : []
+  const sortedSeries = seriesData || []
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">

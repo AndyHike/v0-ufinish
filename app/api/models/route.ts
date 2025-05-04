@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
-import { formatImageUrl } from "@/utils/image-url"
 
 export async function GET(request: Request) {
   try {
@@ -26,19 +25,7 @@ export async function GET(request: Request) {
       throw error
     }
 
-    // Format image URLs
-    const formattedData = data.map((model) => ({
-      ...model,
-      image_url: model.image_url ? formatImageUrl(model.image_url) : null,
-      brands: model.brands
-        ? {
-            ...model.brands,
-            logo_url: model.brands.logo_url ? formatImageUrl(model.brands.logo_url) : null,
-          }
-        : null,
-    }))
-
-    return NextResponse.json(formattedData)
+    return NextResponse.json(data)
   } catch (error) {
     console.error("Error in models API:", error)
     return NextResponse.json({ error: "Failed to fetch models" }, { status: 500 })

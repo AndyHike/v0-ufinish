@@ -1,29 +1,43 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import type { Database } from "@/types/supabase"
 import { cookies } from "next/headers"
 
-export const createClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+export function createServerClient() {
+  const cookieStore = cookies()
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error("Missing Supabase environment variables")
     throw new Error("Missing Supabase environment variables")
   }
 
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+  return createSupabaseClient<Database>(supabaseUrl, supabaseKey, {
     cookies: {
       get(name: string) {
-        return cookies().get(name)?.value
+        return cookieStore.get(name)?.value
       },
       set(name: string, value: string, options: any) {
-        cookies().set({ name, value, ...options })
+        try {
+          cookieStore.set({ name, value, ...options })
+        } catch (error) {
+          // Handle `cookies.set()` error
+          console.error("Error setting cookie:", error)
+        }
       },
       remove(name: string, options: any) {
-        cookies().delete({ name, ...options })
+        try {
+          cookieStore.set({ name, value: "", ...options })
+        } catch (error) {
+          // Handle `cookies.remove()` error
+          console.error("Error removing cookie:", error)
+        }
       },
     },
   })
 }
 
-// Export the createServerClient function that's being referenced elsewhere
-export const createServerClient = createClient
-export const createServerSupabaseClient = createClient
+// For backward compatibility
+export const createClient = createServerClient
+export const createServerSupabaseClient = createServerClient
