@@ -104,7 +104,10 @@ export default function ModelsPage() {
   useEffect(() => {
     Promise.all([fetchModels(), fetchBrands()])
       .then(() => setLoading(false))
-      .catch(() => setLoading(false))
+      .catch((error) => {
+        console.error("Error during initial data fetch:", error)
+        setLoading(false)
+      })
   }, [selectedBrandFilter, selectedSeriesFilter])
 
   useEffect(() => {
@@ -140,9 +143,17 @@ export default function ModelsPage() {
         url += `?${params.toString()}`
       }
 
+      console.log("Fetching models with URL:", url)
       const response = await fetch(url)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
+      console.log("Fetched models:", data)
       setModels(data)
+      return data
     } catch (error) {
       console.error("Error fetching models:", error)
       toast({
@@ -150,14 +161,22 @@ export default function ModelsPage() {
         description: "Failed to fetch models",
         variant: "destructive",
       })
+      return []
     }
   }
 
   async function fetchBrands() {
     try {
       const response = await fetch("/api/admin/brands")
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
+      console.log("Fetched brands:", data)
       setBrands(data)
+      return data
     } catch (error) {
       console.error("Error fetching brands:", error)
       toast({
@@ -165,14 +184,22 @@ export default function ModelsPage() {
         description: "Failed to fetch brands",
         variant: "destructive",
       })
+      return []
     }
   }
 
   async function fetchSeries(brandId: string) {
     try {
       const response = await fetch(`/api/admin/series?brand_id=${brandId}`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
+      console.log("Fetched series for brand:", data)
       setSeries(data)
+      return data
     } catch (error) {
       console.error("Error fetching series:", error)
       toast({
@@ -180,15 +207,21 @@ export default function ModelsPage() {
         description: "Failed to fetch series",
         variant: "destructive",
       })
+      return []
     }
   }
 
   async function fetchSeriesForEdit(brandId: string) {
     try {
       const response = await fetch(`/api/admin/series?brand_id=${brandId}`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
-      setEditModelSeries(data)
       console.log("Fetched series for edit:", data)
+      setEditModelSeries(data)
     } catch (error) {
       console.error("Error fetching series for edit:", error)
       toast({
@@ -218,7 +251,8 @@ export default function ModelsPage() {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to update model")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to update model")
       }
 
       await fetchModels()
@@ -230,12 +264,13 @@ export default function ModelsPage() {
     if (!modelToDelete) return
 
     await executeDeleteModel(async () => {
-      const response = await fetch(`/api/admin/models/${modelToDelete.id}`, {
+      const response = await fetch(`/api/admin/models/${modelToDelete.id}?userId=${session?.user?.id}`, {
         method: "DELETE",
       })
 
       if (!response.ok) {
-        throw new Error("Failed to delete model")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to delete model")
       }
 
       await fetchModels()
@@ -273,7 +308,8 @@ export default function ModelsPage() {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to reorder models")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to reorder models")
       }
 
       return response.json()
@@ -315,7 +351,7 @@ export default function ModelsPage() {
                   <SelectValue placeholder={t("allBrands")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t("allBrands")}</SelectItem>
+                  <SelectItem value="">{t("allBrands")}</SelectItem>
                   {brands.map((brand) => (
                     <SelectItem key={brand.id} value={brand.id}>
                       {brand.name}

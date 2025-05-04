@@ -1,24 +1,20 @@
 import { NextResponse } from "next/server"
-import { createServerClient } from "@/utils/supabase/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { createClient } from "@/lib/supabase"
 import { logActivity } from "@/lib/admin/activity-logger"
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const supabase = createServerClient()
+    const { id } = params
+    const supabase = createClient()
+
     const { data, error } = await supabase
       .from("models")
-      .select("*, brands(id, name, logo_url), series(id, name)")
-      .eq("id", params.id)
+      .select("*, brands(name, logo_url), series(name)")
+      .eq("id", id)
       .single()
 
     if (error) {
       console.error("Error fetching model:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    if (!data) {
       return NextResponse.json({ error: "Model not found" }, { status: 404 })
     }
 
@@ -31,51 +27,43 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const { id } = params
+    const { name, brandId, seriesId, imageUrl, userId } = await request.json()
+
+    if (!name || !brandId) {
+      return NextResponse.json({ error: "Name and brand are required" }, { status: 400 })
     }
 
-    const supabase = createServerClient()
-    const data = await request.json()
+    const supabase = createClient()
 
-    // Handle the case where seriesId is "_none" or empty
-    const modelData = { ...data }
-    if (modelData.seriesId === "_none" || !modelData.seriesId) {
-      modelData.seriesId = null
-    }
-
-    const { data: updatedModel, error } = await supabase
+    const { data, error } = await supabase
       .from("models")
       .update({
-        name: modelData.name,
-        brand_id: modelData.brandId,
-        series_id: modelData.seriesId,
-        image_url: modelData.imageUrl || null,
+        name,
+        brand_id: brandId,
+        series_id: seriesId || null,
+        image_url: imageUrl || null,
       })
-      .eq("id", params.id)
+      .eq("id", id)
       .select()
-      .single()
 
     if (error) {
       console.error("Error updating model:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      throw error
     }
 
     // Log the activity
-    await logActivity({
-      user_id: session.user.id,
-      action: "update",
-      resource_type: "model",
-      resource_id: params.id,
-      details: {
-        name: updatedModel.name,
-        brand_id: updatedModel.brand_id,
-        series_id: updatedModel.series_id,
-      },
-    })
+    if (userId) {
+      await logActivity({
+        userId,
+        action: "update",
+        resourceType: "model",
+        resourceId: id,
+        details: `Updated model: ${name}`,
+      })
+    }
 
-    return NextResponse.json(updatedModel)
+    return NextResponse.json(data[0])
   } catch (error) {
     console.error("Error in update model API:", error)
     return NextResponse.json({ error: "Failed to update model" }, { status: 500 })
@@ -84,45 +72,60 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const { id } = params
+    const supabase = createClient()
 
-    const supabase = createServerClient()
-
-    // First, get the model to log its details
+    // Get the model name for logging
     const { data: model, error: fetchError } = await supabase
       .from("models")
-      .select("name, brand_id, series_id")
-      .eq("id", params.id)
+      .select("name, brand_id")
+      .eq("id", id)
       .single()
 
     if (fetchError) {
       console.error("Error fetching model for deletion:", fetchError)
-      return NextResponse.json({ error: fetchError.message }, { status: 500 })
+      return NextResponse.json({ error: "Model not found" }, { status: 404 })
     }
 
     // Delete the model
-    const { error } = await supabase.from("models").delete().eq("id", params.id)
+    const { error } = await supabase.from("models").delete().eq("id", id)
 
     if (error) {
       console.error("Error deleting model:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      throw error
+    }
+
+    // Update positions for remaining models
+    const { data: remainingModels, error: fetchRemainingError } = await supabase
+      .from("models")
+      .select("id, position")
+      .eq("brand_id", model.brand_id)
+      .order("position", { ascending: true })
+
+    if (!fetchRemainingError && remainingModels) {
+      // Update positions to be sequential
+      const updates = remainingModels.map((item, index) => ({
+        id: item.id,
+        position: index,
+      }))
+
+      for (const update of updates) {
+        await supabase.from("models").update({ position: update.position }).eq("id", update.id)
+      }
     }
 
     // Log the activity
-    await logActivity({
-      user_id: session.user.id,
-      action: "delete",
-      resource_type: "model",
-      resource_id: params.id,
-      details: {
-        name: model.name,
-        brand_id: model.brand_id,
-        series_id: model.series_id,
-      },
-    })
+    const url = new URL(request.url)
+    const userId = url.searchParams.get("userId")
+    if (userId) {
+      await logActivity({
+        userId,
+        action: "delete",
+        resourceType: "model",
+        resourceId: id,
+        details: `Deleted model: ${model.name}`,
+      })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

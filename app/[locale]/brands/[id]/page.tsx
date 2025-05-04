@@ -40,8 +40,6 @@ export default async function BrandPage({ params }: Props) {
 
   const supabase = createServerClient()
 
-  console.log(`[BrandPage] Fetching brand with ID: ${id}`)
-
   // Fetch the brand with its series
   const { data: brand, error: brandError } = await supabase.from("brands").select("*").eq("id", id).single()
 
@@ -49,8 +47,6 @@ export default async function BrandPage({ params }: Props) {
     console.error("[BrandPage] Error fetching brand:", brandError)
     notFound()
   }
-
-  console.log("[BrandPage] Fetched brand:", brand)
 
   // Fetch series for this brand
   const { data: seriesData, error: seriesError } = await supabase
@@ -63,8 +59,6 @@ export default async function BrandPage({ params }: Props) {
     console.error("[BrandPage] Error fetching series:", seriesError)
   }
 
-  console.log(`[BrandPage] Fetched ${seriesData?.length || 0} series:`, seriesData)
-
   // Fetch models without series for this brand
   const { data: modelsWithoutSeries, error: modelsError } = await supabase
     .from("models")
@@ -76,21 +70,6 @@ export default async function BrandPage({ params }: Props) {
   if (modelsError) {
     console.error("[BrandPage] Error fetching models without series:", modelsError)
   }
-
-  console.log(`[BrandPage] Fetched ${modelsWithoutSeries?.length || 0} models without series:`, modelsWithoutSeries)
-
-  // Fetch all models for this brand (for debugging)
-  const { data: allModels, error: allModelsError } = await supabase
-    .from("models")
-    .select("id, name, image_url, base_price, series_id")
-    .eq("brand_id", id)
-    .order("position", { ascending: true })
-
-  if (allModelsError) {
-    console.error("[BrandPage] Error fetching all models:", allModelsError)
-  }
-
-  console.log(`[BrandPage] Fetched ${allModels?.length || 0} total models for brand:`, allModels)
 
   // Sort series by position
   const sortedSeries = seriesData || []
@@ -128,27 +107,6 @@ export default async function BrandPage({ params }: Props) {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Debug information - will be removed in production */}
-        <div className="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <h3 className="mb-2 font-semibold">Debug Information:</h3>
-          <p>Brand ID: {id}</p>
-          <p>Total models in database for this brand: {allModels?.length || 0}</p>
-          <p>Models without series: {modelsWithoutSeries?.length || 0}</p>
-          <p>Series count: {seriesData?.length || 0}</p>
-          {allModels && allModels.length > 0 && (
-            <div className="mt-2">
-              <p className="font-medium">All models:</p>
-              <ul className="ml-4 list-disc">
-                {allModels.map((model) => (
-                  <li key={model.id}>
-                    {model.name} (ID: {model.id}, Series ID: {model.series_id || "none"})
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
 
         {sortedSeries && sortedSeries.length > 0 && (
