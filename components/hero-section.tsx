@@ -1,33 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { useTranslations } from "next-intl"
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { CheckCircle, ArrowRight } from "lucide-react"
 import Image from "next/image"
-import { ArrowRight, CheckCircle } from "lucide-react"
 
 export function HeroSection() {
   const t = useTranslations("Hero")
-  const [isImageLoaded, setIsImageLoaded] = useState(false)
-  const [imageSrc, setImageSrc] = useState("/phone-repair-close-up.png")
-
-  // Перевірка доступності зображення та запасний варіант
-  useEffect(() => {
-    const img = new Image()
-    img.src = "/phone-repair-close-up.png"
-
-    img.onload = () => {
-      setIsImageLoaded(true)
-      setImageSrc("/phone-repair-close-up.png")
-    }
-
-    img.onerror = () => {
-      console.warn("Primary image failed to load, using fallback")
-      setImageSrc("/focused-phone-fix.png")
-      setIsImageLoaded(true)
-    }
-  }, [])
 
   return (
     <section className="w-full py-12 md:py-24 lg:py-32 bg-white overflow-hidden">
@@ -69,20 +49,13 @@ export function HeroSection() {
             </div>
           </div>
           <div className="relative h-[300px] md:h-[400px] lg:h-[500px] xl:h-[600px] rounded-2xl overflow-hidden shadow-xl">
-            {!isImageLoaded && (
-              <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
-                <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            )}
-            {isImageLoaded && (
-              <Image
-                src={imageSrc || "/placeholder.svg"}
-                alt={t("imageAlt")}
-                fill
-                className="object-cover rounded-2xl transition-opacity duration-500"
-                priority
-              />
-            )}
+            <Image
+              src="/phone-repair-close-up.png"
+              alt={t("imageAlt")}
+              fill
+              className="object-cover rounded-2xl"
+              priority
+            />
           </div>
         </div>
       </div>

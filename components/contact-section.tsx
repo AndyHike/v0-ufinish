@@ -7,9 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
-import { CheckCircle, Send, ArrowRight, Phone, Mail, MapPin, Loader2, Clock } from "lucide-react"
+import { CheckCircle, Send, Phone, Mail, MapPin, Loader2, Clock } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { motion, AnimatePresence } from "framer-motion"
 
 export function ContactSection() {
   const t = useTranslations("Contact")
@@ -138,115 +137,96 @@ export function ContactSection() {
 
           {/* Форма */}
           <Card className="border-none shadow-md">
-            <AnimatePresence mode="wait">
-              {isSuccess ? (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <CardContent className="p-6 flex flex-col items-center justify-center min-h-[300px]">
-                    <div className="text-center space-y-4">
-                      <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-                        <CheckCircle className="h-8 w-8 text-green-600" />
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-bold">{t("successTitle")}</h3>
-                        <p className="text-gray-500">{t("successMessage")}</p>
-                      </div>
-                      <Button onClick={resetForm} className="mt-2">
-                        {t("sendAnother")}
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="form"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <CardContent className="p-6 space-y-4">
-                    <div>
-                      <h3 className="text-xl font-bold">{t("contactUs")}</h3>
-                      <p className="text-gray-500 text-sm mt-1">{t("formDescription")}</p>
-                    </div>
+            {isSuccess ? (
+              <CardContent className="p-6 flex flex-col items-center justify-center min-h-[300px]">
+                <div className="text-center space-y-4">
+                  <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                    <CheckCircle className="h-8 w-8 text-green-600" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold">{t("successTitle")}</h3>
+                    <p className="text-gray-500">{t("successMessage")}</p>
+                  </div>
+                  <Button onClick={resetForm} className="mt-2">
+                    {t("sendAnother")}
+                  </Button>
+                </div>
+              </CardContent>
+            ) : (
+              <CardContent className="p-6 space-y-4">
+                <div>
+                  <h3 className="text-xl font-bold">{t("contactUs")}</h3>
+                  <p className="text-gray-500 text-sm mt-1">{t("formDescription")}</p>
+                </div>
 
-                    {error && (
-                      <Alert variant="destructive">
-                        <AlertTitle>{t("errorTitle")}</AlertTitle>
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertTitle>{t("errorTitle")}</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">{t("nameLabel")}</Label>
+                    <Input
+                      id="name"
+                      placeholder={t("namePlaceholder")}
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">{t("emailLabel")}</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder={t("emailPlaceholder")}
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">{t("phoneLabel")}</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder={t("phonePlaceholder")}
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="message">{t("messageLabel")}</Label>
+                    <Textarea
+                      id="message"
+                      placeholder={t("messagePlaceholder")}
+                      required
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="min-h-[120px]"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t("sending")}
+                      </>
+                    ) : (
+                      <>
+                        {t("send")}
+                        <Send className="ml-2 h-4 w-4" />
+                      </>
                     )}
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">{t("nameLabel")}</Label>
-                        <Input
-                          id="name"
-                          placeholder={t("namePlaceholder")}
-                          required
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                        />
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="email">{t("emailLabel")}</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            placeholder={t("emailPlaceholder")}
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="phone">{t("phoneLabel")}</Label>
-                          <Input
-                            id="phone"
-                            type="tel"
-                            placeholder={t("phonePlaceholder")}
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="message">{t("messageLabel")}</Label>
-                        <Textarea
-                          id="message"
-                          placeholder={t("messagePlaceholder")}
-                          required
-                          value={message}
-                          onChange={(e) => setMessage(e.target.value)}
-                          className="min-h-[120px]"
-                        />
-                      </div>
-                      <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            {t("sending")}
-                          </>
-                        ) : (
-                          <>
-                            {t("send")}
-                            <Send className="ml-2 h-4 w-4" />
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  </Button>
+                </form>
+              </CardContent>
+            )}
           </Card>
         </div>
       </div>
