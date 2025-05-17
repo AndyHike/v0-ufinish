@@ -1,33 +1,24 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/server"
 import { cookies } from "next/headers"
-import { createServerClient } from "@supabase/ssr"
 
-// Функція для перевірки прав адміністратора
-async function checkAdminRole() {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const cookieStore = cookies()
+    const id = params.id
 
     // Створюємо клієнта Supabase з серверними куками
-    const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    })
+    const cookieStore = cookies()
+    const supabase = createClient(cookieStore)
 
-    // Отримуємо сесію користувача
+    // Перевіряємо сесію користувача
     const {
       data: { session },
     } = await supabase.auth.getSession()
 
     if (!session) {
       console.log("No session found")
-      return false
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-
-    console.log("Session found for user:", session.user.id)
 
     // Отримуємо дані користувача
     const { data: userData, error: userError } = await supabase
@@ -36,54 +27,13 @@ async function checkAdminRole() {
       .eq("id", session.user.id)
       .single()
 
-    if (userError) {
-      console.log("Error fetching user data:", userError)
-
-      // Спробуємо перевірити роль безпосередньо в метаданих користувача
-      if (session.user.app_metadata?.role === "admin" || session.user.user_metadata?.role === "admin") {
-        console.log("Admin role found in user metadata")
-        return true
-      }
-
-      return false
-    }
-
-    if (!userData) {
-      console.log("User data not found")
-
-      // Спробуємо перевірити роль безпосередньо в метаданих користувача
-      if (session.user.app_metadata?.role === "admin" || session.user.user_metadata?.role === "admin") {
-        console.log("Admin role found in user metadata")
-        return true
-      }
-
-      return false
-    }
-
     // Перевіряємо роль користувача
-    const isAdmin = userData.role === "admin"
-    console.log(`User ${session.user.id} is admin: ${isAdmin}`)
+    const isAdmin = userData?.role === "admin"
 
-    return isAdmin
-  } catch (error) {
-    console.error("Error checking admin role:", error)
-    return false
-  }
-}
-
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  try {
-    // Перевіряємо права адміністратора
-    const isAdmin = await checkAdminRole()
     if (!isAdmin) {
-      console.log("Unauthorized access attempt to GET contact message")
+      console.log("User is not admin")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-
-    const id = params.id
-
-    // Створюємо клієнта Supabase
-    const supabase = createClient()
 
     // Отримуємо повідомлення за ID
     const { data, error } = await supabase.from("contact_messages").select("*").eq("id", id).single()
@@ -107,13 +57,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
-    // Перевіряємо права адміністратора
-    const isAdmin = await checkAdminRole()
-    if (!isAdmin) {
-      console.log("Unauthorized access attempt to PATCH contact message")
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
     const id = params.id
     const body = await request.json()
     const { status } = body
@@ -123,8 +66,34 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ error: "Status is required" }, { status: 400 })
     }
 
-    // Створюємо клієнта Supabase
-    const supabase = createClient()
+    // Створюємо клієнта Supabase з серверними куками
+    const cookieStore = cookies()
+    const supabase = createClient(cookieStore)
+
+    // Перевіряємо сесію користувача
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session) {
+      console.log("No session found")
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Отримуємо дані користувача
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", session.user.id)
+      .single()
+
+    // Перевіряємо роль користувача
+    const isAdmin = userData?.role === "admin"
+
+    if (!isAdmin) {
+      console.log("User is not admin")
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
     // Оновлюємо статус повідомлення
     const { data, error } = await supabase

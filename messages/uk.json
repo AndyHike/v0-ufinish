@@ -455,7 +455,7 @@
     "csvParseError": "Помилка аналізу CSV файлу",
     "csvMissingColumns": "У CSV файлі відсутні необхідні стовпці",
     "exportServicesCSV": "Експортувати послуги (CSV)",
-    "exportModels": "Експорт моделей",
+    "exportModels": "Експортувати моделі",
     "exportModelsDescription": "Експортуйте всі моделі телефонів у форматі CSV",
     "exportModelsCSV": "Експортувати моделі (CSV)",
     "exporting": "Експортування...",
