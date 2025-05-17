@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
-import { CheckCircle, Send, Phone, Mail, MapPin, Loader2, Clock } from "lucide-react"
+import { CheckCircle, Send, Phone, Mail, MapPin, Loader2, Clock, ArrowRight } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export function ContactSection() {
@@ -43,9 +42,7 @@ export function ContactSection() {
         throw new Error(t("submitError"))
       }
 
-      // Успішна відправка
       setIsSuccess(true)
-      // Очищаємо форму
       setName("")
       setEmail("")
       setPhone("")
@@ -58,70 +55,68 @@ export function ContactSection() {
     }
   }
 
-  const resetForm = () => {
-    setIsSuccess(false)
-  }
-
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="container px-4 md:px-6">
-        <div className="text-center max-w-3xl mx-auto mb-10">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">{t("title")}</h2>
-          <p className="mt-3 text-gray-500">{t("subtitle")}</p>
+    <section className="relative py-20 overflow-hidden bg-gradient-to-b from-white to-gray-50">
+      {/* Декоративні елементи */}
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+      <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
+      <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
+
+      <div className="container relative z-10 px-4 md:px-6">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold tracking-tighter md:text-4xl lg:text-5xl mb-3">{t("title")}</h2>
+          <p className="max-w-[700px] mx-auto text-gray-500 md:text-lg">{t("subtitle")}</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {/* Інформаційна картка */}
-          <div className="space-y-6">
-            <Card className="border-none shadow-md">
-              <CardContent className="p-6">
-                <div className="grid gap-5">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <Phone className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">{t("phone")}</h3>
-                      <p className="text-gray-500">+42075848259</p>
-                    </div>
+        <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {/* Контактна інформація */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <div className="space-y-5">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Phone className="h-5 w-5 text-primary" />
                   </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <Mail className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">{t("email")}</h3>
-                      <p className="text-gray-500">info@devicehelp.cz</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <MapPin className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">{t("address")}</h3>
-                      <p className="text-gray-500">Praha 2</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <Clock className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">{t("workingHours")}</h3>
-                      <p className="text-gray-500">{t("workingHoursWeekdays")}</p>
-                      <p className="text-gray-500">{t("workingHoursSaturday")}</p>
-                    </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{t("phone")}</h3>
+                    <p className="text-gray-600">+42075848259</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Карта */}
-            <div className="overflow-hidden rounded-lg shadow-md h-[250px]">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Mail className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{t("email")}</h3>
+                    <p className="text-gray-600">info@devicehelp.cz</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <MapPin className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{t("address")}</h3>
+                    <p className="text-gray-600">Praha 2</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Clock className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{t("workingHours")}</h3>
+                    <p className="text-gray-600">{t("workingHoursWeekdays")}</p>
+                    <p className="text-gray-600">{t("workingHoursSaturday")}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-xl shadow-sm border border-gray-100 h-[220px] bg-white">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d20479.84323795257!2d14.41993243476561!3d50.07762499999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b94ea69e1a1a1%3A0x7c93c7eb4ba09925!2sPraha%202!5e0!3m2!1scs!2scz!4v1652345678901!5m2!1scs!2scz"
                 width="100%"
@@ -136,98 +131,111 @@ export function ContactSection() {
           </div>
 
           {/* Форма */}
-          <Card className="border-none shadow-md">
-            {isSuccess ? (
-              <CardContent className="p-6 flex flex-col items-center justify-center min-h-[300px]">
-                <div className="text-center space-y-4">
-                  <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-                    <CheckCircle className="h-8 w-8 text-green-600" />
+          <div className="lg:col-span-2">
+            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+              {isSuccess ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="h-16 w-16 rounded-full bg-green-50 flex items-center justify-center mb-6">
+                    <CheckCircle className="h-8 w-8 text-green-500" />
                   </div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-bold">{t("successTitle")}</h3>
-                    <p className="text-gray-500">{t("successMessage")}</p>
-                  </div>
-                  <Button onClick={resetForm} className="mt-2">
+                  <h3 className="text-2xl font-bold mb-3">{t("successTitle")}</h3>
+                  <p className="text-gray-500 max-w-md mb-6">{t("successMessage")}</p>
+                  <Button onClick={() => setIsSuccess(false)} variant="outline" size="lg" className="gap-2">
                     {t("sendAnother")}
+                    <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
-              </CardContent>
-            ) : (
-              <CardContent className="p-6 space-y-4">
-                <div>
-                  <h3 className="text-xl font-bold">{t("contactUs")}</h3>
-                  <p className="text-gray-500 text-sm mt-1">{t("formDescription")}</p>
-                </div>
-
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertTitle>{t("errorTitle")}</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">{t("nameLabel")}</Label>
-                    <Input
-                      id="name"
-                      placeholder={t("namePlaceholder")}
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
+              ) : (
+                <>
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">{t("contactUs")}</h3>
+                    <p className="text-gray-500 mt-1">{t("formDescription")}</p>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                  {error && (
+                    <Alert variant="destructive" className="mb-6">
+                      <AlertTitle>{t("errorTitle")}</AlertTitle>
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="space-y-2">
-                      <Label htmlFor="email">{t("emailLabel")}</Label>
+                      <Label htmlFor="name" className="text-gray-700">
+                        {t("nameLabel")}
+                      </Label>
                       <Input
-                        id="email"
-                        type="email"
-                        placeholder={t("emailPlaceholder")}
+                        id="name"
+                        placeholder={t("namePlaceholder")}
                         required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="bg-gray-50 border-gray-200 focus:bg-white"
                       />
                     </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-gray-700">
+                          {t("emailLabel")}
+                        </Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder={t("emailPlaceholder")}
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="bg-gray-50 border-gray-200 focus:bg-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone" className="text-gray-700">
+                          {t("phoneLabel")}
+                        </Label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder={t("phonePlaceholder")}
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="bg-gray-50 border-gray-200 focus:bg-white"
+                        />
+                      </div>
+                    </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="phone">{t("phoneLabel")}</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder={t("phonePlaceholder")}
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                      <Label htmlFor="message" className="text-gray-700">
+                        {t("messageLabel")}
+                      </Label>
+                      <Textarea
+                        id="message"
+                        placeholder={t("messagePlaceholder")}
+                        required
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        className="min-h-[150px] bg-gray-50 border-gray-200 focus:bg-white"
                       />
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="message">{t("messageLabel")}</Label>
-                    <Textarea
-                      id="message"
-                      placeholder={t("messagePlaceholder")}
-                      required
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      className="min-h-[120px]"
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {t("sending")}
-                      </>
-                    ) : (
-                      <>
-                        {t("send")}
-                        <Send className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            )}
-          </Card>
+
+                    <Button type="submit" size="lg" className="w-full gap-2" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {t("sending")}
+                        </>
+                      ) : (
+                        <>
+                          {t("send")}
+                          <Send className="h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </section>
