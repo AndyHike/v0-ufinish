@@ -34,8 +34,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Inbox,
+  AlertTriangle,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { toast } from "@/components/ui/use-toast"
 
 interface ContactMessage {
   id: string
@@ -64,6 +66,7 @@ export function ContactMessagesList({ locale }: ContactMessagesListProps) {
   const [isUpdating, setIsUpdating] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const dateLocale = locale === "uk" ? uk : locale === "cs" ? cs : enUS
 
@@ -161,6 +164,10 @@ export function ContactMessagesList({ locale }: ContactMessagesListProps) {
       messageContent: "Текст повідомлення",
       receivedTime: "Отримано",
       lastUpdated: "Останнє оновлення",
+      unauthorized: "Немає доступу. Будь ласка, увійдіть як адміністратор.",
+      loginAgain: "Увійти знову",
+      errorLoading: "Помилка завантаження повідомлень",
+      tryAgain: "Спробувати знову",
     },
     cs: {
       title: "Zprávy z kontaktního formuláře",
@@ -196,6 +203,10 @@ export function ContactMessagesList({ locale }: ContactMessagesListProps) {
       messageContent: "Text zprávy",
       receivedTime: "Přijato",
       lastUpdated: "Poslední aktualizace",
+      unauthorized: "Nemáte přístup. Přihlaste se prosím jako administrátor.",
+      loginAgain: "Přihlásit se znovu",
+      errorLoading: "Chyba při načítání zpráv",
+      tryAgain: "Zkusit znovu",
     },
     en: {
       title: "Contact Form Messages",
@@ -231,6 +242,10 @@ export function ContactMessagesList({ locale }: ContactMessagesListProps) {
       messageContent: "Message Content",
       receivedTime: "Received",
       lastUpdated: "Last Updated",
+      unauthorized: "Unauthorized. Please login as administrator.",
+      loginAgain: "Login Again",
+      errorLoading: "Error loading messages",
+      tryAgain: "Try Again",
     },
   }
 
@@ -240,6 +255,7 @@ export function ContactMessagesList({ locale }: ContactMessagesListProps) {
 
   const fetchMessages = async () => {
     setLoading(true)
+    setError(null)
     try {
       const statusParam = statusFilter !== "all" ? `&status=${statusFilter}` : ""
       const searchParam = searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : ""
@@ -247,6 +263,13 @@ export function ContactMessagesList({ locale }: ContactMessagesListProps) {
       console.log("Fetching messages from:", url)
 
       const response = await fetch(url)
+
+      if (response.status === 401) {
+        setError("unauthorized")
+        setMessages([])
+        setTotalPages(0)
+        return
+      }
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -267,8 +290,14 @@ export function ContactMessagesList({ locale }: ContactMessagesListProps) {
       }
     } catch (error) {
       console.error("Error fetching messages:", error)
+      setError("errorLoading")
       setMessages([])
       setTotalPages(0)
+      toast({
+        title: t.errorLoading,
+        description: String(error),
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
       setIsRefreshing(false)
@@ -296,6 +325,15 @@ export function ContactMessagesList({ locale }: ContactMessagesListProps) {
         body: JSON.stringify({ status }),
       })
 
+      if (response.status === 401) {
+        setError("unauthorized")
+        toast({
+          title: t.unauthorized,
+          variant: "destructive",
+        })
+        return
+      }
+
       if (!response.ok) {
         const errorText = await response.text()
         console.error("Error response:", response.status, errorText)
@@ -312,8 +350,18 @@ export function ContactMessagesList({ locale }: ContactMessagesListProps) {
           status,
         })
       }
+
+      toast({
+        title: "Status updated",
+        description: `Message status changed to ${status}`,
+      })
     } catch (error) {
       console.error("Error updating message status:", error)
+      toast({
+        title: "Error updating status",
+        description: String(error),
+        variant: "destructive",
+      })
     } finally {
       setIsUpdating(false)
     }
@@ -353,9 +401,27 @@ export function ContactMessagesList({ locale }: ContactMessagesListProps) {
     fetchMessages()
   }
 
+  const handleLoginAgain = () => {
+    router.push("/auth/login")
+  }
+
   useEffect(() => {
     fetchMessages()
   }, [page, statusFilter])
+
+  // Відображення помилки авторизації
+  if (error === "unauthorized") {
+    return (
+      <Card className="shadow-md">
+        <CardContent className="flex flex-col items-center justify-center p-6">
+          <AlertTriangle className="h-16 w-16 text-red-500 mb-4" />
+          <h3 className="text-xl font-semibold mb-2">{t.unauthorized}</h3>
+          <p className="text-gray-500 mb-4 text-center">You need administrator privileges to access this page.</p>
+          <Button onClick={handleLoginAgain}>{t.loginAgain}</Button>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="shadow-md">
@@ -427,6 +493,13 @@ export function ContactMessagesList({ locale }: ContactMessagesListProps) {
                 <Skeleton className="h-8 w-24" />
               </div>
             ))}
+          </div>
+        ) : error === "errorLoading" ? (
+          <div className="text-center py-12 border rounded-md">
+            <AlertTriangle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-1">{t.errorLoading}</h3>
+            <p className="text-gray-500 mb-4">An error occurred while loading messages.</p>
+            <Button onClick={handleRefresh}>{t.tryAgain}</Button>
           </div>
         ) : messages.length > 0 ? (
           <div className="space-y-4">

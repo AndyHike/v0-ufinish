@@ -1,45 +1,32 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/utils/supabase/server"
 import { cookies } from "next/headers"
+import { createClient } from "@/utils/supabase/server"
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id
 
-    // Створюємо клієнта Supabase з серверними куками
+    // Створюємо клієнта Supabase
     const cookieStore = cookies()
     const supabase = createClient(cookieStore)
 
-    // Перевіряємо сесію користувача
+    // Отримуємо сесію користувача
     const {
       data: { session },
     } = await supabase.auth.getSession()
 
     if (!session) {
-      console.log("No session found")
+      console.log("[contact-message] No session found")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Отримуємо дані користувача
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", session.user.id)
-      .single()
-
-    // Перевіряємо роль користувача
-    const isAdmin = userData?.role === "admin"
-
-    if (!isAdmin) {
-      console.log("User is not admin")
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    console.log("[contact-message] User ID:", session.user.id)
 
     // Отримуємо повідомлення за ID
     const { data, error } = await supabase.from("contact_messages").select("*").eq("id", id).single()
 
     if (error) {
-      console.error("Error fetching contact message:", error)
+      console.error("[contact-message] Error fetching contact message:", error)
       return NextResponse.json({ error: "Failed to fetch contact message" }, { status: 500 })
     }
 
@@ -50,7 +37,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     // Успішна відповідь
     return NextResponse.json({ data })
   } catch (error) {
-    console.error("Error in contact message API:", error)
+    console.error("[contact-message] Error in contact message API:", error)
     return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
   }
 }
@@ -66,34 +53,21 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ error: "Status is required" }, { status: 400 })
     }
 
-    // Створюємо клієнта Supabase з серверними куками
+    // Створюємо клієнта Supabase
     const cookieStore = cookies()
     const supabase = createClient(cookieStore)
 
-    // Перевіряємо сесію користувача
+    // Отримуємо сесію користувача
     const {
       data: { session },
     } = await supabase.auth.getSession()
 
     if (!session) {
-      console.log("No session found")
+      console.log("[contact-message] No session found")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Отримуємо дані користувача
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", session.user.id)
-      .single()
-
-    // Перевіряємо роль користувача
-    const isAdmin = userData?.role === "admin"
-
-    if (!isAdmin) {
-      console.log("User is not admin")
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    console.log("[contact-message] User ID:", session.user.id)
 
     // Оновлюємо статус повідомлення
     const { data, error } = await supabase
@@ -107,14 +81,14 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       .single()
 
     if (error) {
-      console.error("Error updating contact message:", error)
+      console.error("[contact-message] Error updating contact message:", error)
       return NextResponse.json({ error: "Failed to update contact message" }, { status: 500 })
     }
 
     // Успішна відповідь
     return NextResponse.json({ data })
   } catch (error) {
-    console.error("Error in contact message API:", error)
+    console.error("[contact-message] Error in contact message API:", error)
     return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
   }
 }
