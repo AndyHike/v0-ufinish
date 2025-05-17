@@ -1,9 +1,20 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { createClient } from "@/utils/supabase/server"
+import { createClient } from "@/lib/supabase"
+import { getSession } from "@/lib/auth/session"
 
 export async function GET(request: Request) {
   try {
+    // Отримуємо сесію користувача
+    const session = await getSession()
+
+    if (!session || !session.user) {
+      console.log("[contact-messages] No session found")
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    console.log("[contact-messages] User ID:", session.user.id)
+    console.log("[contact-messages] User role:", session.user.role)
+
     // Отримуємо параметри запиту
     const { searchParams } = new URL(request.url)
     const page = Number.parseInt(searchParams.get("page") || "1")
@@ -15,20 +26,35 @@ export async function GET(request: Request) {
     const offset = (page - 1) * limit
 
     // Створюємо клієнта Supabase
-    const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = createClient()
 
-    // Отримуємо сесію користувача
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    // Перевіряємо, чи існує таблиця contact_messages
+    const { error: tableCheckError } = await supabase.from("contact_messages").select("id").limit(1)
 
-    if (!session) {
-      console.log("[contact-messages] No session found")
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    if (tableCheckError && tableCheckError.code === "42P01") {
+      // Таблиця не існує, створюємо її
+      const createTableQuery = `
+        CREATE TABLE IF NOT EXISTS contact_messages (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          name TEXT NOT NULL,
+          email TEXT NOT NULL,
+          phone TEXT,
+          message TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'new',
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `
+
+      const { error: createError } = await supabase.rpc("exec", { query: createTableQuery })
+
+      if (createError) {
+        console.error("[contact-messages] Error creating contact_messages table:", createError)
+        return NextResponse.json({ error: "Failed to create contact_messages table" }, { status: 500 })
+      }
+
+      console.log("[contact-messages] Table contact_messages created successfully")
     }
-
-    console.log("[contact-messages] User ID:", session.user.id)
 
     // Базовий запит
     let query = supabase.from("contact_messages").select("*", { count: "exact" })
