@@ -6,24 +6,26 @@ export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(false)
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(query)
+    const media = window.matchMedia(query)
 
-    // Встановлюємо початкове значення
-    setMatches(mediaQuery.matches)
-
-    // Функція для оновлення стану при зміні розміру екрану
-    const listener = (event: MediaQueryListEvent) => {
-      setMatches(event.matches)
+    // Встановлюємо початковий стан
+    if (media.matches !== matches) {
+      setMatches(media.matches)
     }
 
-    // Додаємо слухача подій
-    mediaQuery.addEventListener("change", listener)
+    // Створюємо обробник для відстеження змін
+    const listener = () => {
+      setMatches(media.matches)
+    }
 
-    // Прибираємо слухача при розмонтуванні компонента
+    // Додаємо слухача
+    media.addEventListener("change", listener)
+
+    // Очищаємо слухача при розмонтуванні
     return () => {
-      mediaQuery.removeEventListener("change", listener)
+      media.removeEventListener("change", listener)
     }
-  }, [query])
+  }, [matches, query])
 
   return matches
 }

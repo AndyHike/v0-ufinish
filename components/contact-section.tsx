@@ -50,102 +50,41 @@ export function ContactSection() {
   }
 
   return (
-    <section className="relative py-16 md:py-24 bg-gradient-to-b from-white to-gray-50">
-      {/* Декоративні елементи */}
+    <section className="relative py-12 md:py-20 bg-gradient-to-b from-white to-gray-50">
+      {/* Декоративні елементи - видалені негативні позиції для мобільних */}
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-      <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
-      <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
+      <div className="hidden md:block absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
+      <div className="hidden md:block absolute bottom-0 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
 
       <div className="container relative z-10 px-4 md:px-6">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <h2 className="text-3xl font-bold tracking-tighter md:text-4xl mb-4">{t("title")}</h2>
+        <div className="text-center max-w-3xl mx-auto mb-8 md:mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tighter md:text-4xl mb-3">{t("title")}</h2>
           <p className="text-gray-500 md:text-lg">{t("subtitle")}</p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {/* Контактна інформація */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-              <div className="space-y-5">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Phone className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">{t("phone")}</h3>
-                    <p className="text-gray-600">+42075848259</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Mail className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">{t("email")}</h3>
-                    <p className="text-gray-600">info@devicehelp.cz</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <MapPin className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">{t("address")}</h3>
-                    <p className="text-gray-600">Praha 2</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Clock className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">{t("workingHours")}</h3>
-                    <p className="text-gray-600">{t("workingHoursWeekdays")}</p>
-                    <p className="text-gray-600">{t("workingHoursSaturday")}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-hidden rounded-xl shadow-sm border border-gray-100 h-[220px] bg-white">
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d20479.84323795257!2d14.41993243476561!3d50.07762499999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b94ea69e1a1a1%3A0x7c93c7eb4ba09925!2sPraha%202!5e0!3m2!1scs!2scz!4v1652345678901!5m2!1scs!2scz"
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Google Maps"
-              ></iframe>
-            </div>
-          </div>
-
-          {/* Форма */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="grid lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
+          {/* Форма - переміщена вгору для мобільних */}
+          <div className="lg:col-span-2 order-1 lg:order-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 md:p-8">
               {isSuccess ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="h-16 w-16 rounded-full bg-green-50 flex items-center justify-center mb-6">
-                    <CheckCircle className="h-8 w-8 text-green-500" />
+                <div className="flex flex-col items-center justify-center py-8 md:py-12 text-center">
+                  <div className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-green-50 flex items-center justify-center mb-4 md:mb-6">
+                    <CheckCircle className="h-7 w-7 md:h-8 md:w-8 text-green-500" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3">{t("successTitle")}</h3>
-                  <p className="text-gray-500 max-w-md mb-6">{t("successMessage")}</p>
+                  <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-3">{t("successTitle")}</h3>
+                  <p className="text-gray-500 max-w-md mb-4 md:mb-6">{t("successMessage")}</p>
                   <Button onClick={() => setIsSuccess(false)} variant="outline" size="lg">
                     {t("sendAnother")}
                   </Button>
                 </div>
               ) : (
                 <>
-                  <div className="mb-6">
-                    <h3 className="text-xl font-bold text-gray-900">{t("contactUs")}</h3>
-                    <p className="text-gray-500 mt-1">{t("formDescription")}</p>
+                  <div className="mb-5 md:mb-6">
+                    <h3 className="text-lg md:text-xl font-bold text-gray-900">{t("contactUs")}</h3>
+                    <p className="text-gray-500 mt-1 text-sm md:text-base">{t("formDescription")}</p>
                   </div>
 
-                  <form onSubmit={handleSubmit} className="space-y-5">
+                  <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
                     <div className="space-y-2">
                       <Label htmlFor="name" className="text-gray-700">
                         {t("nameLabel")}
@@ -160,7 +99,7 @@ export function ContactSection() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
                       <div className="space-y-2">
                         <Label htmlFor="email" className="text-gray-700">
                           {t("emailLabel")}
@@ -200,7 +139,7 @@ export function ContactSection() {
                         required
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        className="min-h-[150px] bg-gray-50 border-gray-200 focus:bg-white"
+                        className="min-h-[120px] md:min-h-[150px] bg-gray-50 border-gray-200 focus:bg-white"
                       />
                     </div>
 
@@ -220,6 +159,67 @@ export function ContactSection() {
                   </form>
                 </>
               )}
+            </div>
+          </div>
+
+          {/* Контактна інформація - переміщена вниз для мобільних */}
+          <div className="lg:col-span-1 order-2 lg:order-1">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 md:p-6 mb-5 md:mb-6">
+              <div className="space-y-4 md:space-y-5">
+                <div className="flex items-start gap-3 md:gap-4">
+                  <div className="flex h-9 w-9 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Phone className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900 text-sm md:text-base">{t("phone")}</h3>
+                    <p className="text-gray-600 text-sm md:text-base">+42075848259</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 md:gap-4">
+                  <div className="flex h-9 w-9 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Mail className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900 text-sm md:text-base">{t("email")}</h3>
+                    <p className="text-gray-600 text-sm md:text-base">info@devicehelp.cz</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 md:gap-4">
+                  <div className="flex h-9 w-9 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <MapPin className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900 text-sm md:text-base">{t("address")}</h3>
+                    <p className="text-gray-600 text-sm md:text-base">Praha 2</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 md:gap-4">
+                  <div className="flex h-9 w-9 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Clock className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900 text-sm md:text-base">{t("workingHours")}</h3>
+                    <p className="text-gray-600 text-sm md:text-base">{t("workingHoursWeekdays")}</p>
+                    <p className="text-gray-600 text-sm md:text-base">{t("workingHoursSaturday")}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-xl shadow-sm border border-gray-100 h-[180px] md:h-[220px] bg-white">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d20479.84323795257!2d14.41993243476561!3d50.07762499999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b94ea69e1a1a1%3A0x7c93c7eb4ba09925!2sPraha%202!5e0!3m2!1scs!2scz!4v1652345678901!5m2!1scs!2scz"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Google Maps"
+              ></iframe>
             </div>
           </div>
         </div>
