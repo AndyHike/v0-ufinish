@@ -3,6 +3,7 @@ import {
   getVerificationEmailTemplate,
   getPasswordResetEmailTemplate,
   getVerificationCodeEmailTemplate,
+  getNewContactMessageTemplate,
 } from "./templates"
 
 // Configure email transporter
@@ -86,6 +87,31 @@ export async function sendVerificationCode(email: string, code: string, locale =
   const subject = translations[locale as keyof typeof translations] || translations.en
 
   return await sendEmail(email, subject, emailTemplate)
+}
+
+export async function sendNewContactMessageNotification(
+  contactMessage: {
+    name: string
+    email: string
+    phone?: string | null
+    message: string
+  },
+  locale = "uk",
+) {
+  const emailTemplate = getNewContactMessageTemplate(contactMessage, locale)
+
+  const translations = {
+    en: "New contact form message",
+    uk: "Нове повідомлення з контактної форми",
+    cs: "Nová zpráva z kontaktního formuláře",
+  }
+
+  const subject = translations[locale as keyof typeof translations] || translations.en
+
+  // Отримуємо адресу для сповіщень з env або використовуємо адресу відправника
+  const notificationEmail = process.env.NOTIFICATION_EMAIL || process.env.EMAIL_FROM?.trim() || "info@devicehelp.cz"
+
+  return await sendEmail(notificationEmail, subject, emailTemplate)
 }
 
 async function sendEmail(to: string, subject: string, html: string) {

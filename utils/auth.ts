@@ -34,3 +34,29 @@ export async function verifyPassword(password: string, storedHash: string): Prom
     }
   })
 }
+
+// Check if user has admin role
+export function checkAdminRole(user: any): boolean {
+  // Check if user exists
+  if (!user) return false
+
+  // Check if user has role property and it's 'admin'
+  if (user.role === "admin") return true
+
+  // Check if user has roles array and it includes 'admin'
+  if (Array.isArray(user.roles) && user.roles.includes("admin")) return true
+
+  // Check if user has metadata with role or roles
+  if (user.metadata) {
+    if (user.metadata.role === "admin") return true
+    if (Array.isArray(user.metadata.roles) && user.metadata.roles.includes("admin")) return true
+  }
+
+  // Check if user has user_metadata with role or roles (Supabase format)
+  if (user.user_metadata) {
+    if (user.user_metadata.role === "admin") return true
+    if (Array.isArray(user.user_metadata.roles) && user.user_metadata.roles.includes("admin")) return true
+  }
+
+  return false
+}

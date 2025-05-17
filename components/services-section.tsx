@@ -89,7 +89,7 @@ export function ServicesSection() {
                     <CardContent className="flex-1" />
                     <CardFooter>
                       <Button variant="outline" asChild className="w-full">
-                        <Link href={`/services/${service.id}`}>{t("requestService")}</Link>
+                        <Link href="/contact">{t("requestService")}</Link>
                       </Button>
                     </CardFooter>
                   </Card>
@@ -98,7 +98,7 @@ export function ServicesSection() {
         </div>
         <div className="flex justify-center">
           <Button asChild size="lg">
-            <Link href="/services">{t("allServicesButton")}</Link>
+            <Link href="/contact">{t("allServicesButton")}</Link>
           </Button>
         </div>
       </div>

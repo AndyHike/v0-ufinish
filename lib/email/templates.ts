@@ -162,3 +162,84 @@ export function getVerificationCodeEmailTemplate(code: string, locale: string, i
     </html>
   `
 }
+
+export function getNewContactMessageTemplate(
+  contactMessage: {
+    name: string
+    email: string
+    phone?: string | null
+    message: string
+  },
+  locale: string,
+): string {
+  const translations = {
+    en: {
+      title: "New Contact Form Message",
+      greeting: "Hello,",
+      message: "You have received a new message from the contact form on your website.",
+      details: "Message Details:",
+      name: "Name:",
+      email: "Email:",
+      phone: "Phone:",
+      messageLabel: "Message:",
+      footer: "This is an automated notification.",
+    },
+    uk: {
+      title: "Нове повідомлення з контактної форми",
+      greeting: "Вітаємо,",
+      message: "Ви отримали нове повідомлення з контактної форми на вашому сайті.",
+      details: "Деталі повідомлення:",
+      name: "Ім'я:",
+      email: "Email:",
+      phone: "Телефон:",
+      messageLabel: "Повідомлення:",
+      footer: "Це автоматичне сповіщення.",
+    },
+    cs: {
+      title: "Nová zpráva z kontaktního formuláře",
+      greeting: "Dobrý den,",
+      message: "Obdrželi jste novou zprávu z kontaktního formuláře na vašem webu.",
+      details: "Podrobnosti zprávy:",
+      name: "Jméno:",
+      email: "Email:",
+      phone: "Telefon:",
+      messageLabel: "Zpráva:",
+      footer: "Toto je automatické oznámení.",
+    },
+  }
+
+  const t = translations[locale as keyof typeof translations] || translations.en
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>${t.title}</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .container { border: 1px solid #ddd; border-radius: 5px; padding: 20px; }
+        .details { margin: 20px 0; padding: 15px; background-color: #f5f5f5; border-radius: 5px; }
+        .label { font-weight: bold; }
+        .message-content { white-space: pre-wrap; margin-top: 5px; }
+        .footer { margin-top: 30px; font-size: 0.8em; color: #666; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h2>${t.title}</h2>
+        <p>${t.greeting}</p>
+        <p>${t.message}</p>
+        <div class="details">
+          <p><span class="label">${t.name}</span> ${contactMessage.name}</p>
+          <p><span class="label">${t.email}</span> ${contactMessage.email}</p>
+          ${contactMessage.phone ? `<p><span class="label">${t.phone}</span> ${contactMessage.phone}</p>` : ""}
+          <p><span class="label">${t.messageLabel}</span></p>
+          <div class="message-content">${contactMessage.message}</div>
+        </div>
+        <p class="footer">${t.footer}</p>
+      </div>
+    </body>
+    </html>
+  `
+}

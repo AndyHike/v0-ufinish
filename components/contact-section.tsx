@@ -19,16 +19,49 @@ export function ContactSection() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Отримуємо дані форми
+      const formData = new FormData(e.currentTarget)
+      const formValues = {
+        name: formData.get("name") as string,
+        email: formData.get("email") as string,
+        phone: formData.get("phone") as string,
+        message: formData.get("message") as string,
+      }
 
-    toast({
-      title: t("successTitle"),
-      description: t("successMessage"),
-    })
+      // Відправляємо дані на API
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formValues),
+      })
 
-    setIsSubmitting(false)
-    e.currentTarget.reset()
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send message")
+      }
+
+      // Показуємо повідомлення про успіх
+      toast({
+        title: t("successTitle"),
+        description: t("successMessage"),
+      })
+
+      // Очищаємо форму
+      e.currentTarget.reset()
+    } catch (error) {
+      console.error("Contact form error:", error)
+      toast({
+        title: t("errorTitle") || "Error",
+        description: t("errorMessage") || "Failed to send your message. Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

@@ -19,7 +19,7 @@
     "about": "O nás",
     "contact": "Kontakt",
     "contactUs": "Kontaktujte nás",
-    "address": "Václavské náměstí 1, Praha, Česká republika",
+    "address": "Praha 2, Česká republika",
     "followUs": "Sledujte nás",
     "allRightsReserved": "Všechna práva vyhrazena.",
     "terms": "Obchodní podmínky",
@@ -148,7 +148,7 @@
     "contactUs": "Kontaktujte nás",
     "contactUsDescription": "Vyplňte formulář a my vás budeme kontaktovat co nejdříve.",
     "phone": "Telefon",
-    "email": "E-mail",
+    "email": "info@devicehelp.cz",
     "address": "Praha 2, Česká republika",
     "workingHours": "Otevírací doba",
     "workingHoursWeekdays": "Pondělí - Pátek: 9:00 - 18:00",
@@ -167,7 +167,9 @@
     "send": "Odeslat",
     "sending": "Odesílání...",
     "successTitle": "Zpráva odeslána",
-    "successMessage": "Děkujeme za vaši zprávu. Budeme vás kontaktovat co nejdříve."
+    "successMessage": "Děkujeme za vaši zprávu. Budeme vás kontaktovat co nejdříve.",
+    "errorTitle": "Chyba",
+    "errorMessage": "Nepodařilo se odeslat vaši zprávu. Zkuste to prosím později."
   },
   "Auth": {
     "createAccount": "Vytvořit účet",
