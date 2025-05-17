@@ -1,184 +1,149 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import type React from "react"
+
+import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle, Send, ArrowRight, Phone, Mail, MapPin } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useToast } from "@/components/ui/use-toast"
+import { Phone, Mail, MapPin, Send } from "lucide-react"
 
 export function ContactSection() {
   const t = useTranslations("Contact")
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
-  const [message, setMessage] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError(null)
+    setIsSubmitting(true)
 
     try {
+      // Отримуємо дані форми
+      const formData = new FormData(e.currentTarget)
+      const formValues = {
+        name: formData.get("name") as string,
+        email: formData.get("email") as string,
+        phone: formData.get("phone") as string,
+        message: formData.get("message") as string,
+      }
+
+      // Відправляємо дані на API
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name,
-          email,
-          phone: phone || null,
-          message,
-        }),
+        body: JSON.stringify(formValues),
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error(t("submitError"))
+        throw new Error(data.error || "Failed to send message")
       }
 
-      // Успішна відправка
-      setIsSuccess(true)
+      // Показуємо повідомлення про успіх
+      toast({
+        title: t("successTitle"),
+        description: t("successMessage"),
+      })
+
       // Очищаємо форму
-      setName("")
-      setEmail("")
-      setPhone("")
-      setMessage("")
-    } catch (err) {
-      console.error("Error submitting form:", err)
-      setError(err instanceof Error ? err.message : t("submitError"))
+      e.currentTarget.reset()
+    } catch (error) {
+      console.error("Contact form error:", error)
+      toast({
+        title: t("errorTitle") || "Error",
+        description: t("errorMessage") || "Failed to send your message. Please try again later.",
+        variant: "destructive",
+      })
     } finally {
-      setIsLoading(false)
+      setIsSubmitting(false)
     }
   }
 
-  const resetForm = () => {
-    setIsSuccess(false)
-  }
-
   return (
-    <section className="py-12 md:py-16 lg:py-20 bg-gray-50">
+    <section className="py-12 md:py-24 bg-muted/50" id="contact">
       <div className="container px-4 md:px-6">
-        <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-start">
+        <div className="flex flex-col items-center justify-center space-y-4 text-center">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("title")}</h2>
+            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              {t("subtitle")}
+            </p>
+          </div>
+        </div>
+        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 lg:grid-cols-2">
           <div className="space-y-4">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("title")}</h2>
-              <p className="text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                {t("subtitle")}
-              </p>
+            <div className="flex items-start space-x-4">
+              <Phone className="mt-1 h-5 w-5 text-primary" />
+              <div>
+                <h3 className="font-semibold">{t("phone")}</h3>
+                <p className="text-sm text-muted-foreground">+420 775 848 259</p>
+              </div>
             </div>
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <Phone className="h-6 w-6 text-primary flex-shrink-0" />
-                <div className="space-y-1">
-                  <h3 className="font-medium">{t("phone")}</h3>
-                  <p className="text-sm text-gray-500">+420 777 888 999</p>
-                </div>
+            <div className="flex items-start space-x-4">
+              <Mail className="mt-1 h-5 w-5 text-primary" />
+              <div>
+                <h3 className="font-semibold">{t("email")}</h3>
+                <p className="text-sm text-muted-foreground">info@devicehelp.cz</p>
               </div>
-              <div className="flex items-start gap-4">
-                <Mail className="h-6 w-6 text-primary flex-shrink-0" />
-                <div className="space-y-1">
-                  <h3 className="font-medium">{t("email")}</h3>
-                  <p className="text-sm text-gray-500">info@devicehelp.cz</p>
-                </div>
+            </div>
+            <div className="flex items-start space-x-4">
+              <MapPin className="mt-1 h-5 w-5 text-primary" />
+              <div>
+                <h3 className="font-semibold">{t("address")}</h3>
+                <p className="text-sm text-muted-foreground">{t("addressDetails")}</p>
               </div>
-              <div className="flex items-start gap-4">
-                <MapPin className="h-6 w-6 text-primary flex-shrink-0" />
-                <div className="space-y-1">
-                  <h3 className="font-medium">{t("address")}</h3>
-                  <p className="text-sm text-gray-500">Václavské náměstí 1, 110 00 Praha 1</p>
-                </div>
-              </div>
+            </div>
+            <div className="aspect-video overflow-hidden rounded-lg">
+              <iframe
+                title={t("mapTitle")}
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d20472.97391809471!2d14.4194684!3d50.0755381!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b94ea69e1a1e1%3A0x7c93c7aaef9e8b!2zUHJhaGEgMiwgxIxlc2tv!5e0!3m2!1scs!2scz!4v1650000000000!5m2!1scs!2scz"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+              ></iframe>
             </div>
           </div>
-          <Card className="w-full">
-            {isSuccess ? (
-              <CardContent className="p-6 flex flex-col items-center justify-center min-h-[400px]">
-                <div className="text-center space-y-6">
-                  <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-                    <CheckCircle className="h-10 w-10 text-green-600" />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-2xl font-bold tracking-tight">{t("thankYou")}</h3>
-                    <p className="text-gray-500">{t("messageReceived")}</p>
-                  </div>
-                  <Button onClick={resetForm} className="mt-4">
-                    {t("sendAnother")}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
+          <div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label htmlFor="name" className="text-sm font-medium">
+                    {t("nameLabel")}
+                  </label>
+                  <Input id="name" name="name" required placeholder={t("namePlaceholder")} />
                 </div>
-              </CardContent>
-            ) : (
-              <>
-                <CardHeader>
-                  <CardTitle>{t("contactUs")}</CardTitle>
-                  <CardDescription>{t("formDescription")}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertTitle>{t("errorTitle")}</AlertTitle>
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">{t("nameLabel")}</Label>
-                      <Input
-                        id="name"
-                        placeholder={t("namePlaceholder")}
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">{t("emailLabel")}</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder={t("emailPlaceholder")}
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">{t("phoneLabel")}</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder={t("phonePlaceholder")}
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="message">{t("messageLabel")}</Label>
-                      <Textarea
-                        id="message"
-                        placeholder={t("messagePlaceholder")}
-                        required
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        className="min-h-[120px]"
-                      />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? t("sending") : t("send")}
-                      {!isLoading && <Send className="ml-2 h-4 w-4" />}
-                    </Button>
-                  </form>
-                </CardContent>
-              </>
-            )}
-          </Card>
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium">
+                    {t("emailLabel")}
+                  </label>
+                  <Input id="email" name="email" type="email" required placeholder={t("emailPlaceholder")} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="phone" className="text-sm font-medium">
+                  {t("phoneLabel")}
+                </label>
+                <Input id="phone" name="phone" type="tel" placeholder={t("phonePlaceholder")} />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="message" className="text-sm font-medium">
+                  {t("messageLabel")}
+                </label>
+                <Textarea id="message" name="message" required placeholder={t("messagePlaceholder")} rows={4} />
+              </div>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? t("sending") : t("send")}
+                <Send className="ml-2 h-4 w-4" />
+              </Button>
+            </form>
+          </div>
         </div>
       </div>
     </section>
