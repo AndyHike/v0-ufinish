@@ -4,6 +4,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { createServerClient } from "@/utils/supabase/server"
 import { ArrowLeft, Smartphone } from "lucide-react"
+import { formatImageUrl } from "@/utils/image-url"
 
 type Props = {
   params: {
@@ -101,11 +102,12 @@ export default async function SeriesPage({ params }: Props) {
             {series.brands?.logo_url && (
               <div className="relative h-24 w-24 overflow-hidden rounded-lg bg-slate-50 p-3">
                 <img
-                  src={series.brands.logo_url || "/placeholder.svg"}
+                  src={formatImageUrl(series.brands.logo_url) || "/placeholder.svg"}
                   alt={series.brands.name}
+                  width={96}
+                  height={96}
                   className="h-full w-full object-contain"
                   style={{ display: "block" }}
-                  loading="eager"
                 />
               </div>
             )}
@@ -133,11 +135,12 @@ export default async function SeriesPage({ params }: Props) {
                   <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-lg bg-slate-50 p-2 sm:h-24 sm:w-24">
                     {model.image_url ? (
                       <img
-                        src={model.image_url || "/placeholder.svg"}
+                        src={formatImageUrl(model.image_url) || "/placeholder.svg"}
                         alt={model.name}
+                        width={96}
+                        height={96}
                         className="h-full w-full object-contain"
                         style={{ display: "block" }}
-                        loading="eager"
                       />
                     ) : (
                       <Smartphone className="h-8 w-8 text-slate-400" />

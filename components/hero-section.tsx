@@ -21,8 +21,10 @@ export function HeroSection() {
             <img
               src="/focused-phone-fix.png"
               alt={t("imageAlt")}
+              width={400}
+              height={200}
               className="w-full h-full object-cover object-center"
-              loading="eager"
+              style={{ display: "block" }}
             />
           </div>
           <p className="text-gray-500 mb-6">{t("subtitle")}</p>
@@ -99,8 +101,10 @@ export function HeroSection() {
             <img
               src="/focused-phone-fix.png"
               alt={t("imageAlt")}
+              width={500}
+              height={350}
               className="w-full h-full object-cover object-center"
-              loading="eager"
+              style={{ display: "block" }}
             />
           </div>
         </div>

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { motion } from "framer-motion"
 import { ChevronRight } from "lucide-react"
 import { useParams } from "next/navigation"
+import { formatImageUrl } from "@/utils/image-url"
 
 type Brand = {
   id: string
@@ -121,10 +122,12 @@ export function BrandsSectionModern() {
                   <Card className="p-6 flex flex-col items-center justify-center h-[120px] transition-all hover:shadow-md hover:scale-105">
                     {brand.logo_url ? (
                       <img
-                        src={brand.logo_url || "/placeholder.svg"}
+                        src={formatImageUrl(brand.logo_url) || "/placeholder.svg"}
                         alt={brand.name}
+                        width={48}
+                        height={48}
                         className="h-12 object-contain mb-3"
-                        loading="eager"
+                        style={{ display: "block" }}
                       />
                     ) : (
                       <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">

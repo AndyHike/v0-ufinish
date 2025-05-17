@@ -25,8 +25,10 @@ export default function AboutPage() {
             <img
               src="/tech-fix-storefront.png"
               alt={t("ourShop")}
+              width={600}
+              height={300}
               className="w-full h-full object-cover"
-              loading="eager"
+              style={{ display: "block" }}
             />
           </div>
         </div>

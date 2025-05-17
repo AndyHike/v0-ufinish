@@ -4,6 +4,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { createServerClient } from "@/utils/supabase/server"
 import { ChevronRight, Smartphone } from "lucide-react"
+import { formatImageUrl } from "@/utils/image-url"
 
 type Props = {
   params: {
@@ -87,11 +88,12 @@ export default async function BrandPage({ params }: Props) {
         <div className="mb-12 flex flex-col items-center gap-6 rounded-xl bg-white p-8 shadow-sm md:flex-row">
           <div className="relative h-32 w-32 overflow-hidden rounded-xl bg-slate-50 p-4">
             <img
-              src={brand.logo_url || "/placeholder.svg?height=128&width=128&query=phone+brand+logo"}
+              src={formatImageUrl(brand.logo_url) || "/placeholder.svg?height=128&width=128&query=phone+brand+logo"}
               alt={brand.name}
+              width={128}
+              height={128}
               className="object-contain w-full h-full"
               style={{ display: "block" }}
-              loading="eager"
             />
           </div>
           <div>
@@ -153,11 +155,12 @@ export default async function BrandPage({ params }: Props) {
                   <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-lg bg-slate-50 p-2 sm:h-24 sm:w-24">
                     {model.image_url ? (
                       <img
-                        src={model.image_url || "/placeholder.svg"}
+                        src={formatImageUrl(model.image_url) || "/placeholder.svg"}
                         alt={model.name}
+                        width={96}
+                        height={96}
                         className="h-full w-full object-contain"
                         style={{ display: "block" }}
-                        loading="eager"
                       />
                     ) : (
                       <Smartphone className="h-8 w-8 text-slate-400" />

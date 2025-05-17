@@ -6,6 +6,7 @@ import { createServerClient } from "@/utils/supabase/server"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft } from "lucide-react"
 import { formatCurrency } from "@/lib/format-currency"
+import { formatImageUrl } from "@/utils/image-url"
 
 type Props = {
   params: {
@@ -149,11 +150,12 @@ export default async function ModelPage({ params }: Props) {
         <div className="mb-12 flex flex-col items-center gap-6 md:flex-row">
           <div className="relative h-40 w-40 overflow-hidden rounded-lg">
             <img
-              src={model.image_url || "/placeholder.svg?height=160&width=160&query=phone+model"}
+              src={formatImageUrl(model.image_url) || "/placeholder.svg?height=160&width=160&query=phone+model"}
               alt={model.name}
+              width={160}
+              height={160}
               className="h-full w-full object-contain"
               style={{ display: "block" }}
-              loading="eager"
             />
           </div>
           <div>
@@ -161,11 +163,12 @@ export default async function ModelPage({ params }: Props) {
               {model.brands?.logo_url && (
                 <div className="relative h-6 w-6 overflow-hidden rounded-full">
                   <img
-                    src={model.brands.logo_url || "/placeholder.svg"}
+                    src={formatImageUrl(model.brands.logo_url) || "/placeholder.svg"}
                     alt={model.brands.name}
+                    width={24}
+                    height={24}
                     className="h-full w-full object-contain"
                     style={{ display: "block" }}
-                    loading="eager"
                   />
                 </div>
               )}
