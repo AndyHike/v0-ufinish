@@ -11,12 +11,10 @@ export function HeroSection() {
   return (
     <section className="w-full py-12 md:py-24 lg:py-32 bg-white overflow-hidden">
       <div className="container px-4 md:px-6">
-        <div className="grid gap-6 lg:grid-cols-[1fr_600px] lg:gap-12 items-center">
+        <div className="grid gap-6 lg:grid-cols-[1fr_500px] lg:gap-12 items-center">
           <div className="flex flex-col justify-center space-y-4">
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                {t("title")}
-              </h1>
+              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("title")}</h1>
               <p className="max-w-[600px] text-gray-500 md:text-xl dark:text-gray-400">{t("subtitle")}</p>
             </div>
             <div className="space-y-4">
@@ -47,11 +45,16 @@ export function HeroSection() {
               </Link>
             </div>
           </div>
-          <div
-            className="relative h-[300px] md:h-[400px] lg:h-[500px] xl:h-[600px] rounded-2xl overflow-hidden shadow-xl bg-cover bg-center"
-            style={{ backgroundImage: "url('/phone-repair-close-up.png')" }}
-            aria-label={t("imageAlt")}
-          ></div>
+          <div className="relative mx-auto w-full max-w-[500px] overflow-hidden">
+            <div
+              className="aspect-[4/3] rounded-xl shadow-lg bg-cover bg-center transform transition-transform hover:scale-105 duration-500"
+              style={{
+                backgroundImage: "url('/phone-repair-close-up.png')",
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+              }}
+              aria-label={t("imageAlt")}
+            ></div>
+          </div>
         </div>
       </div>
     </section>
