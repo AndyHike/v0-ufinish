@@ -89,7 +89,6 @@ export function ContactSection() {
                     <div className="space-y-1">
                       <h3 className="font-medium">{t("phone")}</h3>
                       <p className="text-sm text-gray-500">+42075848259</p>
-                      <p className="text-xs text-gray-400">{t("callUsAnytime") || "Телефонуйте в будь-який час"}</p>
                     </div>
                   </div>
 
@@ -100,7 +99,6 @@ export function ContactSection() {
                     <div className="space-y-1">
                       <h3 className="font-medium">{t("email")}</h3>
                       <p className="text-sm text-gray-500">info@devicehelp.cz</p>
-                      <p className="text-xs text-gray-400">{t("emailResponse") || "Відповідаємо протягом 24 годин"}</p>
                     </div>
                   </div>
 
@@ -110,8 +108,7 @@ export function ContactSection() {
                     </div>
                     <div className="space-y-1">
                       <h3 className="font-medium">{t("address")}</h3>
-                      <p className="text-sm text-gray-500">Praha 2</p>
-                      <p className="text-xs text-gray-400">{t("visitUs") || "Завітайте до нашого сервісного центру"}</p>
+                      <p className="text-sm text-gray-500">{t("addressDetails")}</p>
                     </div>
                   </div>
 
@@ -120,9 +117,10 @@ export function ContactSection() {
                       <Clock className="h-5 w-5 text-primary" />
                     </div>
                     <div className="space-y-1">
-                      <h3 className="font-medium">{t("workingHours") || "Години роботи"}</h3>
-                      <p className="text-sm text-gray-500">{t("weekdays") || "Пн-Пт: 9:00 - 18:00"}</p>
-                      <p className="text-sm text-gray-500">{t("weekend") || "Сб: 10:00 - 15:00"}</p>
+                      <h3 className="font-medium">{t("workingHours")}</h3>
+                      <p className="text-sm text-gray-500">{t("workingHoursWeekdays")}</p>
+                      <p className="text-sm text-gray-500">{t("workingHoursSaturday")}</p>
+                      <p className="text-sm text-gray-500">{t("workingHoursSunday")}</p>
                     </div>
                   </div>
                 </div>
@@ -173,10 +171,8 @@ export function ContactSection() {
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
                       >
-                        <h3 className="text-2xl font-bold tracking-tight">{t("thankYou") || "Дякуємо!"}</h3>
-                        <p className="text-gray-500">
-                          {t("messageReceived") || "Ваше повідомлення отримано. Ми зв'яжемося з вами найближчим часом."}
-                        </p>
+                        <h3 className="text-2xl font-bold tracking-tight">{t("successTitle")}</h3>
+                        <p className="text-gray-500">{t("successMessage")}</p>
                       </motion.div>
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
@@ -184,7 +180,7 @@ export function ContactSection() {
                         transition={{ delay: 0.3 }}
                       >
                         <Button onClick={resetForm} className="mt-4">
-                          {t("sendAnother") || "Надіслати ще одне повідомлення"}
+                          {t("sendAnother")}
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </motion.div>
@@ -201,25 +197,23 @@ export function ContactSection() {
                 >
                   <CardContent className="p-8 space-y-6">
                     <div>
-                      <h3 className="text-2xl font-bold">{t("contactUs") || "Зв'язатися з нами"}</h3>
-                      <p className="text-gray-500 mt-1">
-                        {t("formDescription") || "Заповніть форму нижче, щоб надіслати нам повідомлення."}
-                      </p>
+                      <h3 className="text-2xl font-bold">{t("contactUs")}</h3>
+                      <p className="text-gray-500 mt-1">{t("formDescription")}</p>
                     </div>
 
                     {error && (
                       <Alert variant="destructive">
-                        <AlertTitle>{t("errorTitle") || "Помилка"}</AlertTitle>
+                        <AlertTitle>{t("errorTitle")}</AlertTitle>
                         <AlertDescription>{error}</AlertDescription>
                       </Alert>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name">{t("nameLabel") || "Ім'я"}</Label>
+                        <Label htmlFor="name">{t("nameLabel")}</Label>
                         <Input
                           id="name"
-                          placeholder={t("namePlaceholder") || "Введіть ваше ім'я"}
+                          placeholder={t("namePlaceholder")}
                           required
                           value={name}
                           onChange={(e) => setName(e.target.value)}
@@ -227,11 +221,11 @@ export function ContactSection() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="email">{t("emailLabel") || "Email"}</Label>
+                        <Label htmlFor="email">{t("emailLabel")}</Label>
                         <Input
                           id="email"
                           type="email"
-                          placeholder={t("emailPlaceholder") || "Введіть ваш email"}
+                          placeholder={t("emailPlaceholder")}
                           required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
@@ -239,21 +233,21 @@ export function ContactSection() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="phone">{t("phoneLabel") || "Телефон"}</Label>
+                        <Label htmlFor="phone">{t("phoneLabel")}</Label>
                         <Input
                           id="phone"
                           type="tel"
-                          placeholder={t("phonePlaceholder") || "Введіть ваш номер телефону"}
+                          placeholder={t("phonePlaceholder")}
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           className="bg-gray-50 border-gray-200 focus:bg-white"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="message">{t("messageLabel") || "Повідомлення"}</Label>
+                        <Label htmlFor="message">{t("messageLabel")}</Label>
                         <Textarea
                           id="message"
-                          placeholder={t("messagePlaceholder") || "Введіть ваше повідомлення"}
+                          placeholder={t("messagePlaceholder")}
                           required
                           value={message}
                           onChange={(e) => setMessage(e.target.value)}
@@ -264,11 +258,11 @@ export function ContactSection() {
                         {isLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            {t("sending") || "Надсилання..."}
+                            {t("sending")}
                           </>
                         ) : (
                           <>
-                            {t("send") || "Надіслати"}
+                            {t("send")}
                             <Send className="ml-2 h-4 w-4" />
                           </>
                         )}
