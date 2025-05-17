@@ -1,5 +1,5 @@
 /**
- * Formats a number as currency (UAH)
+ * Formats a number as currency (CZK)
  * @param value The value to format
  * @returns Formatted currency string
  */
@@ -8,9 +8,9 @@ export function formatCurrency(value: number | string | null | undefined): strin
 
   const numValue = typeof value === "string" ? Number.parseFloat(value) : value
 
-  return new Intl.NumberFormat("uk-UA", {
+  return new Intl.NumberFormat("cs-CZ", {
     style: "currency",
-    currency: "UAH",
+    currency: "CZK",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(numValue)

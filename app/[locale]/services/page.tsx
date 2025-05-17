@@ -30,7 +30,7 @@ export default async function ServicesPage({ params }: { params: { locale: strin
         "Наші фахівці виконують професійну заміну екранів для смартфонів будь-яких брендів. Ми використовуємо тільки оригінальні або високоякісні сумісні деталі, що гарантує відмінну якість зображення та тривалий термін служби.",
       icon: Smartphone,
       estimatedTime: "30-60 хвилин",
-      priceRange: "від 800 грн",
+      priceRange: "від 800 Kč",
       warranty: "6 місяців",
     },
     {
@@ -41,7 +41,7 @@ export default async function ServicesPage({ params }: { params: { locale: strin
         "З часом батарея смартфона втрачає ємність і швидше розряджається. Ми пропонуємо професійну заміну батареї з використанням якісних комплектуючих, що дозволить відновити тривалість роботи вашого пристрою.",
       icon: Battery,
       estimatedTime: "20-40 хвилин",
-      priceRange: "від 500 грн",
+      priceRange: "від 500 Kč",
       warranty: "3 місяці",
     },
     {
@@ -52,7 +52,7 @@ export default async function ServicesPage({ params }: { params: { locale: strin
         "Ремонт материнської плати - одна з найскладніших процедур, яка вимагає високої кваліфікації. Наші майстри мають багаторічний досвід у діагностиці та ремонті плат, вирішуючи проблеми з підключенням, живленням та іншими компонентами.",
       icon: Wifi,
       estimatedTime: "1-3 дні",
-      priceRange: "від 1200 грн",
+      priceRange: "від 1200 Kč",
       warranty: "3 місяці",
     },
     {
@@ -63,7 +63,7 @@ export default async function ServicesPage({ params }: { params: { locale: strin
         "Захистіть свій пристрій від подряпин та пошкоджень з професійним встановленням захисного скла або плівки. Ми гарантуємо ідеальне нанесення без бульбашок повітря та пилу.",
       icon: Shield,
       estimatedTime: "10-15 хвилин",
-      priceRange: "від 200 грн",
+      priceRange: "від 200 Kč",
       warranty: "1 місяць",
     },
     {
@@ -74,7 +74,7 @@ export default async function ServicesPage({ params }: { params: { locale: strin
         "З часом у вашому пристрої накопичується пил, бруд та інші забруднення, які можуть впливати на його роботу. Ми пропонуємо професійне чищення як зовнішніх, так і внутрішніх компонентів вашого смартфона.",
       icon: Brush,
       estimatedTime: "30-45 хвилин",
-      priceRange: "від 300 грн",
+      priceRange: "від 300 Kč",
       warranty: "1 місяць",
     },
     {
@@ -85,7 +85,7 @@ export default async function ServicesPage({ params }: { params: { locale: strin
         "Якщо ваш пристрій потрапив у воду або іншу рідину, важливо діяти швидко. Наші фахівці проведуть професійне чищення та відновлення компонентів, що постраждали від вологи, максимально збільшуючи шанси на повне відновлення функціональності.",
       icon: Droplet,
       estimatedTime: "1-2 дні",
-      priceRange: "від 1000 грн",
+      priceRange: "від 1000 Kč",
       warranty: "1 місяць",
     },
   ]
