@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, ArrowRight, Smartphone } from "lucide-react"
 import { useParams } from "next/navigation"
@@ -18,12 +19,12 @@ export function HeroSection() {
         <div className="md:hidden flex flex-col items-center text-center mb-8">
           <h1 className="text-3xl font-bold tracking-tighter mb-4">{t("title")}</h1>
           <div className="relative w-full h-[200px] rounded-xl overflow-hidden shadow-lg mb-6">
-            <img
+            <Image
               src="/focused-phone-fix.png"
               alt={t("imageAlt")}
-              className="w-full h-full object-cover object-center"
-              loading="eager"
-              fetchPriority="high"
+              fill
+              priority
+              className="object-cover object-center"
             />
           </div>
           <p className="text-gray-500 mb-6">{t("subtitle")}</p>
@@ -97,12 +98,12 @@ export function HeroSection() {
           </div>
 
           <div className="relative h-[250px] md:h-[350px] w-full rounded-xl overflow-hidden shadow-lg">
-            <img
+            <Image
               src="/focused-phone-fix.png"
               alt={t("imageAlt")}
-              className="w-full h-full object-cover object-center"
-              loading="eager"
-              fetchPriority="high"
+              fill
+              priority
+              className="object-cover object-center"
             />
           </div>
         </div>

@@ -23,7 +23,7 @@ export default function AboutPage() {
         </div>
         <div className="flex items-center justify-center">
           <div className="relative h-[300px] w-full overflow-hidden rounded-lg">
-            <Image src="/tech-fix-storefront.png" alt={t("ourShop")} fill className="object-cover" />
+            <Image src="/tech-fix-storefront.png" alt={t("ourShop")} fill className="object-cover" priority />
           </div>
         </div>
       </div>
