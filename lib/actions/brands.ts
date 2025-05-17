@@ -16,7 +16,10 @@ export async function getBrands() {
     if (error || !data || data.length === 0) {
       const { data: fallbackData, error: fallbackError } = await supabase.from("brands").select("*").order("name")
 
-      if (fallbackError) throw fallbackError
+      if (fallbackError) {
+        console.error("Error in fallback query:", fallbackError)
+        return []
+      }
       data = fallbackData
     }
 
