@@ -22,12 +22,11 @@ export default function AboutPage() {
         </div>
         <div className="flex items-center justify-center">
           <div className="relative h-[300px] w-full overflow-hidden rounded-lg">
-            {/* Використовуємо абсолютний шлях до зображення */}
             <img
-              src="https://new.devicehelp.cz/tech-fix-storefront.png"
+              src="/tech-fix-storefront.png"
               alt={t("ourShop")}
               className="w-full h-full object-cover"
-              style={{ display: "block" }}
+              loading="eager"
             />
           </div>
         </div>

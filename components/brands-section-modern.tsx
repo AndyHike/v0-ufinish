@@ -124,7 +124,7 @@ export function BrandsSectionModern() {
                         src={brand.logo_url || "/placeholder.svg"}
                         alt={brand.name}
                         className="h-12 object-contain mb-3"
-                        style={{ display: "block" }}
+                        loading="eager"
                       />
                     ) : (
                       <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">

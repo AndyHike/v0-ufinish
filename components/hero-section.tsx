@@ -18,12 +18,11 @@ export function HeroSection() {
         <div className="md:hidden flex flex-col items-center text-center mb-8">
           <h1 className="text-3xl font-bold tracking-tighter mb-4">{t("title")}</h1>
           <div className="relative w-full h-[200px] rounded-xl overflow-hidden shadow-lg mb-6">
-            {/* Використовуємо абсолютний шлях до зображення */}
             <img
-              src="https://new.devicehelp.cz/focused-phone-fix.png"
+              src="/focused-phone-fix.png"
               alt={t("imageAlt")}
               className="w-full h-full object-cover object-center"
-              style={{ display: "block" }}
+              loading="eager"
             />
           </div>
           <p className="text-gray-500 mb-6">{t("subtitle")}</p>
@@ -97,12 +96,11 @@ export function HeroSection() {
           </div>
 
           <div className="relative h-[250px] md:h-[350px] w-full rounded-xl overflow-hidden shadow-lg">
-            {/* Використовуємо абсолютний шлях до зображення */}
             <img
-              src="https://new.devicehelp.cz/focused-phone-fix.png"
+              src="/focused-phone-fix.png"
               alt={t("imageAlt")}
               className="w-full h-full object-cover object-center"
-              style={{ display: "block" }}
+              loading="eager"
             />
           </div>
         </div>
