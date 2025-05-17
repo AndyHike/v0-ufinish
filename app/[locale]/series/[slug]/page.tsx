@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
-import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { createServerClient } from "@/utils/supabase/server"
@@ -9,16 +8,24 @@ import { ArrowLeft, Smartphone } from "lucide-react"
 type Props = {
   params: {
     locale: string
-    id: string
+    slug: string
   }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id, locale } = params
+  const { slug, locale } = params
   const t = await getTranslations({ locale, namespace: "Series" })
 
   const supabase = createServerClient()
-  const { data: series } = await supabase.from("series").select("*, brands(name)").eq("id", id).single()
+
+  // Спочатку спробуємо знайти за слагом
+  let { data: series } = await supabase.from("series").select("*, brands(name)").eq("slug", slug).single()
+
+  // Якщо не знайдено за слагом, спробуємо знайти за ID
+  if (!series) {
+    const { data } = await supabase.from("series").select("*, brands(name)").eq("id", slug).single()
+    series = data
+  }
 
   if (!series) {
     return {
@@ -36,18 +43,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function SeriesPage({ params }: Props) {
-  const { id, locale } = params
+  const { slug, locale } = params
   const t = await getTranslations({ locale, namespace: "Series" })
   const commonT = await getTranslations({ locale, namespace: "Common" })
 
   const supabase = createServerClient()
 
-  // Fetch the series with its brand
-  const { data: series, error: seriesError } = await supabase
+  // Спочатку спробуємо знайти за слагом
+  let { data: series, error: seriesError } = await supabase
     .from("series")
-    .select("*, brands(id, name, logo_url)")
-    .eq("id", id)
+    .select("*, brands(id, name, slug, logo_url)")
+    .eq("slug", slug)
     .single()
+
+  // Якщо не знайдено за слагом, спробуємо знайти за ID
+  if (!series) {
+    const { data, error } = await supabase
+      .from("series")
+      .select("*, brands(id, name, slug, logo_url)")
+      .eq("id", slug)
+      .single()
+
+    series = data
+    seriesError = error
+  }
 
   if (seriesError || !series) {
     console.error("[SeriesPage] Error fetching series:", seriesError)
@@ -57,8 +76,8 @@ export default async function SeriesPage({ params }: Props) {
   // Fetch models for this series
   const { data: models, error: modelsError } = await supabase
     .from("models")
-    .select("id, name, image_url, created_at")
-    .eq("series_id", id)
+    .select("id, name, slug, image_url, created_at")
+    .eq("series_id", series.id)
     .order("position", { ascending: true })
 
   if (modelsError) {
@@ -71,7 +90,7 @@ export default async function SeriesPage({ params }: Props) {
         {/* Заголовок серії */}
         <div className="mb-12 rounded-xl bg-white p-8 shadow-sm">
           <Link
-            href={`/${locale}/brands/${series.brand_id}`}
+            href={`/${locale}/brands/${series.brands?.slug || series.brand_id}`}
             className="inline-flex items-center gap-2 rounded-md bg-slate-50 px-3 py-1 text-sm font-medium text-muted-foreground hover:text-primary"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -81,11 +100,12 @@ export default async function SeriesPage({ params }: Props) {
           <div className="mt-6 flex flex-col items-center gap-6 md:flex-row">
             {series.brands?.logo_url && (
               <div className="relative h-24 w-24 overflow-hidden rounded-lg bg-slate-50 p-3">
-                <Image
+                <img
                   src={series.brands.logo_url || "/placeholder.svg"}
                   alt={series.brands.name}
-                  fill
-                  className="object-contain"
+                  className="h-full w-full object-contain"
+                  style={{ display: "block" }}
+                  loading="eager"
                 />
               </div>
             )}
@@ -107,17 +127,17 @@ export default async function SeriesPage({ params }: Props) {
               {models.map((model) => (
                 <Link
                   key={model.id}
-                  href={`/${locale}/models/${model.id}`}
+                  href={`/${locale}/models/${model.slug || model.id}`}
                   className="group flex flex-col items-center rounded-lg bg-white p-4 shadow-sm hover:shadow"
                 >
                   <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-lg bg-slate-50 p-2 sm:h-24 sm:w-24">
                     {model.image_url ? (
-                      <Image
+                      <img
                         src={model.image_url || "/placeholder.svg"}
                         alt={model.name}
-                        width={96}
-                        height={96}
                         className="h-full w-full object-contain"
+                        style={{ display: "block" }}
+                        loading="eager"
                       />
                     ) : (
                       <Smartphone className="h-8 w-8 text-slate-400" />

@@ -15,11 +15,13 @@ type Brand = {
   name: string
   logo_url: string | null
   position: number | null
+  slug: string | null
   series:
     | {
         id: string
         name: string
         position: number
+        slug: string | null
       }[]
     | null
 }
@@ -115,7 +117,7 @@ export function BrandsSectionModern() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <Link href={`/${locale}/brands/${brand.id}`}>
+                <Link href={`/${locale}/brands/${brand.slug || brand.id}`}>
                   <Card className="p-6 flex flex-col items-center justify-center h-[120px] transition-all hover:shadow-md hover:scale-105">
                     {brand.logo_url ? (
                       <img

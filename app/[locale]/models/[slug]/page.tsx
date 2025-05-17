@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
-import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { createServerClient } from "@/utils/supabase/server"
@@ -11,16 +10,24 @@ import { formatCurrency } from "@/lib/format-currency"
 type Props = {
   params: {
     locale: string
-    id: string
+    slug: string
   }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id, locale } = params
+  const { slug, locale } = params
   const t = await getTranslations({ locale, namespace: "Models" })
 
   const supabase = createServerClient()
-  const { data: model } = await supabase.from("models").select("*, brands(name)").eq("id", id).single()
+
+  // Спочатку спробуємо знайти за слагом
+  let { data: model } = await supabase.from("models").select("*, brands(name)").eq("slug", slug).single()
+
+  // Якщо не знайдено за слагом, спробуємо знайти за ID
+  if (!model) {
+    const { data } = await supabase.from("models").select("*, brands(name)").eq("id", slug).single()
+    model = data
+  }
 
   if (!model) {
     return {
@@ -36,20 +43,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ModelPage({ params }: Props) {
-  const { id, locale } = params
+  const { slug, locale } = params
   const t = await getTranslations({ locale, namespace: "Models" })
   const commonT = await getTranslations({ locale, namespace: "Common" })
 
   const supabase = createServerClient()
 
-  console.log(`[ModelPage] Fetching model with ID: ${id}, locale: ${locale}`)
+  console.log(`[ModelPage] Fetching model with ID or slug: ${slug}, locale: ${locale}`)
 
-  // Fetch the model with its brand
-  const { data: model, error: modelError } = await supabase
+  // Спочатку спробуємо знайти за слагом
+  let { data: model, error: modelError } = await supabase
     .from("models")
-    .select("*, brands(id, name, logo_url)")
-    .eq("id", id)
+    .select("*, brands(id, name, slug, logo_url)")
+    .eq("slug", slug)
     .single()
+
+  // Якщо не знайдено за слагом, спробуємо знайти за ID
+  if (!model) {
+    const { data, error } = await supabase
+      .from("models")
+      .select("*, brands(id, name, slug, logo_url)")
+      .eq("id", slug)
+      .single()
+
+    model = data
+    modelError = error
+  }
 
   if (modelError || !model) {
     console.error("[ModelPage] Error fetching model:", modelError)
@@ -59,7 +78,7 @@ export default async function ModelPage({ params }: Props) {
   console.log("[ModelPage] Fetched model:", model)
 
   // Fetch services for this model with translations
-  console.log(`[ModelPage] Fetching model services for model ID: ${id}, locale: ${locale}`)
+  console.log(`[ModelPage] Fetching model services for model ID: ${model.id}, locale: ${locale}`)
   const { data: modelServices, error: modelServicesError } = await supabase
     .from("model_services")
     .select(`
@@ -77,7 +96,7 @@ export default async function ModelPage({ params }: Props) {
         )
       )
     `)
-    .eq("model_id", id)
+    .eq("model_id", model.id)
     .order("services(position)", { ascending: true })
 
   if (modelServicesError) {
@@ -120,7 +139,7 @@ export default async function ModelPage({ params }: Props) {
     <div className="container px-4 py-12 md:px-6 md:py-24">
       <div className="mx-auto max-w-5xl">
         <Link
-          href={`/${locale}/brands/${model.brand_id}`}
+          href={`/${locale}/brands/${model.brands?.slug || model.brand_id}`}
           className="mb-8 flex items-center text-muted-foreground hover:text-foreground"
         >
           <ChevronLeft className="mr-1 h-4 w-4" />
@@ -129,23 +148,24 @@ export default async function ModelPage({ params }: Props) {
 
         <div className="mb-12 flex flex-col items-center gap-6 md:flex-row">
           <div className="relative h-40 w-40 overflow-hidden rounded-lg">
-            <Image
+            <img
               src={model.image_url || "/placeholder.svg?height=160&width=160&query=phone+model"}
               alt={model.name}
-              fill
-              className="object-contain"
-              priority
+              className="h-full w-full object-contain"
+              style={{ display: "block" }}
+              loading="eager"
             />
           </div>
           <div>
             <div className="mb-2 flex items-center gap-2">
               {model.brands?.logo_url && (
                 <div className="relative h-6 w-6 overflow-hidden rounded-full">
-                  <Image
+                  <img
                     src={model.brands.logo_url || "/placeholder.svg"}
                     alt={model.brands.name}
-                    fill
-                    className="object-contain"
+                    className="h-full w-full object-contain"
+                    style={{ display: "block" }}
+                    loading="eager"
                   />
                 </div>
               )}

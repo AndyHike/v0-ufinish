@@ -1,25 +1,31 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
-import Image from "next/image"
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { createServerClient } from "@/utils/supabase/server"
-import Link from "next/link"
-import { formatCurrency } from "@/lib/format-currency"
 import { ChevronRight, Smartphone } from "lucide-react"
 
 type Props = {
   params: {
     locale: string
-    id: string
+    slug: string
   }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id, locale } = params
+  const { slug, locale } = params
   const t = await getTranslations({ locale, namespace: "Brands" })
 
   const supabase = createServerClient()
-  const { data: brand } = await supabase.from("brands").select("*").eq("id", id).single()
+
+  // Спочатку спробуємо знайти за слагом
+  let { data: brand } = await supabase.from("brands").select("*").eq("slug", slug).single()
+
+  // Якщо не знайдено за слагом, спробуємо знайти за ID
+  if (!brand) {
+    const { data } = await supabase.from("brands").select("*").eq("id", slug).single()
+    brand = data
+  }
 
   if (!brand) {
     return {
@@ -35,17 +41,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BrandPage({ params }: Props) {
-  const { id, locale } = params
+  const { slug, locale } = params
   const t = await getTranslations({ locale, namespace: "Brands" })
 
   const supabase = createServerClient()
 
-  // Fetch the brand
-  const { data: brand, error: brandError } = await supabase
+  // Спочатку спробуємо знайти за слагом
+  let { data: brand, error: brandError } = await supabase
     .from("brands")
-    .select("*, series(id, name, position)")
-    .eq("id", id)
+    .select("*, series(id, name, slug, position)")
+    .eq("slug", slug)
     .single()
+
+  // Якщо не знайдено за слагом, спробуємо знайти за ID
+  if (!brand) {
+    const { data, error } = await supabase
+      .from("brands")
+      .select("*, series(id, name, slug, position)")
+      .eq("id", slug)
+      .single()
+
+    brand = data
+    brandError = error
+  }
 
   if (brandError || !brand) {
     notFound()
@@ -54,8 +72,8 @@ export default async function BrandPage({ params }: Props) {
   // Оновимо запит до бази даних, щоб отримати моделі без серії
   const { data: modelsWithoutSeries, error: modelsError } = await supabase
     .from("models")
-    .select("id, name, image_url")
-    .eq("brand_id", id)
+    .select("id, name, slug, image_url")
+    .eq("brand_id", brand.id)
     .is("series_id", null)
     .order("position", { ascending: true })
 
@@ -68,12 +86,12 @@ export default async function BrandPage({ params }: Props) {
         {/* Заголовок бренду */}
         <div className="mb-12 flex flex-col items-center gap-6 rounded-xl bg-white p-8 shadow-sm md:flex-row">
           <div className="relative h-32 w-32 overflow-hidden rounded-xl bg-slate-50 p-4">
-            <Image
+            <img
               src={brand.logo_url || "/placeholder.svg?height=128&width=128&query=phone+brand+logo"}
               alt={brand.name}
-              fill
-              className="object-contain"
-              priority
+              className="object-contain w-full h-full"
+              style={{ display: "block" }}
+              loading="eager"
             />
           </div>
           <div>
@@ -95,7 +113,7 @@ export default async function BrandPage({ params }: Props) {
               {brand.series.map((series) => (
                 <Link
                   key={series.id}
-                  href={`/${locale}/series/${series.id}`}
+                  href={`/${locale}/series/${series.slug || series.id}`}
                   className="group relative overflow-hidden rounded-lg bg-white p-5 shadow-md transition-all hover:shadow-lg"
                 >
                   {/* Декоративна лінія зліва */}
@@ -128,18 +146,18 @@ export default async function BrandPage({ params }: Props) {
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {modelsWithoutSeries.map((model) => (
                 <Link
-                  href={`/${locale}/models/${model.id}`}
+                  href={`/${locale}/models/${model.slug || model.id}`}
                   key={model.id}
                   className="group flex flex-col items-center rounded-lg bg-white p-4 shadow-sm hover:shadow"
                 >
                   <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-lg bg-slate-50 p-2 sm:h-24 sm:w-24">
                     {model.image_url ? (
-                      <Image
+                      <img
                         src={model.image_url || "/placeholder.svg"}
                         alt={model.name}
-                        width={96}
-                        height={96}
                         className="h-full w-full object-contain"
+                        style={{ display: "block" }}
+                        loading="eager"
                       />
                     ) : (
                       <Smartphone className="h-8 w-8 text-slate-400" />
@@ -148,11 +166,6 @@ export default async function BrandPage({ params }: Props) {
                   <h3 className="text-center text-base font-medium group-hover:text-primary sm:text-lg">
                     {model.name}
                   </h3>
-                  {model.base_price && (
-                    <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
-                      {t("startingFrom", { price: formatCurrency(model.base_price) })}
-                    </p>
-                  )}
                 </Link>
               ))}
             </div>
