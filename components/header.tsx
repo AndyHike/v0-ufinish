@@ -5,7 +5,7 @@ import { usePathname, useParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, Smartphone, Search } from "lucide-react"
+import { Menu, Smartphone, Search, Phone } from "lucide-react"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { SearchDialog } from "@/components/search-dialog"
 import { UserNav } from "@/components/user-nav"
@@ -68,7 +68,12 @@ export function Header({ user }) {
                   </ul>
                 </nav>
                 <div className="border-t py-4">
-                  <LanguageSwitcher />
+                  <div className="flex items-center justify-between px-3">
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">+42075848259</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </SheetContent>
@@ -92,10 +97,11 @@ export function Header({ user }) {
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          {/* Мовний перемикач тепер видимий на мобільних */}
+          <LanguageSwitcher className="flex" />
           <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)} aria-label={t("search")}>
             <Search className="h-5 w-5" />
           </Button>
-          <LanguageSwitcher className="hidden md:flex" />
           <UserNav user={user} />
         </div>
       </div>

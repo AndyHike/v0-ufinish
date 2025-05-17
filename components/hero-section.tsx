@@ -3,19 +3,10 @@
 import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, ArrowRight } from "lucide-react"
-import { useMediaQuery } from "@/hooks/use-media-query"
-import { useEffect, useState } from "react"
+import { CheckCircle, ArrowRight, Smartphone } from "lucide-react"
 
 export function HeroSection() {
   const t = useTranslations("Hero")
-  const [isMounted, setIsMounted] = useState(false)
-  const isMobile = useMediaQuery("(max-width: 768px)")
-
-  // Уникаємо помилок гідратації
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
 
   return (
     <section className="w-full py-8 md:py-24 lg:py-32 bg-white overflow-hidden">
@@ -47,24 +38,24 @@ export function HeroSection() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Link href="/services" passHref>
+              <Link href="/brands" passHref>
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                  <Smartphone className="mr-2 h-4 w-4" />
                   {t("servicesButton")}
                 </Button>
               </Link>
             </div>
           </div>
 
-          {/* Показуємо зображення тільки на десктопі або якщо isMounted ще не встановлено */}
-          {(!isMounted || !isMobile) && (
-            <div className="relative h-[250px] md:h-[350px] w-full rounded-xl overflow-hidden shadow-lg">
-              <img
-                src="/focused-phone-fix.png"
-                alt={t("imageAlt")}
-                className="w-full h-full object-cover object-center"
-              />
-            </div>
-          )}
+          {/* Зображення для всіх пристроїв */}
+          <div className="relative h-[250px] md:h-[350px] w-full rounded-xl overflow-hidden shadow-lg">
+            <img
+              src="/focused-phone-fix.png"
+              alt={t("imageAlt")}
+              className="w-full h-full object-cover object-center"
+              loading="eager"
+            />
+          </div>
         </div>
       </div>
     </section>

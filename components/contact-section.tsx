@@ -50,21 +50,46 @@ export function ContactSection() {
   }
 
   return (
-    <section className="relative py-12 md:py-20 bg-gradient-to-b from-white to-gray-50">
-      {/* Декоративні елементи - видалені негативні позиції для мобільних */}
-      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-      <div className="hidden md:block absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
-      <div className="hidden md:block absolute bottom-0 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
-
+    <section className="relative py-12 md:py-20 bg-white">
       <div className="container relative z-10 px-4 md:px-6">
         <div className="text-center max-w-3xl mx-auto mb-8 md:mb-12">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tighter md:text-4xl mb-3">{t("title")}</h2>
           <p className="text-gray-500 md:text-lg">{t("subtitle")}</p>
         </div>
 
+        {/* Контактна інформація - компактна версія для мобільних */}
+        <div className="md:hidden mb-8 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-2">
+              <Phone className="h-4 w-4 text-primary" />
+              <div>
+                <p className="text-sm font-medium">+42075848259</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-primary" />
+              <div>
+                <p className="text-sm font-medium">info@devicehelp.cz</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-primary" />
+              <div>
+                <p className="text-sm font-medium">Praha 2</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              <div>
+                <p className="text-sm font-medium">9:00 - 18:00</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
-          {/* Форма - переміщена вгору для мобільних */}
-          <div className="lg:col-span-2 order-1 lg:order-2">
+          {/* Форма */}
+          <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 md:p-8">
               {isSuccess ? (
                 <div className="flex flex-col items-center justify-center py-8 md:py-12 text-center">
@@ -162,8 +187,8 @@ export function ContactSection() {
             </div>
           </div>
 
-          {/* Контактна інформація - переміщена вниз для мобільних */}
-          <div className="lg:col-span-1 order-2 lg:order-1">
+          {/* Контактна інформація - повна версія для десктопу */}
+          <div className="hidden md:block lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 md:p-6 mb-5 md:mb-6">
               <div className="space-y-4 md:space-y-5">
                 <div className="flex items-start gap-3 md:gap-4">
@@ -221,6 +246,22 @@ export function ContactSection() {
                 title="Google Maps"
               ></iframe>
             </div>
+          </div>
+        </div>
+
+        {/* Карта для мобільних пристроїв */}
+        <div className="md:hidden mt-6">
+          <div className="overflow-hidden rounded-xl shadow-sm border border-gray-100 h-[200px] bg-white">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d20479.84323795257!2d14.41993243476561!3d50.07762499999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b94ea69e1a1a1%3A0x7c93c7eb4ba09925!2sPraha%202!5e0!3m2!1scs!2scz!4v1652345678901!5m2!1scs!2scz"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Google Maps"
+            ></iframe>
           </div>
         </div>
       </div>
