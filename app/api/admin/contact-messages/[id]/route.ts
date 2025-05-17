@@ -7,6 +7,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     // Перевіряємо права адміністратора
     const isAdmin = await checkAdminRole()
     if (!isAdmin) {
+      console.log("Unauthorized access attempt to GET contact message")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -40,6 +41,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     // Перевіряємо права адміністратора
     const isAdmin = await checkAdminRole()
     if (!isAdmin) {
+      console.log("Unauthorized access attempt to PATCH contact message")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
