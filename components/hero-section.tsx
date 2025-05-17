@@ -45,15 +45,12 @@ export function HeroSection() {
               </Link>
             </div>
           </div>
-          <div className="relative mx-auto w-full max-w-[500px] overflow-hidden">
-            <div
-              className="aspect-[4/3] rounded-xl shadow-lg bg-cover bg-center transform transition-transform hover:scale-105 duration-500"
-              style={{
-                backgroundImage: "url('/phone-repair-close-up.png')",
-                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-              }}
-              aria-label={t("imageAlt")}
-            ></div>
+          <div className="relative h-[350px] w-full rounded-xl overflow-hidden shadow-lg">
+            <img
+              src="/phone-repair-close-up.png"
+              alt={t("imageAlt")}
+              className="w-full h-full object-cover object-center"
+            />
           </div>
         </div>
       </div>
