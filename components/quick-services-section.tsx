@@ -1,7 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { Smartphone, Battery, Wifi, Shield, Cpu, Droplet } from "lucide-react"
+import { Smartphone, Battery, Wifi, Shield, Brush, Droplet } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { motion } from "framer-motion"
@@ -38,10 +38,10 @@ export function QuickServicesSection() {
       link: `/${locale}/services#screen-protection`,
     },
     {
-      icon: <Cpu className="h-6 w-6 text-primary" />,
-      title: "Заміна процесора",
-      description: "Відновлення продуктивності вашого пристрою",
-      link: `/${locale}/services#processor-replacement`,
+      icon: <Brush className="h-6 w-6 text-primary" />,
+      title: "Чищення телефону",
+      description: "Професійне чищення від пилу та забруднень",
+      link: `/${locale}/services#phone-cleaning`,
     },
     {
       icon: <Droplet className="h-6 w-6 text-primary" />,

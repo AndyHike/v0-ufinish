@@ -14,11 +14,11 @@ export default function DesignTestPage() {
       {/* Оновлена герой-секція */}
       <HeroSection />
 
-      {/* Нова секція швидких послуг */}
-      <QuickServicesSection />
-
       {/* Оптимізована секція брендів */}
       <BrandsSection />
+
+      {/* Нова секція швидких послуг */}
+      <QuickServicesSection />
 
       {/* Оновлена контактна секція */}
       <ContactSection />
