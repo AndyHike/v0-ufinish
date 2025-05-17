@@ -1,9 +1,7 @@
 import { HeroSection } from "@/components/hero-section"
-import { ServicesSection } from "@/components/services-section"
 import { ContactSection } from "@/components/contact-section"
 import { BrandsSection } from "@/components/brands-section"
 import { InfoBanner } from "@/components/info-banner"
-import { TestimonialSection } from "@/components/testimonial-section"
 import { QuickServicesSection } from "@/components/quick-services-section"
 
 export default function DesignTestPage() {
@@ -21,12 +19,6 @@ export default function DesignTestPage() {
 
       {/* Оптимізована секція брендів */}
       <BrandsSection />
-
-      {/* Нова секція відгуків */}
-      <TestimonialSection />
-
-      {/* Стандартна секція послуг */}
-      <ServicesSection />
 
       {/* Оновлена контактна секція */}
       <ContactSection />

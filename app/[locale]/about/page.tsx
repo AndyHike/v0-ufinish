@@ -1,7 +1,6 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import Image from "next/image"
 
 export default function AboutPage() {
   // Use the correct namespace for translations
@@ -23,7 +22,13 @@ export default function AboutPage() {
         </div>
         <div className="flex items-center justify-center">
           <div className="relative h-[300px] w-full overflow-hidden rounded-lg">
-            <Image src="/tech-fix-storefront.png" alt={t("ourShop")} fill className="object-cover" priority />
+            {/* Використовуємо звичайний img замість Image компонента */}
+            <img
+              src="/tech-fix-storefront.png"
+              alt={t("ourShop")}
+              className="w-full h-full object-cover"
+              loading="eager"
+            />
           </div>
         </div>
       </div>
