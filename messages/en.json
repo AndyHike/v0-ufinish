@@ -543,7 +543,9 @@
     "invalidFileType": "Invalid file type. Please select an image",
     "fileTooLarge": "File too large. Maximum size: 2MB",
     "modelImage": "Model Image",
-    "imageLoadError": "Error loading image. Using default image"
+    "imageLoadError": "Error loading image. Using default image",
+    "infoBanner": "Info Banner",
+    "contactMessages": "Messages"
   },
   "About": {
     "about": "About Us",

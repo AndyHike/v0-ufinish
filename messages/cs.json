@@ -448,7 +448,9 @@
     "pleaseWait": "Prosím, počkejte",
     "addNewStatusDescription": "Přidejte nový stav objednávky ke sledování v systému",
     "editStatusDescription": "Upravte existující stav objednávky",
-    "deleteStatusConfirmation": "Opravdu chcete smazat stav \"{status}\"? Tuto akci nelze vrátit zpět."
+    "deleteStatusConfirmation": "Opravdu chcete smazat stav \"{status}\"? Tuto akci nelze vrátit zpět.",
+    "infoBanner": "Informační banner",
+    "contactMessages": "Zprávy"
   },
   "About": {
     "about": "O nás",

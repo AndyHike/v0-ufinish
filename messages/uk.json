@@ -591,7 +591,9 @@
     "importModels": "Імпорт моделей",
     "importModelsDescription": "Імпортуйте моделі телефонів з CSV-файлу",
     "importServices": "Імпорт послуг",
-    "importServicesDescription": "Імпортуйте послуги та ціни для моделей телефонів з CSV-файлу"
+    "importServicesDescription": "Імпортуйте послуги та ціни для моделей телефонів з CSV-файлу",
+    "infoBanner": "Інформаційний банер",
+    "contactMessages": "Повідомлення"
   },
   "About": {
     "about": "Про нас",
