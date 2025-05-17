@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Send, Loader2 } from "lucide-react"
+import { Send, Loader2, Phone, Mail, MapPin, Clock, CheckCircle } from "lucide-react"
 
 export function ContactSection() {
   const t = useTranslations("Contact")
@@ -50,84 +50,67 @@ export function ContactSection() {
   }
 
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="container px-4 md:px-6">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold mb-3">{t("title")}</h2>
-          <p className="text-gray-500">{t("subtitle")}</p>
+    <section className="relative py-16 md:py-24 bg-gradient-to-b from-white to-gray-50">
+      {/* Декоративні елементи */}
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+      <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
+      <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
+
+      <div className="container relative z-10 px-4 md:px-6">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <h2 className="text-3xl font-bold tracking-tighter md:text-4xl mb-4">{t("title")}</h2>
+          <p className="text-gray-500 md:text-lg">{t("subtitle")}</p>
         </div>
 
-        <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-sm">
-          {isSuccess ? (
-            <div className="text-center py-8">
-              <h3 className="text-xl font-bold mb-2">{t("successTitle")}</h3>
-              <p className="text-gray-500 mb-4">{t("successMessage")}</p>
-              <Button onClick={() => setIsSuccess(false)}>{t("sendAnother")}</Button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">{t("nameLabel")}</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="email">{t("emailLabel")}</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {/* Контактна інформація */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+              <div className="space-y-5">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Phone className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{t("phone")}</h3>
+                    <p className="text-gray-600">+42075848259</p>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="phone">{t("phoneLabel")}</Label>
-                  <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Mail className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{t("email")}</h3>
+                    <p className="text-gray-600">info@devicehelp.cz</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <MapPin className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{t("address")}</h3>
+                    <p className="text-gray-600">Praha 2</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Clock className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{t("workingHours")}</h3>
+                    <p className="text-gray-600">{t("workingHoursWeekdays")}</p>
+                    <p className="text-gray-600">{t("workingHoursSaturday")}</p>
+                  </div>
                 </div>
               </div>
-
-              <div>
-                <Label htmlFor="message">{t("messageLabel")}</Label>
-                <Textarea
-                  id="message"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  required
-                  className="min-h-[120px]"
-                />
-              </div>
-
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("sending")}
-                  </>
-                ) : (
-                  <>
-                    {t("send")}
-                    <Send className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
-            </form>
-          )}
-        </div>
-
-        <div className="mt-10 max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-sm">
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-bold mb-2">{t("contactInfo")}</h3>
-              <p className="mb-1">
-                <strong>{t("phone")}:</strong> +42075848259
-              </p>
-              <p className="mb-1">
-                <strong>{t("email")}:</strong> info@devicehelp.cz
-              </p>
-              <p className="mb-1">
-                <strong>{t("address")}:</strong> Praha 2
-              </p>
-              <p>
-                <strong>{t("workingHours")}:</strong> {t("workingHoursWeekdays")}
-              </p>
             </div>
-            <div className="h-[200px]">
+
+            <div className="overflow-hidden rounded-xl shadow-sm border border-gray-100 h-[220px] bg-white">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d20479.84323795257!2d14.41993243476561!3d50.07762499999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b94ea69e1a1a1%3A0x7c93c7eb4ba09925!2sPraha%202!5e0!3m2!1scs!2scz!4v1652345678901!5m2!1scs!2scz"
                 width="100%"
@@ -138,6 +121,105 @@ export function ContactSection() {
                 referrerPolicy="no-referrer-when-downgrade"
                 title="Google Maps"
               ></iframe>
+            </div>
+          </div>
+
+          {/* Форма */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+              {isSuccess ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="h-16 w-16 rounded-full bg-green-50 flex items-center justify-center mb-6">
+                    <CheckCircle className="h-8 w-8 text-green-500" />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3">{t("successTitle")}</h3>
+                  <p className="text-gray-500 max-w-md mb-6">{t("successMessage")}</p>
+                  <Button onClick={() => setIsSuccess(false)} variant="outline" size="lg">
+                    {t("sendAnother")}
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">{t("contactUs")}</h3>
+                    <p className="text-gray-500 mt-1">{t("formDescription")}</p>
+                  </div>
+
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="text-gray-700">
+                        {t("nameLabel")}
+                      </Label>
+                      <Input
+                        id="name"
+                        placeholder={t("namePlaceholder")}
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="bg-gray-50 border-gray-200 focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-gray-700">
+                          {t("emailLabel")}
+                        </Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder={t("emailPlaceholder")}
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="bg-gray-50 border-gray-200 focus:bg-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone" className="text-gray-700">
+                          {t("phoneLabel")}
+                        </Label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder={t("phonePlaceholder")}
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="bg-gray-50 border-gray-200 focus:bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="message" className="text-gray-700">
+                        {t("messageLabel")}
+                      </Label>
+                      <Textarea
+                        id="message"
+                        placeholder={t("messagePlaceholder")}
+                        required
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        className="min-h-[150px] bg-gray-50 border-gray-200 focus:bg-white"
+                      />
+                    </div>
+
+                    <Button type="submit" size="lg" className="w-full gap-2" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {t("sending")}
+                        </>
+                      ) : (
+                        <>
+                          {t("send")}
+                          <Send className="h-4 w-4 ml-2" />
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </>
+              )}
             </div>
           </div>
         </div>
