@@ -166,21 +166,37 @@ export function ContactMessagesList({ locale }: ContactMessagesListProps) {
   const statusT = statusTranslations[locale] || statusTranslations.en
   const filterT = filterTranslations[locale] || filterTranslations.en
 
+  // Змінимо функцію fetchMessages для кращого відстеження помилок
   const fetchMessages = async () => {
     setLoading(true)
     try {
       const statusParam = statusFilter !== "all" ? `&status=${statusFilter}` : ""
-      const response = await fetch(`/api/admin/contact-messages?page=${page}${statusParam}`)
+      const url = `/api/admin/contact-messages?page=${page}${statusParam}`
+      console.log("Fetching messages from:", url)
+
+      const response = await fetch(url)
 
       if (!response.ok) {
-        throw new Error("Failed to fetch messages")
+        const errorText = await response.text()
+        console.error("Error response:", response.status, errorText)
+        throw new Error(`Failed to fetch messages: ${response.status} ${errorText}`)
       }
 
       const data = await response.json()
-      setMessages(data.data)
-      setTotalPages(data.pagination.totalPages)
+      console.log("Received messages data:", data)
+
+      if (Array.isArray(data.data)) {
+        setMessages(data.data)
+        setTotalPages(data.pagination.totalPages)
+      } else {
+        console.error("Unexpected data format:", data)
+        setMessages([])
+        setTotalPages(0)
+      }
     } catch (error) {
       console.error("Error fetching messages:", error)
+      setMessages([])
+      setTotalPages(0)
     } finally {
       setLoading(false)
     }

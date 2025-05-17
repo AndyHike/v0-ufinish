@@ -170,7 +170,8 @@
     "successTitle": "Message Sent",
     "successMessage": "Thank you for your message. We will contact you as soon as possible.",
     "errorTitle": "Error",
-    "errorMessage": "Failed to send your message. Please try again later."
+    "errorMessage": "Failed to send your message. Please try again later.",
+    "sendAnother": "Send another message"
   },
   "Auth": {
     "createAccount": "Create Account",

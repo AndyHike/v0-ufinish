@@ -9,16 +9,18 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Phone, Mail, MapPin, Clock } from "lucide-react"
+import { Phone, Mail, MapPin, Clock, CheckCircle } from "lucide-react"
 
 export default function ContactPage() {
   const t = useTranslations("Contact")
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setIsSuccess(false)
 
     try {
       // Отримуємо дані форми
@@ -28,6 +30,7 @@ export default function ContactPage() {
         email: formData.get("email") as string,
         phone: formData.get("phone") as string,
         message: formData.get("message") as string,
+        locale: "uk", // Додаємо поточну локаль
       }
 
       // Відправляємо дані на API
@@ -50,6 +53,9 @@ export default function ContactPage() {
         title: t("successTitle"),
         description: t("successMessage"),
       })
+
+      // Встановлюємо стан успіху
+      setIsSuccess(true)
 
       // Очищаємо форму
       e.currentTarget.reset()
@@ -80,37 +86,46 @@ export default function ContactPage() {
               <CardDescription>{t("contactUsDescription")}</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label htmlFor="name" className="text-sm font-medium">
-                      {t("nameLabel")}
-                    </label>
-                    <Input id="name" name="name" required placeholder={t("namePlaceholder")} />
+              {isSuccess ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">{t("successTitle")}</h3>
+                  <p className="text-muted-foreground mb-6">{t("successMessage")}</p>
+                  <Button onClick={() => setIsSuccess(false)}>{t("sendAnother")}</Button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <label htmlFor="name" className="text-sm font-medium">
+                        {t("nameLabel")}
+                      </label>
+                      <Input id="name" name="name" required placeholder={t("namePlaceholder")} />
+                    </div>
+                    <div className="space-y-2">
+                      <label htmlFor="email" className="text-sm font-medium">
+                        {t("emailLabel")}
+                      </label>
+                      <Input id="email" name="email" type="email" required placeholder={t("emailPlaceholder")} />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium">
-                      {t("emailLabel")}
+                    <label htmlFor="phone" className="text-sm font-medium">
+                      {t("phoneLabel")}
                     </label>
-                    <Input id="email" name="email" type="email" required placeholder={t("emailPlaceholder")} />
+                    <Input id="phone" name="phone" type="tel" placeholder={t("phonePlaceholder")} />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="phone" className="text-sm font-medium">
-                    {t("phoneLabel")}
-                  </label>
-                  <Input id="phone" name="phone" type="tel" placeholder={t("phonePlaceholder")} />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="message" className="text-sm font-medium">
-                    {t("messageLabel")}
-                  </label>
-                  <Textarea id="message" name="message" required placeholder={t("messagePlaceholder")} rows={4} />
-                </div>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? t("sending") : t("send")}
-                </Button>
-              </form>
+                  <div className="space-y-2">
+                    <label htmlFor="message" className="text-sm font-medium">
+                      {t("messageLabel")}
+                    </label>
+                    <Textarea id="message" name="message" required placeholder={t("messagePlaceholder")} rows={4} />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? t("sending") : t("send")}
+                  </Button>
+                </form>
+              )}
             </CardContent>
           </Card>
         </div>

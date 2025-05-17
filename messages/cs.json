@@ -169,7 +169,8 @@
     "successTitle": "Zpráva odeslána",
     "successMessage": "Děkujeme za vaši zprávu. Budeme vás kontaktovat co nejdříve.",
     "errorTitle": "Chyba",
-    "errorMessage": "Nepodařilo se odeslat vaši zprávu. Zkuste to prosím později."
+    "errorMessage": "Nepodařilo se odeslat vaši zprávu. Zkuste to prosím později.",
+    "sendAnother": "Poslat další zprávu"
   },
   "Auth": {
     "createAccount": "Vytvořit účet",
