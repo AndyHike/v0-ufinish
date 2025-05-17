@@ -5,6 +5,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { getCurrentUser } from "@/lib/auth/session"
 import { getMessages } from "@/lib/get-messages"
+import { ScrollToAnchor } from "@/components/scroll-to-anchor"
 
 export default async function LocaleLayout({
   children,
@@ -29,6 +30,7 @@ export default async function LocaleLayout({
         <Header user={user} />
         <main className="flex-1">{children}</main>
         <Footer />
+        <ScrollToAnchor />
       </div>
     </NextIntlClientProvider>
   )
