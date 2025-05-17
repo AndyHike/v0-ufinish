@@ -17,6 +17,7 @@ import {
   FileSpreadsheet,
   Wrench,
   Database,
+  AlertCircle,
 } from "lucide-react"
 
 export function AdminSidebar() {
@@ -87,6 +88,12 @@ export function AdminSidebar() {
       href: "/admin/sync",
       icon: Repeat,
       active: isActive("/admin/sync"),
+    },
+    {
+      title: "Інформаційний банер",
+      href: "/admin/banner",
+      icon: AlertCircle,
+      active: isActive("/admin/banner"),
     },
     {
       title: t("settings"),

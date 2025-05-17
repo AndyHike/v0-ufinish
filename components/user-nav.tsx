@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { LogIn } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -35,11 +34,8 @@ export function UserNav({ user }: UserNavProps) {
 
   if (!user) {
     return (
-      <Button variant="ghost" size="sm" asChild>
-        <Link href={`/${locale}/auth/login`}>
-          <LogIn className="mr-2 h-4 w-4" />
-          {t("login")}
-        </Link>
+      <Button variant="ghost" size="sm" disabled title="Тимчасово недоступно">
+        {t("login")}
       </Button>
     )
   }
