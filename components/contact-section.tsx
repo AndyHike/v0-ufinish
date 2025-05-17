@@ -67,7 +67,7 @@ export function ContactSection() {
     <section className="py-12 md:py-16 lg:py-20 bg-gray-50">
       <div className="container px-4 md:px-6">
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-start">
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("title")}</h2>
               <p className="text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
@@ -79,7 +79,7 @@ export function ContactSection() {
                 <Phone className="h-6 w-6 text-primary flex-shrink-0" />
                 <div className="space-y-1">
                   <h3 className="font-medium">{t("phone")}</h3>
-                  <p className="text-sm text-gray-500">+420 777 888 999</p>
+                  <p className="text-sm text-gray-500">+42075848259</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -93,9 +93,23 @@ export function ContactSection() {
                 <MapPin className="h-6 w-6 text-primary flex-shrink-0" />
                 <div className="space-y-1">
                   <h3 className="font-medium">{t("address")}</h3>
-                  <p className="text-sm text-gray-500">Václavské náměstí 1, 110 00 Praha 1</p>
+                  <p className="text-sm text-gray-500">Praha 2</p>
                 </div>
               </div>
+            </div>
+
+            {/* Карта Google */}
+            <div className="w-full h-[300px] rounded-lg overflow-hidden border border-gray-200">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d20479.84323795257!2d14.41993243476561!3d50.07762499999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b94ea69e1a1a1%3A0x7c93c7eb4ba09925!2sPraha%202!5e0!3m2!1scs!2scz!4v1652345678901!5m2!1scs!2scz"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Google Maps"
+              ></iframe>
             </div>
           </div>
           <Card className="w-full">

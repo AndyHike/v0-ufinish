@@ -1,76 +1,40 @@
 import { NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/lib/supabase"
-import { getStatusByRemOnlineId, clearStatusCache } from "@/lib/order-status-utils"
-import { getSession } from "@/lib/auth/session"
+import { cookies } from "next/headers"
+import { createServerClient } from "@supabase/ssr"
 
 export async function GET(request: Request) {
   try {
-    // Очищуємо кеш статусів при кожному запиті замовлень
-    clearStatusCache()
+    const cookieStore = cookies()
+    const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+      },
+    })
 
-    // Отримуємо параметри запиту
-    const url = new URL(request.url)
-    const locale = url.searchParams.get("locale") || "uk"
-    const forceRefresh = url.searchParams.get("forceRefresh") === "true"
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
-    // Отримуємо сесію користувача
-    const session = await getSession()
-    if (!session || !session.user) {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = session.user.id
-    const supabase = createServerSupabaseClient()
-
-    // Отримуємо замовлення користувача
     const { data: orders, error } = await supabase
       .from("repair_orders")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", session.user.id)
       .order("created_at", { ascending: false })
 
     if (error) {
       console.error("Error fetching repair orders:", error)
-      return NextResponse.json({ success: false, message: "Failed to fetch repair orders" }, { status: 500 })
+      return NextResponse.json({ error: "Failed to fetch repair orders" }, { status: 500 })
     }
 
-    // Змінюємо API для отримання замовлень, щоб повертати колір фону
-    const ordersWithStatusNames = await Promise.all(
-      orders.map(async (order) => {
-        const statusId = Number.parseInt(order.status, 10)
-        if (!isNaN(statusId)) {
-          // Примусово оновлюємо статуси з бази даних
-          const statusInfo = await getStatusByRemOnlineId(statusId, locale, forceRefresh)
-          return {
-            ...order,
-            statusName: statusInfo.name,
-            statusColor: statusInfo.color,
-          }
-        }
-        return {
-          ...order,
-          statusName: order.status,
-          statusColor: "bg-gray-100",
-        }
-      }),
-    )
-
-    // Додаємо заголовок Cache-Control
-    return new NextResponse(JSON.stringify({ success: true, orders: ordersWithStatusNames }), {
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store, max-age=0",
-      },
-    })
+    return NextResponse.json({ data: orders || [] })
   } catch (error) {
-    console.error("Error in getUserRepairOrders API:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        message: "An unexpected error occurred",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    )
+    console.error("Error in repair orders API:", error)
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 })
   }
 }

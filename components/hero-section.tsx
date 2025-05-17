@@ -1,55 +1,54 @@
 "use client"
 
+import { useState } from "react"
 import { useTranslations } from "next-intl"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, CheckCircle2 } from "lucide-react"
+import Link from "next/link"
+import Image from "next/image"
 
 export function HeroSection() {
   const t = useTranslations("Hero")
+  const [isImageLoaded, setIsImageLoaded] = useState(false)
 
   return (
-    <section className="py-12 md:py-24">
+    <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-white">
       <div className="container px-4 md:px-6">
-        <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 xl:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-[1fr_600px] lg:gap-12 xl:grid-cols-[1fr_800px]">
           <div className="flex flex-col justify-center space-y-4">
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl">{t("title")}</h1>
-              <p className="max-w-[600px] text-muted-foreground md:text-xl">{t("subtitle")}</p>
+              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                {t("title")}
+              </h1>
+              <p className="max-w-[600px] text-gray-500 md:text-xl dark:text-gray-400">{t("subtitle")}</p>
             </div>
             <div className="flex flex-col gap-2 min-[400px]:flex-row">
-              <Button asChild size="lg">
-                <Link href="/brands">
-                  {t("chooseModelButton")}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" asChild>
-                <Link href="/contact">{t("contactButton")}</Link>
-              </Button>
-            </div>
-            <div className="mt-4 grid gap-2">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary" />
-                <span className="text-sm">{t("feature1")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary" />
-                <span className="text-sm">{t("feature2")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary" />
-                <span className="text-sm">{t("feature3")}</span>
-              </div>
+              <Link href="/uk/contact" passHref>
+                <Button size="lg" className="px-8">
+                  {t("requestService")}
+                </Button>
+              </Link>
+              <Link href="/uk/services" passHref>
+                <Button size="lg" variant="outline" className="px-8">
+                  {t("viewServices")}
+                </Button>
+              </Link>
             </div>
           </div>
-          <div className="flex items-center justify-center">
-            <img
+          <div className="relative h-[300px] md:h-[400px] lg:h-[500px] xl:h-[600px]">
+            <div
+              className={`absolute inset-0 bg-gray-100 rounded-lg ${
+                isImageLoaded ? "hidden" : "flex items-center justify-center"
+              }`}
+            >
+              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <Image
+              src="/phone-repair-close-up.png"
               alt={t("imageAlt")}
-              className="aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full lg:order-last"
-              height="550"
-              src="/focused-phone-fix.png"
-              width="550"
+              fill
+              className={`object-cover rounded-lg ${isImageLoaded ? "opacity-100" : "opacity-0"}`}
+              onLoad={() => setIsImageLoaded(true)}
+              priority
             />
           </div>
         </div>
