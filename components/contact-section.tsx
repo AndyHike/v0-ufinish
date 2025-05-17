@@ -98,21 +98,28 @@ export function ContactSection() {
               </div>
             </div>
 
-            {/* Карта Google */}
-            <div className="w-full h-[300px] rounded-lg overflow-hidden border border-gray-200">
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d20479.84323795257!2d14.41993243476561!3d50.07762499999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b94ea69e1a1a1%3A0x7c93c7eb4ba09925!2sPraha%202!5e0!3m2!1scs!2scz!4v1652345678901!5m2!1scs!2scz"
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Google Maps"
-              ></iframe>
-            </div>
+            {/* Карта Google в Card компоненті */}
+            <Card className="overflow-hidden border border-gray-200">
+              <CardHeader className="pb-0">
+                <CardTitle className="text-lg">{t("ourLocation")}</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="w-full h-[300px] rounded-lg overflow-hidden">
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d20479.84323795257!2d14.41993243476561!3d50.07762499999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b94ea69e1a1a1%3A0x7c93c7eb4ba09925!2sPraha%202!5e0!3m2!1scs!2scz!4v1652345678901!5m2!1scs!2scz"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Google Maps"
+                  ></iframe>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <Card className="w-full">
+          <Card className="w-full h-full">
             <AnimatePresence mode="wait">
               {isSuccess ? (
                 <motion.div
@@ -217,7 +224,7 @@ export function ContactSection() {
                           required
                           value={message}
                           onChange={(e) => setMessage(e.target.value)}
-                          className="min-h-[120px]"
+                          className="min-h-[180px]"
                         />
                       </div>
                       <Button type="submit" className="w-full" disabled={isLoading}>
