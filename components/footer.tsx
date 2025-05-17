@@ -13,33 +13,13 @@ export function Footer() {
   return (
     <footer className="bg-gray-50 border-t border-gray-200">
       <div className="container px-4 md:px-6 py-8 md:py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Smartphone className="h-5 w-5" />
               <span className="font-semibold">DeviceHelp</span>
             </div>
             <p className="text-sm text-gray-500">{t("tagline")}</p>
-          </div>
-          <div>
-            <h3 className="font-medium mb-3">{t("services")}</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href={`/${locale}/services`} className="text-sm text-gray-500 hover:text-gray-900">
-                  {t("repairServices")}
-                </Link>
-              </li>
-              <li>
-                <Link href={`/${locale}/brands`} className="text-sm text-gray-500 hover:text-gray-900">
-                  {t("deviceModels")}
-                </Link>
-              </li>
-              <li>
-                <Link href={`/${locale}/pricing`} className="text-sm text-gray-500 hover:text-gray-900">
-                  {t("pricing")}
-                </Link>
-              </li>
-            </ul>
           </div>
           <div>
             <h3 className="font-medium mb-3">{t("company")}</h3>

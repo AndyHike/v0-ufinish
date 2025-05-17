@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Phone, Smartphone, Info, MessageSquare } from "lucide-react"
+import { Home, Smartphone, Info, MessageSquare } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
@@ -11,14 +11,17 @@ export function MobileNav() {
   const t = useTranslations()
 
   const isActive = (path: string) => {
+    if (path === "/") {
+      return pathname === "/" || pathname === ""
+    }
     return pathname === path || pathname?.startsWith(path + "/")
   }
 
   const navigation = [
     {
-      name: t("Header.services"),
-      href: "/services",
-      icon: <Phone className="h-5 w-5" />,
+      name: t("Header.home"),
+      href: "/",
+      icon: <Home className="h-5 w-5" />,
     },
     {
       name: t("Header.chooseModel"),
@@ -40,19 +43,32 @@ export function MobileNav() {
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t py-2 px-4 shadow-lg">
       <div className="flex justify-around items-center">
-        {navigation.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "flex flex-col items-center justify-center w-1/4 p-1",
-              isActive(item.href) ? "text-primary" : "text-muted-foreground",
-            )}
-          >
-            <div className="flex items-center justify-center mb-1 w-full">{item.icon}</div>
-            <span className="text-xs text-center w-full truncate">{item.name}</span>
-          </Link>
-        ))}
+        {navigation.map((item) => {
+          const active = isActive(item.href)
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex flex-col items-center justify-center w-1/4 p-1 relative",
+                active ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <div
+                className={cn(
+                  "flex items-center justify-center mb-1 w-full rounded-full p-1",
+                  active ? "bg-primary/10" : "",
+                )}
+              >
+                {item.icon}
+              </div>
+              <span className="text-xs text-center w-full truncate">{item.name}</span>
+              {active && (
+                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full"></span>
+              )}
+            </Link>
+          )
+        })}
       </div>
     </div>
   )
