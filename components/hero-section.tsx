@@ -47,7 +47,7 @@ export function HeroSection() {
           </div>
           <div className="relative h-[350px] w-full rounded-xl overflow-hidden shadow-lg">
             <img
-              src="/phone-repair-close-up.png"
+              src="/focused-phone-fix.png"
               alt={t("imageAlt")}
               className="w-full h-full object-cover object-center"
             />
