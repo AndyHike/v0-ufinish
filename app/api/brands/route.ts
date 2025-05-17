@@ -1,49 +1,27 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase"
-import { formatImageUrl } from "@/utils/image-url"
+import { createClient } from "@/utils/supabase/server"
 
 export async function GET() {
   try {
     const supabase = createClient()
+    console.log("Fetching brands from Supabase...")
 
-    // First try to get brands ordered by position
-    let { data, error } = await supabase
+    // Get brands ordered by position
+    const { data, error } = await supabase
       .from("brands")
-      .select("*")
+      .select("*, series(id, name, position)")
       .order("position", { ascending: true, nullsLast: true })
+      .order("name", { ascending: true })
 
-    // If there's an error or no brands with position, try fetching without ordering
-    if (error || !data || data.length === 0) {
-      const { data: fallbackData, error: fallbackError } = await supabase.from("brands").select("*").order("name")
-
-      if (fallbackError) {
-        console.error("Error in fallback query:", fallbackError)
-        return NextResponse.json({ error: "Failed to fetch brands" }, { status: 500 })
-      }
-      data = fallbackData
+    if (error) {
+      console.error("Error fetching brands:", error)
+      return NextResponse.json({ error: "Failed to fetch brands" }, { status: 500 })
     }
 
-    // Sort brands by position if available, otherwise by name
-    const sortedData = data
-      .sort((a, b) => {
-        // If both have position, sort by position
-        if (a.position !== null && a.position !== undefined && b.position !== null && b.position !== undefined) {
-          return a.position - b.position
-        }
-        // If only one has position, prioritize the one with position
-        if (a.position !== null && a.position !== undefined) return -1
-        if (b.position !== null && b.position !== undefined) return 1
-        // If neither has position, sort by name
-        return a.name.localeCompare(b.name)
-      })
-      .map((brand) => ({
-        ...brand,
-        logo_url: brand.logo_url ? formatImageUrl(brand.logo_url) : null,
-      }))
-
-    return NextResponse.json(sortedData)
+    console.log(`Successfully fetched ${data?.length || 0} brands`)
+    return NextResponse.json(data)
   } catch (error) {
-    console.error("Error fetching brands:", error)
-    return NextResponse.json({ error: "Failed to fetch brands" }, { status: 500 })
+    console.error("Unexpected error fetching brands:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
