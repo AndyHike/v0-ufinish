@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { Home, Smartphone, Info, MessageSquare } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
 
 export function MobileNav() {
   const pathname = usePathname()
@@ -56,15 +57,21 @@ export function MobileNav() {
             >
               <div
                 className={cn(
-                  "flex items-center justify-center mb-1 w-full rounded-full p-1",
-                  active ? "bg-primary/10" : "",
+                  "flex items-center justify-center mb-1 w-full rounded-full p-1 transition-all duration-200",
+                  active ? "bg-primary/10" : "hover:bg-gray-100",
                 )}
               >
                 {item.icon}
               </div>
               <span className="text-xs text-center w-full truncate">{item.name}</span>
               {active && (
-                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full"></span>
+                <motion.span
+                  className="absolute -bottom-2 left-1/2 w-1 h-1 bg-primary rounded-full"
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  style={{ translateX: "-50%" }}
+                  transition={{ duration: 0.3 }}
+                />
               )}
             </Link>
           )

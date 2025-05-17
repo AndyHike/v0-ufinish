@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@auth/core": "latest",
+    "@emotion/is-prop-valid": "latest",
     "@formatjs/intl-localematcher": "latest",
     "@hello-pangea/dnd": "latest",
     "@hookform/resolvers": "latest",
@@ -51,6 +52,7 @@
     "crypto": "latest",
     "date-fns": "latest",
     "embla-carousel-react": "8.5.1",
+    "framer-motion": "latest",
     "input-otp": "1.4.1",
     "libphonenumber-js": "latest",
     "lucide-react": "^0.454.0",
