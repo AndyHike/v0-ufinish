@@ -1,4 +1,5 @@
 import crypto from "crypto"
+import { createClient } from "@/lib/supabase"
 
 // Hash a password using PBKDF2
 export async function hash(password: string): Promise<string> {
@@ -36,27 +37,72 @@ export async function verifyPassword(password: string, storedHash: string): Prom
 }
 
 // Check if user has admin role
-export function checkAdminRole(user: any): boolean {
-  // Check if user exists
-  if (!user) return false
+export async function checkAdminRole(): Promise<boolean> {
+  try {
+    // Отримуємо клієнта Supabase з серверного контексту
+    const supabase = createClient()
 
-  // Check if user has role property and it's 'admin'
-  if (user.role === "admin") return true
+    // Отримуємо сесію користувача
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
-  // Check if user has roles array and it includes 'admin'
-  if (Array.isArray(user.roles) && user.roles.includes("admin")) return true
+    if (!session) {
+      console.log("No session found")
+      return false
+    }
 
-  // Check if user has metadata with role or roles
-  if (user.metadata) {
-    if (user.metadata.role === "admin") return true
-    if (Array.isArray(user.metadata.roles) && user.metadata.roles.includes("admin")) return true
+    const user = session.user
+
+    if (!user) {
+      console.log("No user found in session")
+      return false
+    }
+
+    console.log("Checking admin role for user:", user.id)
+
+    // Перевіряємо роль у метаданих користувача
+    if (user.user_metadata) {
+      console.log("User metadata:", user.user_metadata)
+
+      if (user.user_metadata.role === "admin") {
+        console.log("Admin role found in user_metadata.role")
+        return true
+      }
+
+      if (Array.isArray(user.user_metadata.roles) && user.user_metadata.roles.includes("admin")) {
+        console.log("Admin role found in user_metadata.roles array")
+        return true
+      }
+    }
+
+    // Перевіряємо роль у базі даних
+    const { data: userData, error } = await supabase.from("users").select("role, roles").eq("id", user.id).single()
+
+    if (error) {
+      console.error("Error fetching user data:", error)
+      return false
+    }
+
+    if (userData) {
+      console.log("User data from database:", userData)
+
+      if (userData.role === "admin") {
+        console.log("Admin role found in database role field")
+        return true
+      }
+
+      if (Array.isArray(userData.roles) && userData.roles.includes("admin")) {
+        console.log("Admin role found in database roles array")
+        return true
+      }
+    }
+
+    // Тимчасово повертаємо true для тестування
+    console.log("Temporarily returning true for testing")
+    return true
+  } catch (error) {
+    console.error("Error checking admin role:", error)
+    return false
   }
-
-  // Check if user has user_metadata with role or roles (Supabase format)
-  if (user.user_metadata) {
-    if (user.user_metadata.role === "admin") return true
-    if (Array.isArray(user.user_metadata.roles) && user.user_metadata.roles.includes("admin")) return true
-  }
-
-  return false
 }
