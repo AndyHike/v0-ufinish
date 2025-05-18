@@ -3,7 +3,6 @@
 import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Smartphone, Battery, Wifi, Shield, Droplet, Brush } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -55,61 +54,52 @@ export function ServicesSection() {
     // Simulate loading for a brief moment
     const timer = setTimeout(() => {
       setIsLoading(false)
-    }, 500)
+    }, 300)
     return () => clearTimeout(timer)
   }, [])
 
   return (
-    <section className="py-12 md:py-24" id="services">
+    <section className="py-8 md:py-12 bg-gray-50" id="services">
       <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("title")}</h2>
-            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              {t("subtitle")}
-            </p>
-          </div>
+        <div className="flex flex-col items-center justify-center space-y-2 text-center mb-8">
+          <h2 className="text-2xl font-bold tracking-tighter sm:text-3xl">{t("title")}</h2>
+          <p className="max-w-[700px] text-muted-foreground text-sm md:text-base">{t("subtitle")}</p>
         </div>
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           {isLoading
             ? Array(6)
                 .fill(0)
                 .map((_, index) => (
-                  <Card key={index} className="flex flex-col">
-                    <CardHeader>
-                      <div className="mb-2 h-10 w-10 animate-pulse rounded-lg bg-muted"></div>
-                      <div className="h-6 w-3/4 animate-pulse rounded bg-muted"></div>
-                      <div className="h-4 w-full animate-pulse rounded bg-muted"></div>
-                    </CardHeader>
-                    <CardContent className="flex-1" />
-                    <CardFooter>
-                      <div className="h-10 w-full animate-pulse rounded bg-muted"></div>
-                    </CardFooter>
-                  </Card>
+                  <div key={index} className="bg-white rounded-lg p-4 shadow-sm h-[140px] md:h-[160px] animate-pulse">
+                    <div className="h-8 w-8 rounded-full bg-gray-200 mb-2"></div>
+                    <div className="h-4 w-2/3 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-3 w-full bg-gray-200 rounded"></div>
+                  </div>
                 ))
             : services.map((service) => {
                 const Icon = service.icon
                 return (
-                  <Card key={service.id} className="flex flex-col">
-                    <CardHeader>
-                      <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                        <Icon className="h-5 w-5 text-primary" />
-                      </div>
-                      <CardTitle>{t(service.titleKey)}</CardTitle>
-                      <CardDescription>{t(service.descriptionKey)}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-1" />
-                    <CardFooter>
-                      <Button variant="outline" asChild className="w-full">
-                        <Link href="/contact">{t("requestService")}</Link>
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                  <Link
+                    href="/services"
+                    key={service.id}
+                    className="bg-white rounded-lg p-4 shadow-sm hover:shadow transition-all duration-200 flex flex-col h-[140px] md:h-[160px] group"
+                  >
+                    <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <Icon className="h-4 w-4 text-primary" />
+                    </div>
+                    <h3 className="font-medium text-sm md:text-base mb-1">{t(service.titleKey)}</h3>
+                    <p className="text-muted-foreground text-xs md:text-sm line-clamp-2">{t(service.descriptionKey)}</p>
+                    <div className="mt-auto pt-2">
+                      <span className="text-xs text-primary font-medium group-hover:underline">{t("learnMore")} →</span>
+                    </div>
+                  </Link>
                 )
               })}
         </div>
-        <div className="flex justify-center">
-          <Button asChild size="lg">
+
+        <div className="flex justify-center mt-6">
+          <Button asChild size="sm" variant="outline" className="rounded-full">
             <Link href="/services">{t("allServicesButton")}</Link>
           </Button>
         </div>
