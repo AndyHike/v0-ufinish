@@ -2,82 +2,119 @@
 
 import { useTranslations } from "next-intl"
 import Link from "next/link"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { useEffect, useState } from "react"
+import { CheckCircle, ArrowRight, Smartphone, Phone } from "lucide-react"
+import { useParams } from "next/navigation"
 
 export function HeroSection() {
   const t = useTranslations("Hero")
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    setIsLoading(false)
-  }, [])
+  const params = useParams()
+  const locale = params.locale as string
 
   return (
-    <section className="relative py-12 md:py-24 overflow-hidden">
+    <section className="w-full py-8 md:py-24 lg:py-32 bg-white overflow-hidden">
       <div className="container px-4 md:px-6">
-        <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
+        {/* Мобільна версія - спочатку фото, потім кнопки */}
+        <div className="md:hidden flex flex-col items-center text-center">
+          <div className="relative w-full h-[300px] rounded-xl overflow-hidden shadow-xl mb-6">
+            <img
+              src="/focused-phone-fix.png"
+              alt={t("imageAlt")}
+              width={400}
+              height={300}
+              className="w-full h-full object-cover object-center"
+              style={{ display: "block" }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
+              <h1 className="text-3xl font-bold tracking-tighter text-white p-4 w-full">{t("title")}</h1>
+            </div>
+          </div>
+
+          <p className="text-gray-600 mb-8 text-lg">{t("subtitle")}</p>
+
+          <div className="grid grid-cols-1 gap-4 w-full mb-8">
+            <Link href={`/${locale}/brands`} passHref className="w-full">
+              <Button
+                size="lg"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
+              >
+                <Smartphone className="mr-2 h-5 w-5" />
+                {t("repairMyDevice")}
+              </Button>
+            </Link>
+            <Link href={`/${locale}/contact`} passHref className="w-full">
+              <Button size="lg" variant="outline" className="w-full border-2 shadow-sm">
+                <Phone className="mr-2 h-5 w-5" />
+                {t("contactButton")}
+              </Button>
+            </Link>
+          </div>
+
+          <div className="space-y-4 text-left bg-gray-50 p-4 rounded-lg w-full shadow-sm">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-6 w-6 text-green-500 flex-shrink-0" />
+              <span className="text-gray-700">{t("feature1")}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-6 w-6 text-green-500 flex-shrink-0" />
+              <span className="text-gray-700">{t("feature2")}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-6 w-6 text-green-500 flex-shrink-0" />
+              <span className="text-gray-700">{t("feature3")}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Десктопна версія - залишається як була */}
+        <div className="hidden md:grid gap-6 lg:grid-cols-[1fr_500px] lg:gap-12 items-center">
           <div className="flex flex-col justify-center space-y-4">
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                {t("title")}
-              </h1>
-              <p className="max-w-[600px] text-muted-foreground md:text-xl">{t("subtitle")}</p>
+              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("title")}</h1>
+              <p className="text-gray-500 md:text-xl dark:text-gray-400">{t("subtitle")}</p>
             </div>
-            <div className="flex flex-col gap-2 min-[400px]:flex-row">
-              <Button asChild size="lg">
-                <Link href="#services">{t("servicesButton")}</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href="/brands">{t("chooseModelButton")}</Link>
-              </Button>
-            </div>
-            <div className="flex items-center space-x-4 text-sm">
-              <div className="flex items-center space-x-1">
-                <CheckIcon className="h-4 w-4 text-primary" />
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
                 <span>{t("feature1")}</span>
               </div>
-              <div className="flex items-center space-x-1">
-                <CheckIcon className="h-4 w-4 text-primary" />
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
                 <span>{t("feature2")}</span>
               </div>
-              <div className="flex items-center space-x-1">
-                <CheckIcon className="h-4 w-4 text-primary" />
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
                 <span>{t("feature3")}</span>
               </div>
             </div>
+            <div className="flex flex-col gap-2 sm:flex-row mt-4">
+              <Link href={`/${locale}/brands`} passHref>
+                <Button size="lg" className="w-full sm:w-auto">
+                  <Smartphone className="mr-2 h-4 w-4" />
+                  {t("repairMyDevice")}
+                </Button>
+              </Link>
+              <Link href={`/${locale}/contact`} passHref>
+                <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                  {t("contactButton")}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </div>
-          <div className="flex items-center justify-center">
-            {isLoading ? (
-              <div className="aspect-video w-full max-w-[600px] animate-pulse rounded-xl bg-muted"></div>
-            ) : (
-              <div className="relative aspect-video w-full max-w-[600px] overflow-hidden rounded-xl">
-                <Image src="/phone-repair-close-up.png" alt={t("imageAlt")} fill className="object-cover" priority />
-              </div>
-            )}
+
+          <div className="relative h-[250px] md:h-[350px] w-full rounded-xl overflow-hidden shadow-lg">
+            <img
+              src="/focused-phone-fix.png"
+              alt={t("imageAlt")}
+              width={500}
+              height={350}
+              className="w-full h-full object-cover object-center"
+              style={{ display: "block" }}
+            />
           </div>
         </div>
       </div>
     </section>
-  )
-}
-
-function CheckIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
   )
 }
