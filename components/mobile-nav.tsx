@@ -25,6 +25,11 @@ export function MobileNav() {
       icon: <Home className="h-5 w-5" />,
     },
     {
+      name: t("Header.services"),
+      href: "/services",
+      icon: <Smartphone className="h-5 w-5" />,
+    },
+    {
       name: t("Header.chooseModel"),
       href: "/brands",
       icon: <Smartphone className="h-5 w-5" />,

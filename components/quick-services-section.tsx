@@ -1,11 +1,11 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { Smartphone, Battery, Wifi, Shield, Brush, Droplet } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { motion } from "framer-motion"
 import { useParams } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Smartphone, Battery, Cpu, Shield, Droplets, Sparkles } from "lucide-react"
 
 export function QuickServicesSection() {
   const t = useTranslations("Services")
@@ -14,113 +14,66 @@ export function QuickServicesSection() {
 
   const services = [
     {
-      icon: <Smartphone className="h-6 w-6 text-primary" />,
-      titleKey: "screenReplacement.title",
-      descriptionKey: "screenReplacement.description",
-      link: `/${locale}/services#screen-replacement`,
+      icon: <Smartphone className="h-8 w-8 text-primary" />,
+      titleKey: "service1.title",
+      descriptionKey: "service1.description",
     },
     {
-      icon: <Battery className="h-6 w-6 text-primary" />,
-      titleKey: "batteryReplacement.title",
-      descriptionKey: "batteryReplacement.description",
-      link: `/${locale}/services#battery-replacement`,
+      icon: <Battery className="h-8 w-8 text-primary" />,
+      titleKey: "service2.title",
+      descriptionKey: "service2.description",
     },
     {
-      icon: <Wifi className="h-6 w-6 text-primary" />,
-      titleKey: "boardRepair.title",
-      descriptionKey: "boardRepair.description",
-      link: `/${locale}/services#board-repair`,
+      icon: <Cpu className="h-8 w-8 text-primary" />,
+      titleKey: "service3.title",
+      descriptionKey: "service3.description",
     },
     {
-      icon: <Shield className="h-6 w-6 text-primary" />,
-      titleKey: "screenProtection.title",
-      descriptionKey: "screenProtection.description",
-      link: `/${locale}/services#screen-protection`,
+      icon: <Shield className="h-8 w-8 text-primary" />,
+      titleKey: "service4.title",
+      descriptionKey: "service4.description",
     },
     {
-      icon: <Brush className="h-6 w-6 text-primary" />,
+      icon: <Sparkles className="h-8 w-8 text-primary" />,
       titleKey: "phoneCleaning.title",
       descriptionKey: "phoneCleaning.description",
-      link: `/${locale}/services#phone-cleaning`,
     },
     {
-      icon: <Droplet className="h-6 w-6 text-primary" />,
+      icon: <Droplets className="h-8 w-8 text-primary" />,
       titleKey: "waterDamage.title",
       descriptionKey: "waterDamage.description",
-      link: `/${locale}/services#water-damage-repair`,
     },
   ]
 
   return (
-    <section className="py-12 bg-white">
-      <div className="container px-4">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">{t("title")}</h2>
+    <section className="py-12 md:py-16 bg-gray-50">
+      <div className="container">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold tracking-tight mb-2">{t("title")}</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">{t("subtitle")}</p>
         </div>
-
-        {/* Мобільна версія - горизонтальна прокрутка */}
-        <div className="md:hidden">
-          <div className="flex overflow-x-auto pb-4 gap-4 snap-x hide-scrollbar">
-            {services.map((service, index) => (
-              <motion.div
-                key={index}
-                className="snap-center min-w-[250px] p-4 border rounded-lg shadow-sm bg-white"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <div className="flex flex-col items-center text-center h-full">
-                  <div className="p-3 bg-primary/10 rounded-full mb-3">{service.icon}</div>
-                  <h3 className="font-medium">{t(service.titleKey)}</h3>
-                  <p className="text-sm text-muted-foreground mt-2 mb-4 flex-grow">{t(service.descriptionKey)}</p>
-                  <Link href={service.link}>
-                    <Button variant="outline" size="sm">
-                      {t("moreDetails")}
-                    </Button>
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {services.map((service, index) => (
+            <Card key={index} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <div className="mb-2">{service.icon}</div>
+                <CardTitle className="text-xl">{t(service.titleKey)}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-base">{t(service.descriptionKey)}</CardDescription>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/${locale}/services`}>{t("learnMore")}</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
-
-        {/* Десктопна версія - сітка */}
-        <div className="hidden md:block">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service, index) => (
-              <motion.div
-                key={index}
-                className="p-6 border rounded-lg shadow-sm bg-white"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <div className="flex items-start">
-                  <div className="p-3 bg-primary/10 rounded-full mr-4">{service.icon}</div>
-                  <div>
-                    <h3 className="font-medium text-lg mb-2">{t(service.titleKey)}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">{t(service.descriptionKey)}</p>
-                    <Link href={service.link}>
-                      <Button variant="outline" size="sm">
-                        {t("moreDetails")}
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        <div className="text-center mt-8">
-          <Link href={`/${locale}/services`}>
-            <Button variant="default" size="lg">
-              {t("allServices")}
-            </Button>
-          </Link>
+        <div className="mt-10 text-center">
+          <Button asChild>
+            <Link href={`/${locale}/services`}>{t("allServicesButton")}</Link>
+          </Button>
         </div>
       </div>
     </section>
