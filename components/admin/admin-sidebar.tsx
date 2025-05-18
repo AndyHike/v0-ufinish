@@ -19,7 +19,6 @@ import {
   Database,
   AlertCircle,
   MessageSquare,
-  BarChart,
 } from "lucide-react"
 
 export function AdminSidebar() {
@@ -72,13 +71,6 @@ export function AdminSidebar() {
       href: "/admin/order-statuses",
       icon: Wrench,
       active: isActive("/admin/order-statuses"),
-    },
-    {
-      href: `/admin/analytics`,
-      label: t("analytics"),
-      icon: BarChart,
-      active: isActive(`/admin/analytics`),
-      title: t("analytics") || "Analytics",
     },
     {
       title: t("users"),
@@ -137,8 +129,8 @@ export function AdminSidebar() {
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
           )}
         >
-          {typeof item.icon === "function" ? <item.icon className="h-4 w-4" /> : <item.icon className="h-4 w-4" />}
-          <span>{item.title || item.label}</span>
+          <item.icon className="h-4 w-4" />
+          <span>{item.title}</span>
         </Link>
       ))}
     </nav>

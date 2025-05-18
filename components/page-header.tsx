@@ -17,6 +17,3 @@ export function PageHeader({ heading, text, children }: PageHeaderProps) {
     </div>
   )
 }
-
-// Також експортуємо як експорт за замовчуванням для сумісності
-export default PageHeader
