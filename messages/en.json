@@ -654,5 +654,35 @@
   "Privacy": {
     "title": "Privacy Policy",
     "contentPlaceholder": "Content will be added later."
+  },
+  "Services": {
+    "title": "Our Services",
+    "subtitle": "Professional mobile device repair with quality guarantee and fast service",
+    "requestService": "Request Service",
+    "allServicesButton": "All Services",
+    "service1": {
+      "title": "Screen Replacement",
+      "description": "Fast and quality screen replacement for all models"
+    },
+    "service2": {
+      "title": "Battery Replacement",
+      "description": "Restore the battery life of your device"
+    },
+    "service3": {
+      "title": "Board Repair",
+      "description": "Solving problems with connectivity and power"
+    },
+    "service4": {
+      "title": "Screen Protection",
+      "description": "Professional installation of protective glass"
+    },
+    "phoneCleaning": {
+      "title": "Phone Cleaning",
+      "description": "Professional cleaning from dust and dirt"
+    },
+    "waterDamage": {
+      "title": "Water Damage Repair",
+      "description": "Rescue of devices after contact with liquid"
+    }
   }
 }

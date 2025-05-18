@@ -83,6 +83,36 @@
       "description": "Záchrana zařízení po kontaktu s tekutinou"
     }
   },
+  "Services": {
+    "title": "Naše služby",
+    "subtitle": "Profesionální oprava mobilních zařízení s garancí kvality a rychlým servisem",
+    "requestService": "Objednat službu",
+    "allServicesButton": "Všechny služby",
+    "service1": {
+      "title": "Výměna displeje",
+      "description": "Rychlá a kvalitní výměna displeje pro všechny modely"
+    },
+    "service2": {
+      "title": "Výměna baterie",
+      "description": "Obnovte výdrž baterie vašeho zařízení"
+    },
+    "service3": {
+      "title": "Oprava základní desky",
+      "description": "Řešení problémů s připojením a napájením"
+    },
+    "service4": {
+      "title": "Ochrana displeje",
+      "description": "Profesionální instalace ochranného skla"
+    },
+    "phoneCleaning": {
+      "title": "Čištění telefonu",
+      "description": "Profesionální čištění od prachu a nečistot"
+    },
+    "waterDamage": {
+      "title": "Oprava po poškození vodou",
+      "description": "Záchrana zařízení po kontaktu s tekutinou"
+    }
+  },
   "BrandsSection": {
     "title": "Značky, které servisujeme",
     "description": "Specializujeme se na opravy všech hlavních značek smartphonů",

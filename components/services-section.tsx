@@ -1,78 +1,117 @@
 "use client"
 
 import { useTranslations } from "next-intl"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Smartphone, Battery, Wifi, Shield, Droplet, Brush } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export function ServicesSection() {
-  const t = useTranslations("ServicesSection")
+  const t = useTranslations("Services")
+  const [isLoading, setIsLoading] = useState(true)
 
+  // Define the services with their icons
   const services = [
     {
+      id: "1",
       icon: Smartphone,
-      title: "screenReplacement.title",
-      description: "screenReplacement.description",
-      buttonText: "moreDetails",
+      titleKey: "service1.title",
+      descriptionKey: "service1.description",
     },
     {
+      id: "2",
       icon: Battery,
-      title: "batteryReplacement.title",
-      description: "batteryReplacement.description",
-      buttonText: "moreDetails",
+      titleKey: "service2.title",
+      descriptionKey: "service2.description",
     },
     {
+      id: "3",
       icon: Wifi,
-      title: "boardRepair.title",
-      description: "boardRepair.description",
-      buttonText: "moreDetails",
+      titleKey: "service3.title",
+      descriptionKey: "service3.description",
     },
     {
+      id: "4",
       icon: Shield,
-      title: "screenProtection.title",
-      description: "screenProtection.description",
-      buttonText: "moreDetails",
+      titleKey: "service4.title",
+      descriptionKey: "service4.description",
     },
     {
+      id: "5",
       icon: Brush,
-      title: "phoneCleaning.title",
-      description: "phoneCleaning.description",
-      buttonText: "moreDetails",
+      titleKey: "phoneCleaning.title",
+      descriptionKey: "phoneCleaning.description",
     },
     {
+      id: "6",
       icon: Droplet,
-      title: "waterDamage.title",
-      description: "waterDamage.description",
-      buttonText: "moreDetails",
+      titleKey: "waterDamage.title",
+      descriptionKey: "waterDamage.description",
     },
   ]
 
+  useEffect(() => {
+    // Simulate loading for a brief moment
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
-    <section className="py-16 px-4">
-      <div className="container mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-2">{t("title")}</h2>
-        <p className="text-center text-gray-600 mb-12 max-w-3xl mx-auto">{t("subtitle")}</p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services.map((service, index) => (
-            <div key={index} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <service.icon className="w-8 h-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{t(service.title)}</h3>
-              <p className="text-gray-600 mb-4">{t(service.description)}</p>
-              <button className="text-blue-600 font-medium hover:text-blue-800 transition-colors">
-                {t(service.buttonText)}
-              </button>
-            </div>
-          ))}
+    <section className="py-12 md:py-24" id="services">
+      <div className="container px-4 md:px-6">
+        <div className="flex flex-col items-center justify-center space-y-4 text-center">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("title")}</h2>
+            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              {t("subtitle")}
+            </p>
+          </div>
         </div>
-
-        <div className="text-center mt-12">
-          <a
-            href="/services"
-            className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors inline-block"
-          >
-            {t("allServices")}
-          </a>
+        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+          {isLoading
+            ? Array(6)
+                .fill(0)
+                .map((_, index) => (
+                  <Card key={index} className="flex flex-col">
+                    <CardHeader>
+                      <div className="mb-2 h-10 w-10 animate-pulse rounded-lg bg-muted"></div>
+                      <div className="h-6 w-3/4 animate-pulse rounded bg-muted"></div>
+                      <div className="h-4 w-full animate-pulse rounded bg-muted"></div>
+                    </CardHeader>
+                    <CardContent className="flex-1" />
+                    <CardFooter>
+                      <div className="h-10 w-full animate-pulse rounded bg-muted"></div>
+                    </CardFooter>
+                  </Card>
+                ))
+            : services.map((service) => {
+                const Icon = service.icon
+                return (
+                  <Card key={service.id} className="flex flex-col">
+                    <CardHeader>
+                      <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                        <Icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <CardTitle>{t(service.titleKey)}</CardTitle>
+                      <CardDescription>{t(service.descriptionKey)}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1" />
+                    <CardFooter>
+                      <Button variant="outline" asChild className="w-full">
+                        <Link href="/contact">{t("requestService")}</Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                )
+              })}
+        </div>
+        <div className="flex justify-center">
+          <Button asChild size="lg">
+            <Link href="/services">{t("allServicesButton")}</Link>
+          </Button>
         </div>
       </div>
     </section>
