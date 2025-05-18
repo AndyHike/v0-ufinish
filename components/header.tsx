@@ -21,7 +21,6 @@ export function Header({ user }) {
 
   const navigation = [
     { name: t("home"), href: `/${locale}`, icon: <Home className="h-5 w-5" /> },
-    { name: t("services"), href: `/${locale}/services`, icon: <Smartphone className="h-5 w-5" /> },
     { name: t("chooseModel"), href: `/${locale}/brands`, icon: <Smartphone className="h-5 w-5" /> },
     { name: t("about"), href: `/${locale}/about`, icon: <Info className="h-5 w-5" /> },
     { name: t("contact"), href: `/${locale}/contact`, icon: <MessageSquare className="h-5 w-5" /> },
