@@ -23,7 +23,9 @@
     "followUs": "Follow Us",
     "allRightsReserved": "All rights reserved.",
     "terms": "Terms and Conditions",
-    "privacy": "Privacy Policy"
+    "privacy": "Privacy Policy",
+    "tagline": "Professional mobile device repair with quality guarantee",
+    "company": "Company"
   },
   "UserNav": {
     "login": "Login",
@@ -58,6 +60,23 @@
     "subtitle": "Professional mobile device repair with quality guarantee and fast service",
     "moreDetails": "More Details",
     "allServices": "All Services",
+    "learnMore": "Learn More",
+    "service1": {
+      "title": "Screen Replacement",
+      "description": "Fast and quality screen replacement for all models"
+    },
+    "service2": {
+      "title": "Battery Replacement",
+      "description": "Restore the battery life of your device"
+    },
+    "service3": {
+      "title": "Board Repair",
+      "description": "Solving problems with connectivity and power"
+    },
+    "service4": {
+      "title": "Screen Protection",
+      "description": "Professional installation of protective glass"
+    },
     "screenReplacement": {
       "title": "Screen Replacement",
       "description": "Fast and quality screen replacement for all models"
@@ -151,7 +170,10 @@
     "title": "Contact Us",
     "subtitle": "Have questions? Write to us, and we will contact you as soon as possible.",
     "contactUs": "Contact Us",
+    "contactForm": "Contact Form",
+    "location": "Location",
     "contactUsDescription": "Fill out the form, and we will contact you as soon as possible.",
+    "formDescription": "Fill out the form below and we'll get back to you as soon as possible",
     "phone": "Phone",
     "email": "info@devicehelp.cz",
     "address": "Address",
@@ -656,8 +678,8 @@
     "contentPlaceholder": "Content will be added later."
   },
   "Services": {
-    "title": "Our Services",
-    "subtitle": "Professional mobile device repair with quality guarantee and fast service",
+    "pageTitle": "Our Services",
+    "pageDescription": "Professional mobile device repair with quality guarantee and fast service",
     "requestService": "Request Service",
     "allServicesButton": "All Services",
     "timeLabel": "Time",
@@ -665,6 +687,7 @@
     "warrantyLabel": "Warranty",
     "estimatedTimeLabel": "Estimated Time",
     "priceRangeLabel": "Price Range",
+    "learnMore": "Learn More",
     "screenReplacement": {
       "name": "Screen Replacement",
       "shortDescription": "Fast and quality screen replacement for all models",
@@ -712,6 +735,22 @@
       "estimatedTime": "1-2 days",
       "priceRange": "from 1000 CZK",
       "warranty": "1 month"
+    },
+    "service1": {
+      "title": "Screen Replacement",
+      "description": "Fast and quality screen replacement for all models"
+    },
+    "service2": {
+      "title": "Battery Replacement",
+      "description": "Restore the battery life of your device"
+    },
+    "service3": {
+      "title": "Board Repair",
+      "description": "Solving problems with connectivity and power"
+    },
+    "service4": {
+      "title": "Screen Protection",
+      "description": "Professional installation of protective glass"
     }
   }
 }
