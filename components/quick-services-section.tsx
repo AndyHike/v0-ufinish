@@ -8,45 +8,45 @@ import { motion } from "framer-motion"
 import { useParams } from "next/navigation"
 
 export function QuickServicesSection() {
-  const t = useTranslations()
+  const t = useTranslations("Services")
   const params = useParams()
   const locale = params.locale as string
 
   const services = [
     {
       icon: <Smartphone className="h-6 w-6 text-primary" />,
-      title: "Заміна екрану",
-      description: "Швидка та якісна заміна екрану для всіх моделей",
+      titleKey: "screenReplacement.title",
+      descriptionKey: "screenReplacement.description",
       link: `/${locale}/services#screen-replacement`,
     },
     {
       icon: <Battery className="h-6 w-6 text-primary" />,
-      title: "Заміна батареї",
-      description: "Відновіть тривалість роботи вашого пристрою",
+      titleKey: "batteryReplacement.title",
+      descriptionKey: "batteryReplacement.description",
       link: `/${locale}/services#battery-replacement`,
     },
     {
       icon: <Wifi className="h-6 w-6 text-primary" />,
-      title: "Ремонт плати",
-      description: "Вирішення проблем з підключенням та живленням",
+      titleKey: "boardRepair.title",
+      descriptionKey: "boardRepair.description",
       link: `/${locale}/services#board-repair`,
     },
     {
       icon: <Shield className="h-6 w-6 text-primary" />,
-      title: "Захист екрану",
-      description: "Професійне встановлення захисного скла",
+      titleKey: "screenProtection.title",
+      descriptionKey: "screenProtection.description",
       link: `/${locale}/services#screen-protection`,
     },
     {
       icon: <Brush className="h-6 w-6 text-primary" />,
-      title: "Чищення телефону",
-      description: "Професійне чищення від пилу та забруднень",
+      titleKey: "phoneCleaning.title",
+      descriptionKey: "phoneCleaning.description",
       link: `/${locale}/services#phone-cleaning`,
     },
     {
       icon: <Droplet className="h-6 w-6 text-primary" />,
-      title: "Ремонт після води",
-      description: "Порятунок пристроїв після контакту з рідиною",
+      titleKey: "waterDamage.title",
+      descriptionKey: "waterDamage.description",
       link: `/${locale}/services#water-damage-repair`,
     },
   ]
@@ -55,10 +55,8 @@ export function QuickServicesSection() {
     <section className="py-12 bg-white">
       <div className="container px-4">
         <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">Наші послуги</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Професійний ремонт мобільних пристроїв з гарантією якості та швидким обслуговуванням
-          </p>
+          <h2 className="text-2xl md:text-3xl font-bold mb-2">{t("title")}</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">{t("subtitle")}</p>
         </div>
 
         {/* Мобільна версія - горизонтальна прокрутка */}
@@ -75,11 +73,11 @@ export function QuickServicesSection() {
               >
                 <div className="flex flex-col items-center text-center h-full">
                   <div className="p-3 bg-primary/10 rounded-full mb-3">{service.icon}</div>
-                  <h3 className="font-medium">{service.title}</h3>
-                  <p className="text-sm text-muted-foreground mt-2 mb-4 flex-grow">{service.description}</p>
+                  <h3 className="font-medium">{t(service.titleKey)}</h3>
+                  <p className="text-sm text-muted-foreground mt-2 mb-4 flex-grow">{t(service.descriptionKey)}</p>
                   <Link href={service.link}>
                     <Button variant="outline" size="sm">
-                      Детальніше
+                      {t("moreDetails")}
                     </Button>
                   </Link>
                 </div>
@@ -103,11 +101,11 @@ export function QuickServicesSection() {
                 <div className="flex items-start">
                   <div className="p-3 bg-primary/10 rounded-full mr-4">{service.icon}</div>
                   <div>
-                    <h3 className="font-medium text-lg mb-2">{service.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">{service.description}</p>
+                    <h3 className="font-medium text-lg mb-2">{t(service.titleKey)}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">{t(service.descriptionKey)}</p>
                     <Link href={service.link}>
                       <Button variant="outline" size="sm">
-                        Детальніше
+                        {t("moreDetails")}
                       </Button>
                     </Link>
                   </div>
@@ -120,7 +118,7 @@ export function QuickServicesSection() {
         <div className="text-center mt-8">
           <Link href={`/${locale}/services`}>
             <Button variant="default" size="lg">
-              Всі послуги
+              {t("allServices")}
             </Button>
           </Link>
         </div>
