@@ -53,7 +53,8 @@
     "feature1": "Free Diagnostics",
     "feature2": "Warranty on All Repairs",
     "feature3": "Same Day Repair",
-    "imageAlt": "Phone Repair"
+    "imageAlt": "Phone Repair",
+    "repairMyDevice": "Repair My Device"
   },
   "ServicesSection": {
     "title": "Our Services",
@@ -751,6 +752,7 @@
     "service4": {
       "title": "Screen Protection",
       "description": "Professional installation of protective glass"
-    }
+    },
+    "learnMore": "Learn More"
   }
 }

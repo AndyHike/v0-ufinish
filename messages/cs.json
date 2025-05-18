@@ -23,7 +23,9 @@
     "followUs": "Sledujte nás",
     "allRightsReserved": "Všechna práva vyhrazena.",
     "terms": "Obchodní podmínky",
-    "privacy": "Ochrana osobních údajů"
+    "privacy": "Ochrana osobních údajů",
+    "tagline": "Profesionální opravy mobilních telefonů",
+    "company": "Společnost"
   },
   "UserNav": {
     "login": "Přihlásit se",
@@ -51,7 +53,8 @@
     "feature1": "Bezplatná diagnostika",
     "feature2": "Záruka na všechny opravy",
     "feature3": "Rychlá oprava během dne",
-    "imageAlt": "Oprava telefonu"
+    "imageAlt": "Oprava telefonu",
+    "repairMyDevice": "Opravit mé zařízení"
   },
   "ServicesSection": {
     "title": "Naše služby",
@@ -88,6 +91,7 @@
     "subtitle": "Profesionální oprava mobilních zařízení s garancí kvality a rychlým servisem",
     "requestService": "Objednat službu",
     "allServicesButton": "Všechny služby",
+    "learnMore": "Zjistit více",
     "service1": {
       "title": "Výměna displeje",
       "description": "Rychlá a kvalitní výměna displeje pro všechny modely"
@@ -238,6 +242,8 @@
     "contactUs": "Kontaktujte nás",
     "contactUsDescription": "Vyplňte formulář a my vás budeme kontaktovat co nejdříve.",
     "formDescription": "Vyplňte formulář níže a my vás budeme kontaktovat co nejdříve.",
+    "contactForm": "Kontaktní formulář",
+    "location": "Naše lokalita",
     "phone": "Telefon",
     "email": "info@devicehelp.cz",
     "address": "Praha 2, Česká republika",
