@@ -67,7 +67,7 @@ export function ContactSection() {
                 <Phone className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium">+42075848259</p>
+                <p className="text-sm font-medium">+420775848259</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -321,7 +321,7 @@ export function ContactSection() {
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900 text-sm md:text-base">{t("phone")}</h3>
-                    <p className="text-gray-600 text-sm md:text-base">+42075848259</p>
+                    <p className="text-gray-600 text-sm md:text-base">+420775848259</p>
                   </div>
                 </div>
 
