@@ -7,47 +7,27 @@ export function ScrollToAnchor() {
     const handleHashChange = () => {
       const hash = window.location.hash
       if (hash) {
-        const element = document.querySelector(hash)
+        const id = hash.replace("#", "")
+        const element = document.getElementById(id)
         if (element) {
-          // Додаємо невелику затримку, щоб дати сторінці повністю завантажитися
-          setTimeout(() => {
-            const headerOffset = 96 // Висота фіксованого заголовка
-            const elementPosition = element.getBoundingClientRect().top
-            const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+          const headerOffset = 80 // Висота фіксованого хедера
+          const elementPosition = element.getBoundingClientRect().top
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset
 
-            window.scrollTo({
-              top: offsetPosition,
-              behavior: "smooth",
-            })
-          }, 100)
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth",
+          })
         }
       }
     }
 
-    // Обробляємо хеш при початковому завантаженні
-    if (window.location.hash) {
-      handleHashChange()
-    }
+    // Викликаємо при початковому завантаженні
+    handleHashChange()
 
-    // Додаємо обробник для кліків на посилання з якорями
-    const handleAnchorClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement
-      const anchor = target.closest("a")
-
-      if (anchor && anchor.hash && anchor.href.includes(window.location.pathname)) {
-        e.preventDefault()
-        window.history.pushState({}, "", anchor.hash)
-        handleHashChange()
-      }
-    }
-
-    document.addEventListener("click", handleAnchorClick)
+    // Додаємо слухач для змін хеша
     window.addEventListener("hashchange", handleHashChange)
-
-    return () => {
-      document.removeEventListener("click", handleAnchorClick)
-      window.removeEventListener("hashchange", handleHashChange)
-    }
+    return () => window.removeEventListener("hashchange", handleHashChange)
   }, [])
 
   return null
