@@ -53,30 +53,35 @@
     "feature3": "Rychlá oprava během dne",
     "imageAlt": "Oprava telefonu"
   },
-  "Services": {
+  "ServicesSection": {
     "title": "Naše služby",
-    "subtitle": "Nabízíme širokou škálu služeb oprav mobilních telefonů",
-    "pageTitle": "Naše služby",
-    "pageDescription": "Nabízíme širokou škálu služeb oprav mobilních telefonů",
-    "requestService": "Objednat službu",
-    "service1": {
+    "subtitle": "Profesionální oprava mobilních zařízení s garancí kvality a rychlým servisem",
+    "moreDetails": "Více informací",
+    "allServices": "Všechny služby",
+    "screenReplacement": {
       "title": "Výměna displeje",
-      "description": "Profesionální výměna rozbitého nebo poškozeného displeje"
+      "description": "Rychlá a kvalitní výměna displeje pro všechny modely"
     },
-    "service2": {
+    "batteryReplacement": {
       "title": "Výměna baterie",
-      "description": "Obnovení výdrže vašeho telefonu s novou baterií"
+      "description": "Obnovte výdrž baterie vašeho zařízení"
     },
-    "service3": {
-      "title": "Oprava bezdrátových sítí",
-      "description": "Řešení problémů s bezdrátovými sítěmi vašeho zařízení"
+    "boardRepair": {
+      "title": "Oprava základní desky",
+      "description": "Řešení problémů s připojením a napájením"
     },
-    "service4": {
+    "screenProtection": {
+      "title": "Ochrana displeje",
+      "description": "Profesionální instalace ochranného skla"
+    },
+    "phoneCleaning": {
+      "title": "Čištění telefonu",
+      "description": "Profesionální čištění od prachu a nečistot"
+    },
+    "waterDamage": {
       "title": "Oprava po poškození vodou",
-      "description": "Obnova telefonů po poškození vodou"
-    },
-    "learnMore": "Zjistit více",
-    "allServicesButton": "Všechny služby"
+      "description": "Záchrana zařízení po kontaktu s tekutinou"
+    }
   },
   "BrandsSection": {
     "title": "Značky, které servisujeme",
@@ -452,7 +457,7 @@
     "pleaseWait": "Prosím, počkejte",
     "addNewStatusDescription": "Přidejte nový stav objednávky ke sledování v systému",
     "editStatusDescription": "Upravte existující stav objednávky",
-    "deleteStatusConfirmation": "Opravdu chcete smazat stav \"{status}\"? Tuto akci nelze vrátit zpět.",
+    "deleteStatusConfirmation": "Opravdu chcete smazat stav \"{status}\"? Může to ovlivnit existující objednávky.",
     "infoBanner": "Informační banner",
     "contactMessages": "Zprávy"
   },
@@ -500,40 +505,6 @@
     "userProfile": "Profil uživatele",
     "manageProfileAndOrders": "Spravujte svůj profil a objednávky",
     "profile": "Profil",
-    "repairHistory": {
-      "title": "Historie oprav"
-    },
-    "myDiscounts": "Moje slevy",
-    "viewRepairHistory": "Prohlížejte historii vašich oprav a jejich stav.",
-    "all": "Všechny",
-    "active": "Aktivní",
-    "completed": "Dokončené",
-    "refresh": "Obnovit",
-    "search": "Hledat...",
-    "id": "ID",
-    "date": "Datum",
-    "device": "Zařízení",
-    "service": "Služba",
-    "status": "Stav",
-    "price": "Cena",
-    "details": "Detaily",
-    "orderDetails": "Detaily objednávky",
-    "orderID": "ID objednávky",
-    "creationDate": "Datum vytvoření",
-    "currentStatus": "Aktuální stav",
-    "value": "Hodnota",
-    "notSpecified": "Neuvedeno",
-    "noOrdersYet": "Zatím nemáte žádné objednávky",
-    "welcomeDiscount": "Uvítací sleva pro nové klienty",
-    "expiresOn": "Platí do",
-    "noDiscountsYet": "Zatím nemáte žádné slevy",
-    "firstName": "Jméno",
-    "lastName": "Příjmení",
-    "email": "Email",
-    "phone": "Telefon",
-    "address": "Adresa",
-    "registrationDate": "Datum registrace",
-    "editingNotAvailable": "Úprava profilu není momentálně k dispozici. Pro provedení změn kontaktujte správce.",
     "repairHistory": {
       "title": "Historie oprav",
       "description": "Zobrazit historii a stav vašich oprav",

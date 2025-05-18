@@ -53,30 +53,35 @@
     "feature3": "Same Day Repair",
     "imageAlt": "Phone Repair"
   },
-  "Services": {
+  "ServicesSection": {
     "title": "Our Services",
-    "subtitle": "We offer a wide range of mobile phone repair services",
-    "pageTitle": "Our Services",
-    "pageDescription": "We offer a wide range of mobile phone repair services",
-    "requestService": "Request Service",
-    "service1": {
+    "subtitle": "Professional mobile device repair with quality guarantee and fast service",
+    "moreDetails": "More Details",
+    "allServices": "All Services",
+    "screenReplacement": {
       "title": "Screen Replacement",
-      "description": "Professional replacement of broken or damaged screens"
+      "description": "Fast and quality screen replacement for all models"
     },
-    "service2": {
+    "batteryReplacement": {
       "title": "Battery Replacement",
-      "description": "Restore your phone's battery life with a new battery"
+      "description": "Restore the battery life of your device"
     },
-    "service3": {
-      "title": "Wireless Network Repair",
-      "description": "Resolving issues with wireless networks on your device"
+    "boardRepair": {
+      "title": "Board Repair",
+      "description": "Solving problems with connectivity and power"
     },
-    "service4": {
+    "screenProtection": {
+      "title": "Screen Protection",
+      "description": "Professional installation of protective glass"
+    },
+    "phoneCleaning": {
+      "title": "Phone Cleaning",
+      "description": "Professional cleaning from dust and dirt"
+    },
+    "waterDamage": {
       "title": "Water Damage Repair",
-      "description": "Recovery of phones after water damage"
-    },
-    "learnMore": "Learn More",
-    "allServicesButton": "All Services"
+      "description": "Rescue of devices after contact with liquid"
+    }
   },
   "BrandsSection": {
     "title": "Brands We Service",
