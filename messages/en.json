@@ -660,29 +660,58 @@
     "subtitle": "Professional mobile device repair with quality guarantee and fast service",
     "requestService": "Request Service",
     "allServicesButton": "All Services",
-    "service1": {
-      "title": "Screen Replacement",
-      "description": "Fast and quality screen replacement for all models"
+    "timeLabel": "Time",
+    "priceLabel": "Price",
+    "warrantyLabel": "Warranty",
+    "estimatedTimeLabel": "Estimated Time",
+    "priceRangeLabel": "Price Range",
+    "screenReplacement": {
+      "name": "Screen Replacement",
+      "shortDescription": "Fast and quality screen replacement for all models",
+      "fullDescription": "Our specialists perform professional screen replacements for smartphones of any brand. We use only original or high-quality compatible parts, which guarantees excellent image quality and long service life.",
+      "estimatedTime": "30-60 minutes",
+      "priceRange": "from 800 CZK",
+      "warranty": "6 months"
     },
-    "service2": {
-      "title": "Battery Replacement",
-      "description": "Restore the battery life of your device"
+    "batteryReplacement": {
+      "name": "Battery Replacement",
+      "shortDescription": "Restore your device's battery life",
+      "fullDescription": "Over time, smartphone batteries lose capacity and discharge faster. We offer professional battery replacement using quality components that will restore your device's battery life.",
+      "estimatedTime": "20-40 minutes",
+      "priceRange": "from 500 CZK",
+      "warranty": "3 months"
     },
-    "service3": {
-      "title": "Board Repair",
-      "description": "Solving problems with connectivity and power"
+    "boardRepair": {
+      "name": "Board Repair",
+      "shortDescription": "Solving connectivity and power issues",
+      "fullDescription": "Motherboard repair is one of the most complex procedures that requires high qualifications. Our masters have many years of experience in diagnosing and repairing boards, solving problems with connectivity, power, and other components.",
+      "estimatedTime": "1-3 days",
+      "priceRange": "from 1200 CZK",
+      "warranty": "3 months"
     },
-    "service4": {
-      "title": "Screen Protection",
-      "description": "Professional installation of protective glass"
+    "screenProtection": {
+      "name": "Screen Protection",
+      "shortDescription": "Professional installation of protective glass",
+      "fullDescription": "Protect your device from scratches and damage with professional installation of protective glass or film. We guarantee perfect application without air bubbles and dust.",
+      "estimatedTime": "10-15 minutes",
+      "priceRange": "from 200 CZK",
+      "warranty": "1 month"
     },
     "phoneCleaning": {
-      "title": "Phone Cleaning",
-      "description": "Professional cleaning from dust and dirt"
+      "name": "Phone Cleaning",
+      "shortDescription": "Professional cleaning from dust and dirt",
+      "fullDescription": "Over time, dust, dirt, and other contaminants accumulate in your device, which can affect its performance. We offer professional cleaning of both external and internal components of your smartphone.",
+      "estimatedTime": "30-45 minutes",
+      "priceRange": "from 300 CZK",
+      "warranty": "1 month"
     },
-    "waterDamage": {
-      "title": "Water Damage Repair",
-      "description": "Rescue of devices after contact with liquid"
+    "waterDamageRepair": {
+      "name": "Water Damage Repair",
+      "shortDescription": "Rescuing devices after contact with liquid",
+      "fullDescription": "If your device has been exposed to water or other liquid, it's important to act quickly. Our specialists will conduct professional cleaning and restoration of components affected by moisture, maximizing the chances of full functionality restoration.",
+      "estimatedTime": "1-2 days",
+      "priceRange": "from 1000 CZK",
+      "warranty": "1 month"
     }
   }
 }

@@ -111,6 +111,61 @@
     "waterDamage": {
       "title": "Oprava po poškození vodou",
       "description": "Záchrana zařízení po kontaktu s tekutinou"
+    },
+    "pageTitle": "Naše služby",
+    "pageDescription": "Nabízíme širokou škálu služeb oprav mobilních zařízení. Naši kvalifikovaní technici poskytují rychlé a kvalitní opravy.",
+    "timeLabel": "Čas",
+    "priceLabel": "Cena",
+    "warrantyLabel": "Záruka",
+    "estimatedTimeLabel": "Odhadovaný čas",
+    "priceRangeLabel": "Cenové rozpětí",
+    "screenReplacement": {
+      "name": "Výměna displeje",
+      "shortDescription": "Rychlá a kvalitní výměna displeje pro všechny modely",
+      "fullDescription": "Naši specialisté provádějí profesionální výměnu displejů pro smartphony jakékoli značky. Používáme pouze originální nebo vysoce kvalitní kompatibilní díly, což zaručuje vynikající kvalitu obrazu a dlouhou životnost.",
+      "estimatedTime": "30-60 minut",
+      "priceRange": "od 800 Kč",
+      "warranty": "6 měsíců"
+    },
+    "batteryReplacement": {
+      "name": "Výměna baterie",
+      "shortDescription": "Obnovte výdrž baterie vašeho zařízení",
+      "fullDescription": "Časem baterie smartphonu ztrácí kapacitu a rychleji se vybíjí. Nabízíme profesionální výměnu baterie s použitím kvalitních komponentů, které obnoví výdrž baterie vašeho zařízení.",
+      "estimatedTime": "20-40 minut",
+      "priceRange": "od 500 Kč",
+      "warranty": "3 měsíce"
+    },
+    "boardRepair": {
+      "name": "Oprava základní desky",
+      "shortDescription": "Řešení problémů s připojením a napájením",
+      "fullDescription": "Oprava základní desky je jedním z nejsložitějších postupů, který vyžaduje vysokou kvalifikaci. Naši mistři mají mnohaletou zkušenost s diagnostikou a opravou desek, řešením problémů s připojením, napájením a dalšími komponenty.",
+      "estimatedTime": "1-3 dny",
+      "priceRange": "od 1200 Kč",
+      "warranty": "3 měsíce"
+    },
+    "screenProtection": {
+      "name": "Ochrana displeje",
+      "shortDescription": "Profesionální instalace ochranného skla",
+      "fullDescription": "Chraňte své zařízení před poškrábáním a poškozením profesionální instalací ochranného skla nebo fólie. Garantujeme perfektní aplikaci bez vzduchových bublin a prachu.",
+      "estimatedTime": "10-15 minut",
+      "priceRange": "od 200 Kč",
+      "warranty": "1 měsíc"
+    },
+    "phoneCleaning": {
+      "name": "Čištění telefonu",
+      "shortDescription": "Profesionální čištění od prachu a nečistot",
+      "fullDescription": "Časem se ve vašem zařízení hromadí prach, nečistoty a další kontaminanty, které mohou ovlivnit jeho výkon. Nabízíme profesionální čištění jak vnějších, tak vnitřních komponentů vašeho smartphonu.",
+      "estimatedTime": "30-45 minut",
+      "priceRange": "od 300 Kč",
+      "warranty": "1 měsíc"
+    },
+    "waterDamageRepair": {
+      "name": "Oprava po poškození vodou",
+      "shortDescription": "Záchrana zařízení po kontaktu s tekutinou",
+      "fullDescription": "Pokud bylo vaše zařízení vystaveno vodě nebo jiné tekutině, je důležité jednat rychle. Naši specialisté provedou profesionální čištění a obnovu komponentů zasažených vlhkostí, čímž maximalizují šance na plné obnovení funkčnosti.",
+      "estimatedTime": "1-2 dny",
+      "priceRange": "od 1000 Kč",
+      "warranty": "1 měsíc"
     }
   },
   "BrandsSection": {
