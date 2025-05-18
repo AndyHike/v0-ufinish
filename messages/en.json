@@ -1,89 +1,4 @@
 {
-  "app": {
-    "title": "Phone Repair",
-    "description": "Professional mobile phone and smartphone repair"
-  },
-  "nav": {
-    "home": "Home",
-    "services": "Services",
-    "pricing": "Pricing",
-    "about": "About",
-    "contact": "Contact",
-    "login": "Login",
-    "register": "Register",
-    "profile": "Profile",
-    "admin": "Admin",
-    "logout": "Logout"
-  },
-  "home": {
-    "hero": {
-      "title": "Professional Mobile Phone Repair",
-      "subtitle": "Fast, quality service with warranty",
-      "cta": "Learn More"
-    },
-    "services": {
-      "title": "Our Services",
-      "subtitle": "We offer a wide range of mobile phone repair services",
-      "viewAll": "View All Services"
-    },
-    "brands": {
-      "title": "Brands We Work With",
-      "subtitle": "We repair phones of all popular brands"
-    },
-    "testimonials": {
-      "title": "Customer Testimonials",
-      "subtitle": "What our customers say about us"
-    },
-    "contact": {
-      "title": "Contact Us",
-      "subtitle": "We are always happy to help you",
-      "address": "Address",
-      "phone": "Phone",
-      "email": "Email",
-      "form": {
-        "name": "Name",
-        "email": "Email",
-        "message": "Message",
-        "submit": "Submit"
-      }
-    }
-  },
-  "services": {
-    "title": "Our Services",
-    "subtitle": "We offer a wide range of mobile phone repair services",
-    "screenReplacement": {
-      "title": "Screen Replacement",
-      "shortDescription": "Fast and quality screen replacement for all models",
-      "fullDescription": "Our specialists perform professional screen replacements for smartphones of any brand. We use only original or high-quality compatible parts, which guarantees excellent image quality and long service life."
-    },
-    "batteryReplacement": {
-      "title": "Battery Replacement",
-      "shortDescription": "Restore your device's battery life",
-      "fullDescription": "Over time, smartphone batteries lose their capacity. We offer battery replacement services that will restore your device's battery life. We use only quality batteries with warranty."
-    },
-    "boardRepair": {
-      "title": "Board Repair",
-      "shortDescription": "Complex motherboard repair",
-      "fullDescription": "Our engineers have extensive experience in repairing smartphone motherboards. We perform diagnostics and repairs of any complexity: from replacing microchips to restoring tracks on the board."
-    },
-    "screenProtection": {
-      "title": "Screen Protection",
-      "shortDescription": "Protective glass and films for your smartphone",
-      "fullDescription": "We offer professional installation of protective glasses and films on your smartphone screen. This will help protect your device from scratches, fingerprints and damage from falls."
-    },
-    "waterDamageRepair": {
-      "title": "Water Damage Repair",
-      "shortDescription": "Restoration of devices after contact with liquid",
-      "fullDescription": "If your smartphone has been in water or other liquid, it is important to contact specialists as soon as possible. We carry out professional cleaning and restoration of devices after contact with liquid, which helps to avoid corrosion and further damage."
-    },
-    "learnMore": "Learn More",
-    "contactUs": "Contact Us"
-  },
-  "footer": {
-    "rights": "All rights reserved",
-    "privacy": "Privacy Policy",
-    "terms": "Terms of Service"
-  },
   "Header": {
     "siteTitle": "Phone Repair",
     "home": "Home",
@@ -137,6 +52,31 @@
     "feature2": "Warranty on All Repairs",
     "feature3": "Same Day Repair",
     "imageAlt": "Phone Repair"
+  },
+  "Services": {
+    "title": "Our Services",
+    "subtitle": "We offer a wide range of mobile phone repair services",
+    "pageTitle": "Our Services",
+    "pageDescription": "We offer a wide range of mobile phone repair services",
+    "requestService": "Request Service",
+    "service1": {
+      "title": "Screen Replacement",
+      "description": "Professional replacement of broken or damaged screens"
+    },
+    "service2": {
+      "title": "Battery Replacement",
+      "description": "Restore your phone's battery life with a new battery"
+    },
+    "service3": {
+      "title": "Wireless Network Repair",
+      "description": "Resolving issues with wireless networks on your device"
+    },
+    "service4": {
+      "title": "Water Damage Repair",
+      "description": "Recovery of phones after water damage"
+    },
+    "learnMore": "Learn More",
+    "allServicesButton": "All Services"
   },
   "BrandsSection": {
     "title": "Brands We Service",

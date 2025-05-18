@@ -24,8 +24,8 @@ export default async function ServicesPage({ params }: { params: { locale: strin
   const services = [
     {
       id: "screen-replacement",
-      name: t("service1.title"),
-      shortDescription: t("service1.description"),
+      name: "Заміна екрану",
+      shortDescription: "Швидка та якісна заміна екрану для всіх моделей",
       fullDescription:
         "Наші фахівці виконують професійну заміну екранів для смартфонів будь-яких брендів. Ми використовуємо тільки оригінальні або високоякісні сумісні деталі, що гарантує відмінну якість зображення та тривалий термін служби.",
       icon: Smartphone,
@@ -35,8 +35,8 @@ export default async function ServicesPage({ params }: { params: { locale: strin
     },
     {
       id: "battery-replacement",
-      name: t("service2.title"),
-      shortDescription: t("service2.description"),
+      name: "Заміна батареї",
+      shortDescription: "Відновіть тривалість роботи вашого пристрою",
       fullDescription:
         "З часом батарея смартфона втрачає ємність і швидше розряджається. Ми пропонуємо професійну заміну батареї з використанням якісних комплектуючих, що дозволить відновити тривалість роботи вашого пристрою.",
       icon: Battery,
@@ -79,8 +79,8 @@ export default async function ServicesPage({ params }: { params: { locale: strin
     },
     {
       id: "water-damage-repair",
-      name: t("service4.title"),
-      shortDescription: t("service4.description"),
+      name: "Ремонт після води",
+      shortDescription: "Порятунок пристроїв після контакту з рідиною",
       fullDescription:
         "Якщо ваш пристрій потрапив у воду або іншу рідину, важливо діяти швидко. Наші фахівці проведуть професійне чищення та відновлення компонентів, що постраждали від вологи, максимально збільшуючи шанси на повне відновлення функціональності.",
       icon: Droplet,

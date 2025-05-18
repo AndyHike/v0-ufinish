@@ -8,21 +8,21 @@ import { motion } from "framer-motion"
 import { useParams } from "next/navigation"
 
 export function QuickServicesSection() {
-  const t = useTranslations("Services")
+  const t = useTranslations()
   const params = useParams()
   const locale = params.locale as string
 
   const services = [
     {
       icon: <Smartphone className="h-6 w-6 text-primary" />,
-      title: t("service1.title"),
-      description: t("service1.description"),
+      title: "Заміна екрану",
+      description: "Швидка та якісна заміна екрану для всіх моделей",
       link: `/${locale}/services#screen-replacement`,
     },
     {
       icon: <Battery className="h-6 w-6 text-primary" />,
-      title: t("service2.title"),
-      description: t("service2.description"),
+      title: "Заміна батареї",
+      description: "Відновіть тривалість роботи вашого пристрою",
       link: `/${locale}/services#battery-replacement`,
     },
     {
@@ -45,8 +45,8 @@ export function QuickServicesSection() {
     },
     {
       icon: <Droplet className="h-6 w-6 text-primary" />,
-      title: t("service4.title"),
-      description: t("service4.description"),
+      title: "Ремонт після води",
+      description: "Порятунок пристроїв після контакту з рідиною",
       link: `/${locale}/services#water-damage-repair`,
     },
   ]
@@ -55,8 +55,10 @@ export function QuickServicesSection() {
     <section className="py-12 bg-white">
       <div className="container px-4">
         <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">{t("title")}</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">{t("subtitle")}</p>
+          <h2 className="text-2xl md:text-3xl font-bold mb-2">Наші послуги</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Професійний ремонт мобільних пристроїв з гарантією якості та швидким обслуговуванням
+          </p>
         </div>
 
         {/* Мобільна версія - горизонтальна прокрутка */}
@@ -77,7 +79,7 @@ export function QuickServicesSection() {
                   <p className="text-sm text-muted-foreground mt-2 mb-4 flex-grow">{service.description}</p>
                   <Link href={service.link}>
                     <Button variant="outline" size="sm">
-                      {t("learnMore")}
+                      Детальніше
                     </Button>
                   </Link>
                 </div>
@@ -105,7 +107,7 @@ export function QuickServicesSection() {
                     <p className="text-sm text-muted-foreground mb-4">{service.description}</p>
                     <Link href={service.link}>
                       <Button variant="outline" size="sm">
-                        {t("learnMore")}
+                        Детальніше
                       </Button>
                     </Link>
                   </div>
@@ -118,7 +120,7 @@ export function QuickServicesSection() {
         <div className="text-center mt-8">
           <Link href={`/${locale}/services`}>
             <Button variant="default" size="lg">
-              {t("allServicesButton")}
+              Всі послуги
             </Button>
           </Link>
         </div>
